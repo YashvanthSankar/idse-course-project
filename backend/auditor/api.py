@@ -10,7 +10,8 @@ from collections.abc import Callable
 from uuid import uuid4
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
@@ -27,6 +28,7 @@ from auditor.models import (
     ToolSpec,
     Verdict,
 )
+from auditor.rooms import RoomManager
 from auditor.scoring import score_accusation
 from auditor.store import CaseSession, SessionStore
 from auditor.telemetry import Telemetry
@@ -52,6 +54,10 @@ class Rows(BaseModel):
 
 class Budget(BaseModel):
     budget_left: int
+
+
+class RoomCreated(BaseModel):
+    code: str
 
 
 def _records(df: pd.DataFrame) -> list[dict]:
@@ -82,7 +88,9 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
     app.state.store = store or SessionStore()
     app.state.clock = clock
     app.state.telemetry = telemetry or Telemetry()
-    app.state.on_verdict = []  # hooks: Class Mode listens here
+    app.state.rooms = RoomManager(app.state.store, app.state.telemetry, clock)
+    app.state.on_verdict = [app.state.rooms.record_verdict]  # hooks: Class Mode listens here
+    app.state.on_tool_run = [app.state.rooms.tool_ran]
 
     def log(event, session: CaseSession, **kw):
         app.state.telemetry.log(event, player_id=session.player_id, case_id=session.case_id,
@@ -167,6 +175,8 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
         log("tool_run", session, tool_id=tool_id,
             payload={"cost": cost, "params": params, "implicates": result.implicates,
                      "visual": TOOLS[tool_id].visual})
+        for hook in app.state.on_tool_run:
+            hook(session, TOOLS[tool_id].name)
         return result
 
     @app.post("/api/cases/{case_id}/hacker-charge", response_model=Budget)
@@ -207,6 +217,60 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
         for hook in app.state.on_verdict:
             hook(session, verdict)
         return verdict
+
+    @app.post("/api/rooms", response_model=RoomCreated)
+    def create_room():
+        return RoomCreated(code=app.state.rooms.create())
+
+    @app.websocket("/ws/rooms/{code}")
+    async def room_socket(ws: WebSocket, code: str, role: str = "player",
+                          player_id: str | None = None, name: str = "Detective"):
+        rooms: RoomManager = app.state.rooms
+        if code not in rooms.rooms:
+            await ws.close(code=4404)
+            return
+        await ws.accept()
+        room = rooms.rooms[code]
+        pid = player_id or uuid4().hex[:10] if role == "player" else None
+        rooms.add_socket(code, ws, role, pid)
+        try:
+            if role == "host":
+                await ws.send_json(rooms.lobby(code))
+                if room.status == "running":
+                    await ws.send_json(rooms.round_start(code))
+                    await ws.send_json(rooms.leaderboard(code))
+            else:
+                rooms.join(code, pid, name)
+                case_id = await run_in_threadpool(rooms.ensure_case, code, pid)
+                await ws.send_json({"type": "welcome", "player_id": pid,
+                                    "status": room.status})
+                if case_id:
+                    await ws.send_json(rooms.round_start(code))
+                    await ws.send_json({"type": "your_case", "case_id": case_id})
+                await rooms.broadcast(code, rooms.lobby(code))
+            while True:
+                message = await ws.receive_json()
+                if role != "host":
+                    continue
+                if message.get("type") == "start":
+                    level = min(7, max(1, int(message.get("level", 1))))
+                    seconds = min(1800, max(30, int(message.get("seconds", 360))))
+                    assignments = await run_in_threadpool(rooms.start, code, level, seconds)
+                    await rooms.broadcast(code, rooms.round_start(code))
+                    for player, case_id in assignments.items():
+                        await rooms.send_to_player(code, player,
+                                                   {"type": "your_case", "case_id": case_id})
+                    await rooms.broadcast(code, rooms.leaderboard(code))
+                elif message.get("type") == "end":
+                    rooms.end(code)
+                    await rooms.broadcast(code, {"type": "round_end"})
+                    await rooms.broadcast(code, rooms.leaderboard(code))
+        except WebSocketDisconnect:
+            pass
+        finally:
+            rooms.remove_socket(code, ws)
+            if role == "player":
+                await rooms.broadcast(code, rooms.lobby(code))
 
     @app.get("/api/debug/cases/{case_id}/truth", response_model=CaseTruth)
     def debug_truth(case_id: str):
