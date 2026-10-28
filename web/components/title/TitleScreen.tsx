@@ -11,11 +11,21 @@ import { Manual } from "./Manual";
 import { Skyline } from "./Skyline";
 
 const MENU = [
-  { id: "new", label: "New Case", hint: "Solve a fraud case on your own" },
-  { id: "class", label: "Class Mode", hint: "The whole class plays live from their phones" },
-  { id: "manual", label: "Detective's Manual", hint: "How to play, and every tool in the kit" },
-  { id: "settings", label: "Settings", hint: "Sound, effects and unlocking cases" },
+  { id: "new", label: "NEW CASE", hint: "Solve a fraud case on your own" },
+  { id: "class", label: "CLASS MODE", hint: "The whole class plays live from their phones" },
+  { id: "manual", label: "MANUAL", hint: "How to play, and every tool in the kit" },
+  { id: "settings", label: "OPTIONS", hint: "Sound, effects and unlocking cases" },
 ] as const;
+
+// The attract-mode ticker: a ledger scrolling past, with one claim that doesn't belong.
+const LEDGER = [
+  "412.00", "1,208.50", "96.00", "2,150.00", "460.00", "6,800.00", "131.25", "14,700.00",
+  "88.40", "3,020.00", "512.75", "31,600.00", "245.00", "1,990.00", "702.30", "48,750.00",
+  "118.00", "5,430.00", "390.00", "9,860.00", "72.50", "2,640.00", "1,004.00", "620.00",
+];
+const OUTLIER_INDEX = 15;
+
+const pad = (n: number) => String(n).padStart(6, "0");
 
 export function TitleScreen() {
   const router = useRouter();
@@ -32,7 +42,7 @@ export function TitleScreen() {
   }, [pointerX]);
 
   const choose = (id: (typeof MENU)[number]["id"]) => {
-    sfx.play("pin");
+    sfx.play("coin");
     if (id === "new") router.push("/office");
     else if (id === "class") router.push("/host");
     else setPanel(id);
@@ -44,14 +54,19 @@ export function TitleScreen() {
       sfx.unlock();
       sfx.loop("rain");
       sfx.loop("jazz");
-      sfx.play("buzz");
       setAwake(true);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (!awake) return wake();
+      wake();
       if (panel) return;
-      if (e.key === "ArrowDown") setFocus((f) => (f + 1) % MENU.length);
-      if (e.key === "ArrowUp") setFocus((f) => (f + MENU.length - 1) % MENU.length);
+      if (e.key === "ArrowDown") {
+        sfx.play("tick");
+        setFocus((f) => (f + 1) % MENU.length);
+      }
+      if (e.key === "ArrowUp") {
+        sfx.play("tick");
+        setFocus((f) => (f + MENU.length - 1) % MENU.length);
+      }
       if (e.key === "Enter") choose(MENU[focus].id);
     };
     window.addEventListener("keydown", onKey);
@@ -62,76 +77,97 @@ export function TitleScreen() {
     };
   });
 
-  const letters = ["O", "U", "T", "L", "I", "E", "R"];
+  const ticker = [...LEDGER, ...LEDGER];
 
   return (
-    <main className="relative flex min-h-dvh flex-col overflow-hidden bg-[#070a12]">
-      {/* the city, low and dark, with the moon behind it */}
-      <div aria-hidden className="absolute left-[44%] top-[7%] h-16 w-16 rounded-full bg-[#f3ead2] opacity-70 shadow-[0_0_70px_24px_rgba(243,234,210,0.12)] sm:h-24 sm:w-24" />
+    <main className="relative flex min-h-dvh flex-col overflow-hidden bg-[#05060d] font-terminal text-paper">
+      {/* ── the night: a pixel moon, the city, the rain ─────────────────── */}
+      <svg aria-hidden viewBox="0 0 12 12" className="pixel absolute right-[7%] top-[16%] h-12 w-12 sm:right-[5%] sm:top-[9%] opacity-90 sm:h-20 sm:w-20" shapeRendering="crispEdges">
+        <path fill="#f3ead2" d="M4 0h4v1h2v1h1v2h1v4h-1v2h-1v1H8v1H4v-1H2v-1H1V8H0V4h1V2h1V1h2z" />
+        <path fill="#d9cdb0" d="M3 3h2v2H3zM7 6h2v2H7zM4 8h1v1H4z" />
+      </svg>
       <Skyline pointerX={pointerX} />
-      <div aria-hidden className="pointer-events-none absolute inset-x-[-20%] bottom-[14%] h-[34%]">
-        <div className="animate-fog absolute inset-0 bg-[radial-gradient(ellipse_at_30%_70%,rgba(160,180,210,0.14),transparent_60%)] blur-2xl" />
-      </div>
-      <Rain lightning density={300} />
-      {/* darken the lower half so the monument reads over the lights */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%] bg-[linear-gradient(to_top,#070a12_35%,transparent)]" />
+      <Rain density={220} />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-[55%] bg-[linear-gradient(to_top,#05060d_30%,transparent)]" />
 
-      {/* top corners: what this is / the menu */}
-      <header className="relative z-10 flex items-start justify-between gap-6 px-5 pt-5 sm:px-8 sm:pt-7">
-        <p className="max-w-[22ch] text-[15px] leading-snug text-paper/85 sm:text-lg">
-          A detective game. Catch the fraudster with real statistics.
-          <span className="block text-paper/50">
-            {summary.closed > 0
-              ? `${summary.closed} of 7 cases closed · best ${summary.best.toLocaleString("en-IN")}`
-              : "Mumbai · 2 AM · raining"}
-          </span>
+      {/* ── arcade HUD ───────────────────────────────────────────────────── */}
+      <header className="relative z-10 grid grid-cols-3 items-start px-4 pt-4 font-pixel text-[9px] leading-[1.8] sm:px-8 sm:pt-6 sm:text-xs">
+        <div>
+          <p className="text-[#ff2a6d]">1UP</p>
+          <p className="text-paper">{pad(summary.best)}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[#ff2a6d]">HI-SCORE</p>
+          <p className="text-paper">{pad(Math.max(summary.best, 1880))}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[#ff2a6d]">CASES</p>
+          <p className="text-paper">{summary.closed}/7</p>
+        </div>
+      </header>
+
+      {/* ── the marquee ──────────────────────────────────────────────────── */}
+      <section className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 pb-6 pt-8 text-center">
+        <p className="font-pixel text-[10px] tracking-[0.2em] text-[#4cc9f0] sm:text-sm">A DATA DETECTIVE GAME</p>
+        <motion.h1
+          aria-label="Outlier"
+          initial={{ scale: 0.6, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 140, damping: 14 }}
+          className="mt-5 font-pixel leading-none"
+          style={{ fontSize: "clamp(2.4rem, 10.5vw, 9.5rem)", letterSpacing: "0.02em" }}
+        >
+          <span aria-hidden className="arcade-logo animate-hop">O</span>
+          <span aria-hidden className="arcade-logo">UTLIER</span>
+        </motion.h1>
+        <p className="mt-7 max-w-[30ch] text-balance text-[1.6rem] leading-tight text-paper/90 sm:max-w-none sm:text-[2.1rem]">
+          Every number tells a story. Some of them lie.
         </p>
-        <nav aria-label="Main menu" className="flex flex-col items-end gap-1 text-right">
+
+        {/* the menu */}
+        <nav aria-label="Main menu" className="mt-9 flex flex-col items-start gap-1">
           {MENU.map((item, i) => (
             <button
               key={item.id}
               onMouseEnter={() => {
+                if (focus !== i) sfx.play("tick");
                 setFocus(i);
-                sfx.play("tick");
               }}
               onFocus={() => setFocus(i)}
               onClick={() => choose(item.id)}
-              className={`min-h-11 text-xl font-medium leading-tight transition-colors sm:text-2xl ${
-                focus === i ? "text-amber [text-shadow:0_0_16px_rgba(245,165,36,0.4)]" : "text-paper/80 hover:text-paper"
+              className={`flex min-h-11 items-center gap-4 font-pixel text-sm transition-colors sm:text-lg ${
+                focus === i ? "text-[#ffd319]" : "text-paper/75 hover:text-paper"
               }`}
             >
+              <span aria-hidden className={focus === i ? "animate-blink-hard" : "invisible"}>▶</span>
               {item.label}
             </button>
           ))}
-          <p className="mt-2 hidden max-w-[28ch] text-base text-paper/60 sm:block" aria-live="polite">
-            {MENU[focus].hint}
-          </p>
         </nav>
-      </header>
+        <p className="mt-5 h-8 text-2xl text-[#4cc9f0] sm:text-[1.7rem]" aria-live="polite">{MENU[focus].hint}</p>
+      </section>
 
-      {/* the monument: the name fills the width, and one letter is the outlier */}
-      <h1
-        aria-label="Outlier"
-        className="relative z-10 mt-auto flex w-full items-end justify-between px-5 pb-2 font-title font-black uppercase leading-none text-[#e8e6e1] sm:px-8"
-        style={{ fontSize: "clamp(3.2rem, 17.5vw, 19rem)" }}
-      >
-        {letters.map((ch, i) => (
-          <motion.span
-            key={i}
-            aria-hidden
-            initial={{ y: 40, opacity: 0 }}
-            animate={{ y: i === 0 ? "-0.22em" : 0, opacity: 1 }}
-            transition={{ delay: 0.15 + i * 0.07, type: "spring", stiffness: 120, damping: 18 }}
-            className={i === 0 ? "animate-neon text-[#ffd9da]" : ""}
-          >
-            {ch}
-          </motion.span>
-        ))}
-      </h1>
-      <p className="relative z-10 px-5 pb-5 text-base text-paper/70 sm:px-8 sm:pb-7 sm:text-lg">
-        <span className="text-[#ffd9da]">One</span> of them doesn&apos;t fit. Find out who.
-        <span className="float-right hidden text-paper/40 sm:inline">numpy · pandas · scipy · scikit-learn</span>
-      </p>
+      {/* ── attract mode: the ledger ticker, one claim doesn't belong ────── */}
+      <div aria-hidden className="relative z-10 overflow-hidden border-y-2 border-[#1a2238] bg-[#080b16]/90 py-2">
+        <div className="animate-ticker flex w-max gap-10 whitespace-nowrap text-2xl sm:text-3xl">
+          {ticker.map((n, i) =>
+            i % LEDGER.length === OUTLIER_INDEX ? (
+              <span key={i} className="bg-[#ff2a6d] px-2 text-[#05060d]">₹{n} ◀ ?!</span>
+            ) : (
+              <span key={i} className="text-[#3dd68c]/80">₹{n}</span>
+            ),
+          )}
+        </div>
+      </div>
+
+      <footer className="relative z-10 flex items-center justify-between px-4 py-3 font-pixel text-[8px] text-paper/50 sm:px-8 sm:text-[10px]">
+        <span>© 2026 IDSE<span className="hidden sm:inline"> · NUMPY · PANDAS · SCIPY · SKLEARN</span></span>
+        <span className="animate-blink-hard text-[#ffd319]">{awake ? "CREDIT 01" : "INSERT COIN"}</span>
+      </footer>
+
+      {/* ── the glass: scanlines, bezel, flicker ─────────────────────────── */}
+      <div aria-hidden className="crt-scanlines animate-crt pointer-events-none fixed inset-0 z-[60]" />
+      <div aria-hidden className="crt-bezel pointer-events-none fixed inset-0 z-[61]" />
 
       <Manual open={panel === "manual"} onClose={() => setPanel(null)} />
       <SettingsPanel open={panel === "settings"} onClose={() => setPanel(null)} />
