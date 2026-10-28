@@ -8,6 +8,7 @@ import { Portrait } from "@/components/case/Portrait";
 import { LampLight } from "@/components/fx/LampLight";
 import { Typewriter } from "@/components/fx/Typewriter";
 import { useAccused } from "@/lib/accused";
+import { reportUrl } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import type { Figure } from "@/lib/plotlyData";
 import { sfx } from "@/lib/sound";
@@ -198,6 +199,14 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
               >
                 BACK TO THE DESK
               </Link>
+              <a
+                href={reportUrl(meta.case_id)}
+                download
+                onClick={() => sfx.play("rustle")}
+                className="rounded-sm border border-line px-6 py-3 text-center font-type tracking-[0.3em] text-paper/70 hover:border-paper/50 hover:text-paper"
+              >
+                CASE REPORT · PDF
+              </a>
             </div>
           </motion.section>
         )}
