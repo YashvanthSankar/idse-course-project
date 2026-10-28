@@ -2,6 +2,7 @@
 
 import asyncio
 import secrets
+import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -16,6 +17,8 @@ from auditor.telemetry import Telemetry
 
 CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ"  # no I or O: nobody squints at a projector
 MAX_NAME = 16
+GRACE_SECONDS = 15  # accusations sent just as the clock hits zero still count
+ROOM_TTL_SECONDS = 12 * 3600
 
 
 @dataclass
@@ -40,6 +43,9 @@ class Room:
     started_at: float = 0.0  # monotonic clock, shared start line for every timer
     players: dict[str, PlayerState] = field(default_factory=dict)
     bundle: CaseBundle | None = None
+    round: int = 0
+    host_token: str = field(default_factory=lambda: secrets.token_urlsafe(24))
+    created_at: float = 0.0  # epoch seconds
 
 
 class RoomManager:
@@ -50,16 +56,29 @@ class RoomManager:
         # socket -> (role, player_id, the event loop that owns the socket)
         self.sockets: dict[str, dict[WebSocket, tuple[str, str | None,
                                                       asyncio.AbstractEventLoop]]] = {}
+        self._lock = threading.RLock()  # START and late joins must not interleave
 
     # ---- state ------------------------------------------------------------
 
     def create(self) -> str:
-        while True:
+        now = self.wall()
+        for old in [c for c, r in self.rooms.items() if now - r.created_at > ROOM_TTL_SECONDS]:
+            del self.rooms[old]
+            self.sockets.pop(old, None)
+        for _ in range(1000):
             code = "".join(secrets.choice(CODE_ALPHABET) for _ in range(4))
             if code not in self.rooms:
-                self.rooms[code] = Room(code=code)
+                self.rooms[code] = Room(code=code, created_at=now)
                 self.sockets[code] = {}
                 return code
+        raise RuntimeError("No free room codes")
+
+    def is_live(self, code: str | None) -> bool:
+        room = self.rooms.get(code or "")
+        return room is not None and room.status == "running"
+
+    def host_ok(self, code: str, token: str | None) -> bool:
+        return secrets.compare_digest(token or "", self.rooms[code].host_token)
 
     def join(self, code: str, player_id: str, name: str) -> PlayerState:
         room = self.rooms[code]
@@ -71,17 +90,25 @@ class RoomManager:
         return player
 
     def start(self, code: str, level: int, seconds: int) -> dict[str, str]:
-        room = self.rooms[code]
-        room.level, room.seed = level, secrets.randbelow(2**31)
-        room.bundle = build_case(level, room.seed)
-        room.status, room.started_at = "running", self.clock()
-        room.ends_at = self.wall() + seconds
-        for player in room.players.values():
-            player.case_id, player.score, player.solved, player.correct = None, 0, False, False
-        return {pid: self.ensure_case(code, pid) for pid in room.players}
+        seed = secrets.randbelow(2**31)
+        bundle = build_case(level, seed)  # outside the lock: the slow part
+        with self._lock:
+            room = self.rooms[code]
+            room.level, room.seed, room.bundle = level, seed, bundle
+            room.round += 1
+            room.status, room.started_at = "running", self.clock()
+            room.ends_at = self.wall() + seconds
+            for player in list(room.players.values()):
+                player.case_id, player.score, player.solved, player.correct = None, 0, False, False
+                player.solved_at = None
+            return {pid: self.ensure_case(code, pid) for pid in list(room.players)}
 
     def ensure_case(self, code: str, player_id: str) -> str | None:
         """Give the player their copy of the round's case (late joiners included)."""
+        with self._lock:
+            return self._ensure_case(code, player_id)
+
+    def _ensure_case(self, code: str, player_id: str) -> str | None:
         room = self.rooms[code]
         player = room.players[player_id]
         if room.status != "running" or room.bundle is None:
@@ -102,10 +129,23 @@ class RoomManager:
     def end(self, code: str) -> None:
         self.rooms[code].status = "ended"
 
+    async def end_after(self, code: str, round_no: int, delay: float) -> None:
+        """Server-side clock: end the round even if the projector tab is asleep."""
+        await asyncio.sleep(delay)
+        room = self.rooms.get(code)
+        if room is None or room.round != round_no or room.status != "running":
+            return
+        self.end(code)
+        await self.broadcast(code, {"type": "round_end"})
+        await self.to_hosts(code, self.leaderboard(code))
+
     def record_verdict(self, session: CaseSession, verdict: Verdict) -> bool:
         room = self.rooms.get(session.room_code or "")
         player = room.players.get(session.player_id or "") if room else None
-        if player is None or player.solved:
+        if player is None or player.solved or room.status != "running":
+            return False  # late accusations still get a verdict, just not a podium place
+        if room.ends_at is not None and self.wall() > room.ends_at + GRACE_SECONDS:
+            self.end(room.code)
             return False
         player.solved, player.correct, player.score = True, verdict.correct, verdict.score
         player.solved_at = self.clock()

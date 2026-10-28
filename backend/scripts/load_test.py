@@ -13,10 +13,11 @@ import urllib.request
 import websockets
 
 
-def create_room(base: str) -> str:
+def create_room(base: str) -> tuple[str, str]:
     req = urllib.request.Request(f"{base}/api/rooms", method="POST")
     with urllib.request.urlopen(req) as res:
-        return json.load(res)["code"]
+        body = json.load(res)
+        return body["code"], body["host_token"]
 
 
 async def player(ws_base: str, code: str, i: int, started: asyncio.Event, out: list[float]):
@@ -33,9 +34,9 @@ async def player(ws_base: str, code: str, i: int, started: asyncio.Event, out: l
 
 async def main(base: str, n: int) -> None:
     ws_base = base.replace("http", "ws", 1)
-    code = create_room(base)
+    code, token = create_room(base)
     started, latencies = asyncio.Event(), []
-    async with websockets.connect(f"{ws_base}/ws/rooms/{code}?role=host", max_size=None) as host:
+    async with websockets.connect(f"{ws_base}/ws/rooms/{code}?role=host&token={token}", max_size=None) as host:
         t_join = time.perf_counter()
         tasks = [asyncio.create_task(player(ws_base, code, i, started, latencies))
                  for i in range(n)]

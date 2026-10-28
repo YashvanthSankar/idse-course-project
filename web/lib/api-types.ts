@@ -55,6 +55,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cases/{case_id}/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Case State */
+        get: operations["case_state_api_cases__case_id__state_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/cases/{case_id}/rows": {
         parameters: {
             query?: never;
@@ -314,6 +331,16 @@ export interface components {
             unlocked_tools: ("summary" | "groupby" | "zscore" | "iqr_box" | "duplicates" | "benford" | "timeseries" | "regression" | "isoforest")[];
         };
         /**
+         * CaseState
+         * @description Everything needed to restore a case after a reload or a locked phone.
+         */
+        CaseState: {
+            meta: components["schemas"]["CaseMeta"];
+            /** Results */
+            results: components["schemas"]["ToolResult"][];
+            verdict: components["schemas"]["Verdict"] | null;
+        };
+        /**
          * CaseTruth
          * @description Server-side only until the verdict.
          */
@@ -389,6 +416,8 @@ export interface components {
         RoomCreated: {
             /** Code */
             code: string;
+            /** Host Token */
+            host_token: string;
         };
         /** Rows */
         Rows: {
@@ -606,6 +635,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CaseMeta"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    case_state_api_cases__case_id__state_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseState"];
                 };
             };
             /** @description Validation Error */

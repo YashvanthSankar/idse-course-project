@@ -1,6 +1,8 @@
 """In-memory case sessions (single uvicorn worker by design)."""
 
+import time
 from collections import OrderedDict
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from threading import Lock
 from uuid import uuid4
@@ -27,24 +29,43 @@ class CaseSession:
 
 
 class SessionStore:
-    def __init__(self, max_size: int = 2000):
-        self.max_size = max_size
+    """LRU of live cases. Idle cases expire; cases of a running class are never evicted."""
+
+    def __init__(self, max_size: int = 2000, ttl_seconds: float = 6 * 3600,
+                 clock: Callable[[], float] = time.monotonic):
+        self.max_size, self.ttl, self.clock = max_size, ttl_seconds, clock
+        self.protect: Callable[[CaseSession], bool] = lambda _session: False
         self._sessions: OrderedDict[str, CaseSession] = OrderedDict()
+        self._last_seen: dict[str, float] = {}
         self._lock = Lock()
 
     @staticmethod
     def new_id() -> str:
         return uuid4().hex[:12]
 
+    def _drop(self, case_id: str) -> None:
+        self._sessions.pop(case_id, None)
+        self._last_seen.pop(case_id, None)
+
     def create(self, session: CaseSession) -> str:
         with self._lock:
+            now = self.clock()
+            for case_id in [c for c, seen in self._last_seen.items() if now - seen > self.ttl]:
+                if not self.protect(self._sessions[case_id]):
+                    self._drop(case_id)
             self._sessions[session.case_id] = session
-            while len(self._sessions) > self.max_size:
-                self._sessions.popitem(last=False)
+            self._last_seen[session.case_id] = now
+            # Over capacity: evict the least recently used case that isn't in a live class
+            for case_id in list(self._sessions):
+                if len(self._sessions) <= self.max_size:
+                    break
+                if case_id != session.case_id and not self.protect(self._sessions[case_id]):
+                    self._drop(case_id)
         return session.case_id
 
     def get(self, case_id: str) -> CaseSession:
         with self._lock:
             session = self._sessions[case_id]  # KeyError -> 404
             self._sessions.move_to_end(case_id)
+            self._last_seen[case_id] = self.clock()
             return session

@@ -1,12 +1,13 @@
 """FastAPI app: the game's HTTP interface to the Python brain."""
 
+import asyncio
 import io
 import json
 import math
 import os
 import secrets
 import time
-from collections import Counter
+from collections import Counter, deque
 from collections.abc import Callable
 from uuid import uuid4
 
@@ -35,7 +36,7 @@ from auditor.models import (
 )
 from auditor.profiles import profile_for
 from auditor.report import render_report
-from auditor.rooms import RoomManager
+from auditor.rooms import GRACE_SECONDS, RoomManager
 from auditor.scoring import score_accusation
 from auditor.store import CaseSession, SessionStore
 from auditor.telemetry import Telemetry
@@ -73,6 +74,7 @@ class CaseState(BaseModel):
 
 class RoomCreated(BaseModel):
     code: str
+    host_token: str  # only the session that created the room may drive the projector
 
 
 class AutopsySlide(BaseModel):
@@ -107,7 +109,7 @@ def _meta(session: CaseSession) -> CaseMeta:
 
 
 def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = None,
-               clock: Callable[[], float] = time.monotonic) -> FastAPI:
+               clock: Callable[[], float] = time.monotonic, rate_limit: int = 240) -> FastAPI:
     app = FastAPI(title="The Auditor — Python brain", version="1.0.0")
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"],
                        allow_headers=["*"])
@@ -117,6 +119,20 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
     app.state.rooms = RoomManager(app.state.store, app.state.telemetry, clock)
     app.state.on_verdict = [app.state.rooms.record_verdict]  # hooks: Class Mode listens here
     app.state.on_tool_run = [app.state.rooms.tool_ran]
+    app.state.store.protect = lambda s: app.state.rooms.is_live(s.room_code)
+    timers: set[asyncio.Task] = set()  # keep round timers alive until they fire
+    hits: dict[tuple[str, str], deque[float]] = {}
+
+    def limit(request: Request, bucket: str) -> None:
+        """At most `rate_limit` creations per minute per client address and bucket."""
+        key = (bucket, request.client.host if request.client else "?")
+        window = hits.setdefault(key, deque())
+        now = time.monotonic()
+        while window and now - window[0] > 60:
+            window.popleft()
+        if len(window) >= rate_limit:
+            raise HTTPException(429, "Slow down, detective")
+        window.append(now)
 
     def log(event, session: CaseSession, **kw):
         app.state.telemetry.log(event, player_id=session.player_id, case_id=session.case_id,
@@ -134,7 +150,8 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
         return level_infos()
 
     @app.post("/api/cases", response_model=CaseMeta)
-    def create_case(body: CaseCreate):
+    def create_case(body: CaseCreate, request: Request):
+        limit(request, "cases")
         seed = body.seed if body.seed is not None else secrets.randbelow(2**31)
         scheme = None
         if body.level == 7 and body.player_id:  # endless mode: the fraudster studies you
@@ -267,16 +284,22 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
                                  f'attachment; filename="case-{case_id}.pdf"'})
 
     @app.post("/api/rooms", response_model=RoomCreated)
-    def create_room():
-        return RoomCreated(code=app.state.rooms.create())
+    def create_room(request: Request):
+        limit(request, "rooms")
+        code = app.state.rooms.create()
+        return RoomCreated(code=code, host_token=app.state.rooms.rooms[code].host_token)
 
     @app.websocket("/ws/rooms/{code}")
     async def room_socket(ws: WebSocket, code: str, role: str = "player",
-                          player_id: str | None = None, name: str = "Detective"):
+                          player_id: str | None = None, name: str = "Detective",
+                          token: str | None = None):
         rooms: RoomManager = app.state.rooms
         await ws.accept()
         if code not in rooms.rooms:
             await ws.close(code=4404)  # browsers only see close codes after an accept
+            return
+        if role == "host" and not rooms.host_ok(code, token):
+            await ws.close(code=4403)
             return
         room = rooms.rooms[code]
         pid = player_id or uuid4().hex[:10] if role == "player" else None
@@ -304,6 +327,10 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
                     level = min(7, max(1, int(message.get("level", 1))))
                     seconds = min(1800, max(30, int(message.get("seconds", 360))))
                     assignments = await run_in_threadpool(rooms.start, code, level, seconds)
+                    timer = asyncio.create_task(
+                        rooms.end_after(code, room.round, seconds + GRACE_SECONDS))
+                    timers.add(timer)
+                    timer.add_done_callback(timers.discard)
                     await rooms.broadcast(code, rooms.round_start(code))
                     for player, case_id in assignments.items():
                         await rooms.send_to_player(code, player,

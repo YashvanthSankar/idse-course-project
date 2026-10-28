@@ -15,8 +15,17 @@ def client(tmp_path, monkeypatch):
     return TestClient(create_app(store=SessionStore(), telemetry=Telemetry(str(tmp_path / "r.db"))))
 
 
+TOKENS: dict[str, str] = {}
+
+
 def room(client):
-    return client.post("/api/rooms").json()["code"]
+    body = client.post("/api/rooms").json()
+    TOKENS[body["code"]] = body["host_token"]
+    return body["code"]
+
+
+def host_url(code):
+    return f"/ws/rooms/{code}?role=host&token={TOKENS.get(code, '')}"
 
 
 def until(ws, kind, where=lambda m: True, limit=40):
@@ -59,7 +68,7 @@ def test_unknown_room_rejected(client):
 
 def test_join_broadcasts_lobby(client):
     code = room(client)
-    with client.websocket_connect(f"/ws/rooms/{code}?role=host") as host:
+    with client.websocket_connect(host_url(code)) as host:
         assert until(host, "lobby")["players"] == []
         with client.websocket_connect(player_url(code, "p1", "Asha")):
             assert [p["name"] for p in until(host, "lobby")["players"]] == ["Asha"]
@@ -71,7 +80,7 @@ def test_join_broadcasts_lobby(client):
 def test_start_gives_same_case_to_everyone(client):
     code = room(client)
     store = client.app.state.store
-    with client.websocket_connect(f"/ws/rooms/{code}?role=host") as host, \
+    with client.websocket_connect(host_url(code)) as host, \
             client.websocket_connect(player_url(code, "p1", "Asha")) as a, \
             client.websocket_connect(player_url(code, "p2", "Bilal")) as b:
         host.send_json({"type": "start", "level": 2, "seconds": 300})
@@ -85,7 +94,7 @@ def test_start_gives_same_case_to_everyone(client):
 
 def test_verdict_updates_leaderboard(client):
     code = room(client)
-    with client.websocket_connect(f"/ws/rooms/{code}?role=host") as host, \
+    with client.websocket_connect(host_url(code)) as host, \
             client.websocket_connect(player_url(code, "p1", "Asha")) as a, \
             client.websocket_connect(player_url(code, "p2", "Bilal")):
         host.send_json({"type": "start", "level": 1, "seconds": 300})
@@ -100,7 +109,7 @@ def test_verdict_updates_leaderboard(client):
 
 def test_tool_runs_reach_ticker(client):
     code = room(client)
-    with client.websocket_connect(f"/ws/rooms/{code}?role=host") as host, \
+    with client.websocket_connect(host_url(code)) as host, \
             client.websocket_connect(player_url(code, "p1", "Asha")) as a:
         host.send_json({"type": "start", "level": 1, "seconds": 300})
         case_id = until(a, "your_case")["case_id"]
@@ -110,7 +119,7 @@ def test_tool_runs_reach_ticker(client):
 
 def test_reconnect_keeps_state(client):
     code = room(client)
-    with client.websocket_connect(f"/ws/rooms/{code}?role=host") as host:
+    with client.websocket_connect(host_url(code)) as host:
         with client.websocket_connect(player_url(code, "p1", "Asha")) as a:
             host.send_json({"type": "start", "level": 1, "seconds": 300})
             first = until(a, "your_case")["case_id"]
@@ -122,7 +131,7 @@ def test_reconnect_keeps_state(client):
 
 def test_double_accuse_counts_once(client):
     code = room(client)
-    with client.websocket_connect(f"/ws/rooms/{code}?role=host") as host, \
+    with client.websocket_connect(host_url(code)) as host, \
             client.websocket_connect(player_url(code, "p1", "Asha")) as a:
         host.send_json({"type": "start", "level": 1, "seconds": 300})
         case_id = until(a, "your_case")["case_id"]
@@ -136,7 +145,7 @@ def test_double_accuse_counts_once(client):
 def test_join_after_start_gets_case(client):
     code = room(client)
     store = client.app.state.store
-    with client.websocket_connect(f"/ws/rooms/{code}?role=host") as host, \
+    with client.websocket_connect(host_url(code)) as host, \
             client.websocket_connect(player_url(code, "p1", "Asha")) as a:
         host.send_json({"type": "start", "level": 3, "seconds": 300})
         early = until(a, "your_case")["case_id"]
@@ -148,7 +157,7 @@ def test_join_after_start_gets_case(client):
 
 def test_end_round(client):
     code = room(client)
-    with client.websocket_connect(f"/ws/rooms/{code}?role=host") as host, \
+    with client.websocket_connect(host_url(code)) as host, \
             client.websocket_connect(player_url(code, "p1", "Asha")) as a:
         host.send_json({"type": "start", "level": 1, "seconds": 300})
         until(a, "your_case")
@@ -159,7 +168,7 @@ def test_end_round(client):
 
 def test_long_names_trimmed(client):
     code = room(client)
-    with client.websocket_connect(f"/ws/rooms/{code}?role=host") as host, \
+    with client.websocket_connect(host_url(code)) as host, \
             client.websocket_connect(player_url(code, "p1", "X" * 40)):
         lobby = until(host, "lobby", lambda m: m["players"])
         assert lobby["players"][0]["name"] == "X" * 16

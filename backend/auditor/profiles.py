@@ -35,10 +35,11 @@ def _rule_based(players: pd.DataFrame) -> pd.Series:
 
 
 def assign_archetypes(players: pd.DataFrame) -> pd.Series:
-    if len(players) < MIN_FOR_CLUSTERING:
-        return _rule_based(players)
     X = players[FEATURES].copy()
-    X["seconds_to_accuse"] = X["seconds_to_accuse"].fillna(X["seconds_to_accuse"].max() or 0)
+    slowest = X["seconds_to_accuse"].max()
+    X["seconds_to_accuse"] = X["seconds_to_accuse"].fillna(0 if pd.isna(slowest) else slowest)
+    if len(players) < MIN_FOR_CLUSTERING or len(X.drop_duplicates()) < 4:
+        return _rule_based(players)  # too few (distinct) detectives to cluster
     scaled = StandardScaler().fit_transform(X)
     clusters = KMeans(n_clusters=4, n_init=10, random_state=0).fit_predict(scaled)
 

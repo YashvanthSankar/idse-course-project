@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from scipy.stats import chi2_contingency, pearsonr
+from scipy.stats import fisher_exact, pearsonr
 
 from auditor.charts import COLORS, fig_to_json
 from auditor.generator.cases import LEVELS
@@ -21,8 +21,17 @@ class Slide:
     stats: dict
 
 
+def latest_round(events: pd.DataFrame) -> pd.DataFrame:
+    """Keep each detective's most recent case only, so a second round is analysed alone."""
+    started = events[events["type"] == "case_started"]
+    latest = set(started.drop_duplicates("player_id", keep="last")["case_id"])
+    with_case = events["player_id"].isin(started["player_id"])
+    return events[~with_case | events["case_id"].isin(latest)]
+
+
 def player_table(events: pd.DataFrame) -> pd.DataFrame:
     """One row per detective, built from the raw click log."""
+    events = latest_round(events)
     tools = events[events["type"] == "tool_run"]
     accused = events[events["type"] == "accused"].drop_duplicates("player_id", keep="first")
     started = events[events["type"] == "case_started"].drop_duplicates("player_id")
@@ -62,10 +71,11 @@ def verdict_slide(players: pd.DataFrame) -> Slide:
                            marker_color=[COLORS["green"], COLORS["red"], COLORS["muted"]],
                            text=list(counts.values()), textposition="outside"))
     fig.update_layout(title="How the class did", yaxis_title="detectives")
+    median = players["seconds_to_accuse"].median()
     return Slide("The verdicts", fig_to_json(fig), inspect.getsource(verdict_slide), {
         "players": len(players),
         "solve_rate": round(float(players["correct"].mean()), 3),
-        "median_seconds": float(players["seconds_to_accuse"].median()),
+        "median_seconds": 0.0 if pd.isna(median) else float(median),
     })
 
 
@@ -99,7 +109,11 @@ def timing_slide(players: pd.DataFrame) -> Slide:
 
 def analysis_pays_slide(players: pd.DataFrame) -> Slide:
     # Pearson correlation between how many tools you ran and whether you were right
-    r, p = pearsonr(players["n_tools"], players["correct"])
+    x, y = players["n_tools"], players["correct"]
+    if len(players) < 3 or x.nunique() < 2 or y.nunique() < 2:
+        r, p = 0.0, 1.0  # no variation, no correlation to measure
+    else:
+        r, p = pearsonr(x, y)
     by_tools = players.groupby(players["n_tools"].clip(upper=10))["correct"].agg(["mean", "size"])
     jitter = np.random.default_rng(0).uniform(-0.08, 0.08, len(players))
     fig = go.Figure([
@@ -124,9 +138,10 @@ def predictive_tool_slide(events: pd.DataFrame, players: pd.DataFrame) -> Slide:
         users, others = players.loc[used, "correct"], players.loc[~used, "correct"]
         if len(users) == 0 or len(others) == 0:
             continue
-        # 2x2 table: used the tool? x got it right?
+        # 2x2 table: used the tool? x got it right? Fisher's exact test stays valid for the
+        # small classes and empty cells a chi-square approximation can't handle.
         table = [[users.sum(), len(users) - users.sum()], [others.sum(), len(others) - others.sum()]]
-        p = chi2_contingency(table).pvalue if np.min(table) > 0 else 1.0
+        p = fisher_exact(table).pvalue
         rows.append((TOOLS[tool_id].name, users.mean(), others.mean(), p))
     result = pd.DataFrame(rows, columns=["tool", "users", "non_users", "p"]).sort_values(
         "users", ascending=False)
@@ -142,7 +157,10 @@ def predictive_tool_slide(events: pd.DataFrame, players: pd.DataFrame) -> Slide:
     return Slide("Which tool predicts success?", fig_to_json(fig),
                  inspect.getsource(predictive_tool_slide),
                  {"best_tool": best["tool"] if best is not None else "none",
-                  "best_p": float(best["p"]) if best is not None else 1.0})
+                  "best_p": float(best["p"]) if best is not None else 1.0,
+                  "tests": len(result),  # many tests at once: treat as exploratory
+                  "bonferroni_p": min(1.0, float(best["p"]) * len(result))
+                  if best is not None else 1.0})
 
 
 def archetype_slide(players: pd.DataFrame) -> Slide:
