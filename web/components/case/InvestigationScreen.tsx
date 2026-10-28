@@ -86,6 +86,9 @@ export function InvestigationScreen({
   );
 
   const meta = storeHasCase ? store.meta : null;
+  const career = meta?.career ?? null;
+  const home = career ? "/career" : "/office";
+  const lockedText = career ? "isn't available at this tier yet — bigger companies unlock it." : null;
   const tools = useQuery({
     queryKey: ["tools", meta?.level],
     queryFn: () => listTools(meta!.level),
@@ -171,24 +174,24 @@ export function InvestigationScreen({
     (spec: ToolSpec) => {
       if (!spec.unlocked) {
         sfx.play("buzz");
-        showToast(`${spec.name} unlocks at Case ${spec.unlock_level}.`);
+        showToast(lockedText ? `${spec.name} ${lockedText}` : `${spec.name} unlocks at Case ${spec.unlock_level}.`);
         return;
       }
       setSelectedTool(spec.id);
       if (!run.isPending) run.mutate({ spec, p: paramsFor(spec) });
     },
-    [run, paramsFor, showToast],
+    [run, paramsFor, showToast, lockedText],
   );
   const select = useCallback(
     (spec: ToolSpec) => {
       if (!spec.unlocked) {
         sfx.play("buzz");
-        showToast(`${spec.name} unlocks at Case ${spec.unlock_level}.`);
+        showToast(lockedText ? `${spec.name} ${lockedText}` : `${spec.name} unlocks at Case ${spec.unlock_level}.`);
         return;
       }
       setSelectedTool((cur) => (cur === spec.id ? null : spec.id));
     },
-    [showToast],
+    [showToast, lockedText],
   );
 
   // Number keys 1–9 run the tools in kit order.
@@ -273,6 +276,7 @@ export function InvestigationScreen({
     evidence: (
       <EvidenceTray
         pinned={pinnedResults}
+        files={2 * (career?.culprits ?? 1)}
         suspects={meta.suspects}
         onUnpin={(id) => store.unpin(id)}
         onSelect={(id) => {
@@ -293,6 +297,7 @@ export function InvestigationScreen({
           onRun={trigger}
           busy={run.isPending}
           budgetLeft={meta.budget_left}
+          lockedLabel={career ? "bigger firms" : undefined}
         />
         <button
           onClick={() => setHackerOpen(true)}
@@ -311,12 +316,14 @@ export function InvestigationScreen({
   return (
     <div className="relative flex min-h-dvh flex-col overflow-x-hidden bg-[radial-gradient(ellipse_at_50%_0%,#151b28_0%,#0a0d13_55%,#07080b_100%)] md:h-dvh md:overflow-hidden">
       <header className="relative z-20 flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-white/5 bg-[#0b0d12]/90 px-4 py-3 backdrop-blur sm:px-6">
-        <BackButton href="/office" label="Case desk" short="Desk" />
-        <Link href="/office" onClick={() => sfx.play("tick")} className="hidden arcade-logo font-pixel text-xs sm:inline" title="Back to the case desk">
+        <BackButton href={home} label={career ? "Career" : "Case desk"} short={career ? "Career" : "Desk"} />
+        <Link href={home} onClick={() => sfx.play("tick")} className="hidden arcade-logo font-pixel text-xs sm:inline" title={career ? "Back to your career" : "Back to the case desk"}>
           OUTLIER
         </Link>
         <div className="min-w-0 flex-1 lg:flex-none">
-          <p className="text-xs text-amber/80">Case {meta.level}</p>
+          <p className="text-xs text-amber/80">
+            {career ? `Case ${career.index} of ${career.total}${career.culprits > 1 ? " · two fraudsters" : ""}` : `Case ${meta.level}`}
+          </p>
           <h1 data-testid="case-title" className="truncate font-display text-xl italic leading-tight text-paper">
             {meta.title}
           </h1>

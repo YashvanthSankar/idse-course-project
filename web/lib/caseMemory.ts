@@ -47,5 +47,6 @@ export function restoreSnapshot(state: CaseState, memory: CaseMemory | null): Ca
     pinned,
     links,
     verdict: state.verdict ?? null,
+    careerVerdict: state.career_verdict ?? null,
   };
 }

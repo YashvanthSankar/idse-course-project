@@ -5,7 +5,8 @@ import { toPng } from "html-to-image";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { PlotlyChart } from "@/components/case/PlotlyChart";
-import { ApiError, getProfile } from "@/lib/api";
+import { ApiError, getCareer, getProfile } from "@/lib/api";
+import { loadCareerCode } from "@/lib/career";
 import { sfx } from "@/lib/sound";
 import type { Profile } from "@/lib/types";
 
@@ -48,6 +49,10 @@ export function DetectiveCardPage({ playerId }: { playerId: string }) {
 function Card({ profile }: { profile: Profile }) {
   const ref = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
+  // Career Mode adds only its title to the card; company and salary live on the Career hub
+  const [code] = useState(() => (typeof window === "undefined" ? null : loadCareerCode()));
+  const career = useQuery({ queryKey: ["career", code], queryFn: () => getCareer(code!), enabled: Boolean(code), retry: false });
+  const title = career.data?.title;
   const s = profile.stats;
   const stats = [
     ["Tools run", String(s.n_tools ?? 0)],
@@ -105,6 +110,11 @@ function Card({ profile }: { profile: Profile }) {
               {profile.archetype}
             </p>
             <p className="truncate text-lg">{profile.name}</p>
+            {title && (
+              <p data-testid="career-title" className="mt-0.5 font-type text-xs tracking-[0.3em] text-[#8f1d27]">
+                {title.toUpperCase()}
+              </p>
+            )}
           </div>
         </div>
         <p className="mt-3 text-base italic opacity-80">“{profile.tagline}”</p>

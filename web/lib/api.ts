@@ -1,4 +1,4 @@
-import type { CaseState, Autopsy, CaseMeta, LevelInfo, Profile, RoomCreated, ToolId, ToolResult, ToolSpec, Verdict } from "./types";
+import type { CaseState, Autopsy, CareerVerdict, CareerView, CaseMeta, Cutscene, LevelInfo, Profile, RoomCreated, ToolId, ToolResult, ToolSpec, Verdict } from "./types";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -73,3 +73,15 @@ export async function roomExists(code: string): Promise<boolean> {
     throw err;
   }
 }
+
+// ── Career Mode ──────────────────────────────────────────────────────────────────
+export const createCareer = (playerId?: string) => post<CareerView>("/api/career", { player_id: playerId });
+export const getCareer = (code: string) => request<CareerView>(`/api/career/${encodeURIComponent(code)}`);
+export const signContract = (code: string, companyId: string, practice = false) =>
+  post<CareerView>(`/api/career/${encodeURIComponent(code)}/sign`, { company_id: companyId, practice });
+export const retireCareer = (code: string) => post<CareerView>(`/api/career/${encodeURIComponent(code)}/retire`);
+/** The contract's current case (created on first call). */
+export const openCareerCase = (code: string) => post<CaseMeta>(`/api/career/${encodeURIComponent(code)}/case`);
+export const careerAccuse = (caseId: string, accusations: { suspect_id: string; evidence_ids: string[] }[]) =>
+  post<CareerVerdict>(`/api/career/cases/${caseId}/accuse`, { accusations });
+export const getEnding = (code: string) => request<Cutscene>(`/api/career/${encodeURIComponent(code)}/ending`);

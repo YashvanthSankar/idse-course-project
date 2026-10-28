@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { CaseMeta, ToolResult, Verdict } from "./types";
+import type { CareerVerdict, CaseMeta, ToolResult, Verdict } from "./types";
 
 type CaseState = {
   meta: CaseMeta | null;
@@ -8,6 +8,8 @@ type CaseState = {
   pinned: string[];
   links: Record<string, string>;
   verdict: Verdict | null;
+  /** Career Mode's verdict: the rating, the contract so far, every culprit revealed. */
+  careerVerdict: CareerVerdict | null;
   setMeta: (meta: CaseMeta) => void;
   setBudgetLeft: (budgetLeft: number) => void;
   addResult: (result: ToolResult) => void;
@@ -18,6 +20,7 @@ type CaseState = {
   unlink: (resultId: string) => void;
   evidenceFor: (suspectId: string) => string[];
   setVerdict: (verdict: Verdict) => void;
+  setCareerVerdict: (verdict: CareerVerdict) => void;
   hydrate: (snapshot: CaseSnapshot) => void;
   reset: () => void;
 };
@@ -30,6 +33,7 @@ export type CaseSnapshot = {
   pinned: string[];
   links: Record<string, string>;
   verdict: Verdict | null;
+  careerVerdict?: CareerVerdict | null;
 };
 
 const initial = {
@@ -39,6 +43,7 @@ const initial = {
   pinned: [],
   links: {},
   verdict: null,
+  careerVerdict: null,
 };
 
 export const useCaseStore = create<CaseState>()((set, get) => ({
@@ -76,6 +81,7 @@ export const useCaseStore = create<CaseState>()((set, get) => ({
   evidenceFor: (suspectId) =>
     get().pinned.filter((id) => get().links[id] === suspectId),
   setVerdict: (verdict) => set({ verdict }),
-  hydrate: (snapshot) => set({ ...snapshot }),
+  setCareerVerdict: (careerVerdict) => set({ careerVerdict }),
+  hydrate: (snapshot) => set({ careerVerdict: null, ...snapshot }),
   reset: () => set(initial),
 }));

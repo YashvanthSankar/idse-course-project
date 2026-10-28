@@ -44,7 +44,7 @@ async function mockApi(page: Page) {
 test("title → office → briefing → case", async ({ page }) => {
   await mockApi(page);
   await page.goto("/");
-  const newCase = page.getByRole("button", { name: /new case/i });
+  const newCase = page.getByRole("button", { name: /quick case/i });
   // The title listens for a key only after hydration: keep knocking until it answers.
   await expect(async () => {
     await page.keyboard.press("Space");

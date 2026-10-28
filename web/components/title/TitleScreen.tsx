@@ -4,18 +4,22 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Rain } from "@/components/fx/Rain";
 import { SettingsPanel } from "@/components/settings/SettingsPanel";
+import { CAREER_ENABLED } from "@/lib/career";
 import { progressSummary } from "@/lib/progress";
 import { sfx } from "@/lib/sound";
 import { useProgress } from "@/lib/useProgress";
 import { Manual } from "./Manual";
 import { Skyline } from "./Skyline";
 
-const MENU = [
-  { id: "new", label: "NEW CASE", hint: "Solve a fraud case on your own" },
+// The stable mode stays on top, so switching Career Mode off never moves what a presenter
+// rehearsed. Options live behind the gear.
+const ALL_MENU = [
+  { id: "new", label: "QUICK CASE", hint: "Solve a fraud case on your own" },
+  { id: "career", label: "CAREER", hint: "From a sweet shop in Dadar to the Kaveri Inquiry" },
   { id: "class", label: "CLASS MODE", hint: "The whole class plays live from their phones" },
   { id: "manual", label: "MANUAL", hint: "How to play, and every tool in the kit" },
-  { id: "settings", label: "OPTIONS", hint: "Sound, effects and unlocking cases" },
 ] as const;
+const MENU = ALL_MENU.filter((item) => item.id !== "career" || CAREER_ENABLED);
 
 // The attract-mode ticker: a ledger scrolling past, with one claim that doesn't belong.
 const LEDGER = [
@@ -44,6 +48,7 @@ export function TitleScreen() {
   const choose = (id: (typeof MENU)[number]["id"]) => {
     sfx.play("coin");
     if (id === "new") router.push("/office");
+    else if (id === "career") router.push("/career");
     else if (id === "class") router.push("/host");
     else setPanel(id);
   };
@@ -160,8 +165,21 @@ export function TitleScreen() {
         </div>
       </div>
 
-      <footer className="relative z-10 flex items-center justify-between px-4 py-3 font-pixel text-[8px] text-paper/50 sm:px-8 sm:text-[10px]">
-        <span>© 2026 IDSE<span className="hidden sm:inline"> · NUMPY · PANDAS · SCIPY · SKLEARN</span></span>
+      <footer className="relative z-10 flex items-center justify-between gap-3 px-4 py-3 font-pixel text-[8px] text-paper/50 sm:px-8 sm:text-[10px]">
+        <span className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              sfx.play("coin");
+              setPanel("settings");
+            }}
+            aria-label="Options"
+            title="Options: sound, effects and unlocking cases"
+            className="flex h-11 w-11 items-center justify-center rounded border-2 border-[#1a2238] text-xl text-paper/70 hover:border-[#ffd319] hover:text-[#ffd319]"
+          >
+            ⚙
+          </button>
+          <span>© 2026 IDSE<span className="hidden sm:inline"> · NUMPY · PANDAS · SCIPY · SKLEARN</span></span>
+        </span>
         <span className="animate-blink-hard text-[#ffd319]">{awake ? "CREDIT 01" : "INSERT COIN"}</span>
       </footer>
 

@@ -92,13 +92,18 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
   const verdict = useCaseStore((s) => s.verdict);
   const budgetLeft = useCaseStore((s) => s.meta?.budget_left ?? 1);
   const allResults = useCaseStore((s) => s.results.length);
+  // Career Mode's very hard cases have two fraudsters: accuse both, two clues each
+  const culprits = useCaseStore((s) => s.meta?.career?.culprits ?? 1);
   // 2 clues normally; when the budget is spent, whatever you have (the server agrees)
-  const required = requiredClues(budgetLeft, allResults);
+  const required = culprits > 1 && budgetLeft <= 0
+    ? Math.min(2, Math.floor(allResults / 2))
+    : requiredClues(budgetLeft, allResults);
   const phone = useMediaQuery("(max-width: 639px)") ?? false;
   const surface = useRef<HTMLDivElement>(null);
   const [lines, setLines] = useState<Line[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
-  const [accusing, setAccusing] = useState<Suspect | null>(null);
+  const [accusing, setAccusing] = useState<Suspect[]>([]);
+  const [pair, setPair] = useState<string[]>([]);
   const lastDrag = useRef(0);
   const frame = useRef(0);
 
@@ -147,7 +152,7 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
   }, [open, schedule]);
 
   useEffect(() => {
-    if (!open || accusing) return;
+    if (!open || accusing.length) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" || e.key === "b" || e.key === "B") onClose();
     };
@@ -176,6 +181,11 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
 
   const count = (sid: string) => results.filter((r) => links[r.result_id] === sid).length;
   const readyList = suspects.filter((s) => count(s.id) >= required);
+  const pairPicks = pair.filter((id) => readyList.some((s) => s.id === id));
+  const togglePair = (id: string) => {
+    sfx.play("tick");
+    setPair((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id].slice(-2)));
+  };
 
   const closedHere = verdict !== null && useCaseStore.getState().meta?.case_id === caseId;
 
@@ -295,7 +305,45 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
                 ))}
               </svg>
               <AnimatePresence>
-                {readyList.length > 0 && !selected && (
+                {culprits > 1 && readyList.length > 0 && !selected && (
+                  <motion.div
+                    initial={{ y: 80, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 80, opacity: 0 }}
+                    data-testid="pair-picker"
+                    className="fixed inset-x-0 bottom-0 z-40 flex flex-col items-center gap-2 bg-[linear-gradient(to_top,rgba(0,0,0,0.85),transparent)] px-3 pb-5 pt-6"
+                  >
+                    <p className="font-type text-xs tracking-[0.25em] text-paper">
+                      TWO FRAUDSTERS · PICK BOTH ({pairPicks.length}/2)
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {readyList.map((suspect) => (
+                        <button
+                          key={suspect.id}
+                          aria-pressed={pairPicks.includes(suspect.id)}
+                          onClick={() => togglePair(suspect.id)}
+                          className={cn(
+                            "min-h-11 rounded-sm border-2 px-4 py-2 font-display text-base italic",
+                            pairPicks.includes(suspect.id) ? "border-[#ffd319] bg-[#ffd319]/15 text-[#ffd319]" : "border-paper/30 bg-ink-950/80 text-paper/80",
+                          )}
+                        >
+                          {pairPicks.includes(suspect.id) ? "☑ " : "☐ "}{suspect.name}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      disabled={pairPicks.length !== 2}
+                      onClick={() => {
+                        sfx.play("whoosh");
+                        setAccusing(suspects.filter((s) => pairPicks.includes(s.id)));
+                      }}
+                      className="animate-pulse-red rounded-sm border-2 border-[#8f1d27] bg-[#c4161c] px-5 py-3 font-type text-sm tracking-[0.2em] text-paper shadow-[0_10px_30px_rgba(196,22,28,0.6)] hover:bg-[#d61f26] disabled:animate-none disabled:opacity-40 sm:text-base"
+                    >
+                      MAKE THE ACCUSATION
+                    </button>
+                  </motion.div>
+                )}
+                {culprits === 1 && readyList.length > 0 && !selected && (
                   <motion.div
                     initial={{ y: 80, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
@@ -307,7 +355,7 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
                         key={suspect.id}
                         onClick={() => {
                           sfx.play("whoosh");
-                          setAccusing(suspect);
+                          setAccusing([suspect]);
                         }}
                         aria-label={readyList.length > 1 ? `Make the accusation against ${suspect.name}` : undefined}
                         className="animate-pulse-red flex items-center gap-3 rounded-sm border-2 border-[#8f1d27] bg-[#c4161c] px-5 py-3 font-type text-sm tracking-[0.2em] text-paper shadow-[0_10px_30px_rgba(196,22,28,0.6)] hover:bg-[#d61f26] sm:text-base sm:tracking-[0.3em]"
@@ -344,12 +392,12 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
 
           <Spotlight
             caseId={caseId}
-            suspect={accusing}
-            evidence={accusing ? results.filter((r) => links[r.result_id] === accusing.id) : []}
+            accused={accusing}
+            evidenceFor={(id) => results.filter((r) => links[r.result_id] === id)}
             required={required}
-            onCancel={() => setAccusing(null)}
+            onCancel={() => setAccusing([])}
             onAccused={() => {
-              setAccusing(null);
+              setAccusing([]);
               onClose();
             }}
           />
