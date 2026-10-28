@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+*.db
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+node_modules/
+.next/
+.vercel/
+test-results/
+playwright-report/
+.env*.local
+.DS_Store
