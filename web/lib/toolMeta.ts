@@ -24,3 +24,10 @@ export const PARAM_LABELS: Record<string, string> = {
 
 export const toolMeta = (id: string) =>
   TOOL_META[id] ?? { icon: "?", blurb: "", lib: "" };
+
+/** The tool kit is shelved by what kind of question each tool answers. */
+export const SHELVES: { title: string; tools: string[] }[] = [
+  { title: "Basics", tools: ["summary", "groupby"] },
+  { title: "Outliers", tools: ["zscore", "iqr_box", "duplicates"] },
+  { title: "Patterns & models", tools: ["benford", "timeseries", "regression", "isoforest"] },
+];

@@ -1,35 +1,51 @@
 "use client";
+import { SHELVES } from "@/lib/toolMeta";
 import type { ToolSpec } from "@/lib/types";
 import { ToolCard } from "./ToolCard";
 
-export function ToolKit({ specs, params, onParam, onRun, busy, budgetLeft }: {
+export function ToolKit({ specs, params, selected, onSelect, onParam, onRun, busy, budgetLeft }: {
   specs: ToolSpec[];
   params: Record<string, Record<string, string>>;
+  selected: string | null;
+  onSelect: (spec: ToolSpec) => void;
   onParam: (tool: string, name: string, value: string) => void;
   onRun: (spec: ToolSpec) => void;
   busy: boolean;
   budgetLeft: number;
 }) {
+  const byId = new Map(specs.map((s, i) => [s.id as string, { spec: s, hotkey: i + 1 }]));
   return (
-    <section aria-label="Tool kit" className="flex flex-col gap-2">
+    <section aria-label="Tool kit" className="flex flex-col gap-5">
       <div className="flex items-baseline justify-between px-1">
-        <h2 className="font-type text-[10px] tracking-[0.4em] text-muted">TOOL KIT</h2>
-        <p className="hidden font-mono text-[10px] text-muted/70 md:block">press 1–9 · re-runs are free</p>
+        <h2 className="font-display text-xl italic text-paper">Tool kit</h2>
+        <p className="hidden text-xs text-paper/45 lg:block">keys 1–9 run instantly</p>
       </div>
-      <div className="grid grid-cols-2 gap-2 md:flex md:gap-3 md:overflow-x-auto md:pb-1">
-        {specs.map((spec, i) => (
-          <ToolCard
-            key={spec.id}
-            spec={spec}
-            hotkey={i + 1}
-            params={params[spec.id] ?? {}}
-            onParam={(name, value) => onParam(spec.id, name, value)}
-            onRun={() => onRun(spec)}
-            busy={busy}
-            affordable={spec.cost <= budgetLeft}
-          />
-        ))}
-      </div>
+      {SHELVES.map((shelf) => (
+        <div key={shelf.title}>
+          <h3 className="mb-1 px-2.5 text-xs font-medium uppercase tracking-[0.18em] text-paper/45">{shelf.title}</h3>
+          <ul className="flex flex-col gap-0.5">
+            {shelf.tools.map((id) => {
+              const entry = byId.get(id);
+              if (!entry) return null;
+              const { spec, hotkey } = entry;
+              return (
+                <ToolCard
+                  key={id}
+                  spec={spec}
+                  hotkey={hotkey}
+                  selected={selected === id}
+                  params={params[id] ?? {}}
+                  onSelect={() => onSelect(spec)}
+                  onParam={(name, value) => onParam(id, name, value)}
+                  onRun={() => onRun(spec)}
+                  busy={busy}
+                  affordable={spec.cost <= budgetLeft}
+                />
+              );
+            })}
+          </ul>
+        </div>
+      ))}
     </section>
   );
 }

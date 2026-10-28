@@ -18,7 +18,7 @@ export function BudgetMeter({ budget, left, errorTick }: { budget: number; left:
       aria-label={`Budget ${left} of ${budget}`}
       className="flex items-center gap-2"
     >
-      <span className="hidden font-type text-[10px] tracking-[0.3em] text-muted sm:inline">BUDGET</span>
+      <span className="hidden text-xs text-paper/55 sm:inline">Budget</span>
       <div className="flex flex-wrap items-center gap-[3px]">
         {Array.from({ length: budget }, (_, i) => {
           const full = i < left;

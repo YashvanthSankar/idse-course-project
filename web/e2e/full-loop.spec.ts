@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { runTool } from "./fixtures/tools";
 
 // Runs against the REAL Python backend (AUDITOR_DEBUG=1) on :8000.
 const API = process.env.API_URL ?? "http://localhost:8000";
@@ -26,7 +27,7 @@ test("solve case 1 end to end: tools → board → spotlight → GUILTY → case
   await page.goto(`/case/${meta.case_id}`);
   await expect(page.getByTestId("case-title")).toHaveText("The Midnight Invoice");
   for (const tool of ["Z-Score Scan", "Box & Whisker"]) {
-    await page.getByRole("button", { name: `Run ${tool}` }).click();
+    await runTool(page, tool);
     await expect(page.getByTestId("result-view")).toBeVisible({ timeout: 15_000 });
     await page.getByRole("button", { name: "📌 Pin as evidence" }).click();
   }
@@ -65,7 +66,7 @@ test("letting go early cancels the accusation", async ({ page, request }) => {
   const meta = await (await request.post(`${API}/api/cases`, { data: { level: 1 } })).json();
   await page.goto(`/case/${meta.case_id}`);
   for (const tool of ["Z-Score Scan", "Box & Whisker"]) {
-    await page.getByRole("button", { name: `Run ${tool}` }).click();
+    await runTool(page, tool);
     await expect(page.getByTestId("result-view")).toBeVisible({ timeout: 15_000 });
     await page.getByRole("button", { name: "📌 Pin as evidence" }).click();
   }

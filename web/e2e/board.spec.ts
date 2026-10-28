@@ -1,9 +1,10 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { CASE_ID, FRAUDSTER, mockCase } from "./fixtures/mockCase";
+import { runTool } from "./fixtures/tools";
 
 async function runAndPin(page: Page, tool: string, phone = false) {
   if (phone) await page.getByRole("button", { name: /Tools/ }).click();
-  await page.getByRole("button", { name: `Run ${tool}` }).click();
+  await runTool(page, tool);
   await expect(page.getByTestId("result-view")).toBeVisible({ timeout: 10_000 });
   await page.getByRole("button", { name: "📌 Pin as evidence" }).click();
 }

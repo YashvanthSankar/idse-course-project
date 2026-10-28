@@ -1,10 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { CASE_ID, FRAUDSTER, mockCase } from "./fixtures/mockCase";
+import { runTool } from "./fixtures/tools";
 
 test.beforeEach(async ({ page }) => {
   await mockCase(page);
   await page.goto(`/case/${CASE_ID}`);
-  await page.getByRole("button", { name: "Run Z-Score Scan" }).click();
+  await runTool(page, "Z-Score Scan");
   await expect(page.getByTestId("result-view")).toBeVisible({ timeout: 10_000 });
 });
 

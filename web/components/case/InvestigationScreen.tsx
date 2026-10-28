@@ -19,6 +19,7 @@ import { CodeDrawer } from "./CodeDrawer";
 import { DataTable } from "./DataTable";
 import { EvidenceTray } from "./EvidenceTray";
 import { ResultPanel, type Running } from "./ResultPanel";
+import { StepGuide } from "./StepGuide";
 import { SuspectRail } from "./SuspectRail";
 import { ToolKit } from "./ToolKit";
 
@@ -62,6 +63,7 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
   const [toast, setToast] = useState<string | null>(null);
   const [drawer, setDrawer] = useState<"code" | "data" | null>(null);
   const [tab, setTab] = useState<Tab>("tools");
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [settings, setSettings] = useState(false);
   const [boardOpen, setBoardOpen] = useState(false);
   const openBoard = useCallback(() => {
@@ -133,9 +135,21 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
         showToast(`${spec.name} unlocks at Case ${spec.unlock_level}.`);
         return;
       }
+      setSelectedTool(spec.id);
       if (!run.isPending) run.mutate({ spec, p: paramsFor(spec) });
     },
     [run, paramsFor, showToast],
+  );
+  const select = useCallback(
+    (spec: ToolSpec) => {
+      if (!spec.unlocked) {
+        sfx.play("buzz");
+        showToast(`${spec.name} unlocks at Case ${spec.unlock_level}.`);
+        return;
+      }
+      setSelectedTool((cur) => (cur === spec.id ? null : spec.id));
+    },
+    [showToast],
   );
 
   // Number keys 1–9 run the tools in kit order.
@@ -183,7 +197,13 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
   }
 
   const panels = {
-    suspects: <SuspectRail suspects={meta.suspects} flagged={flagged} />,
+    suspects: (
+      <SuspectRail
+        suspects={meta.suspects}
+        flagged={flagged}
+        flaggedBy={active ? active.title.split(" · ")[0] : undefined}
+      />
+    ),
     result: (
       <ResultPanel
         results={store.results}
@@ -208,6 +228,7 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
           setDrawer("data");
         }}
         suspects={meta.suspects}
+        phone={!desktop}
       />
     ),
     evidence: (
@@ -226,6 +247,8 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
       <ToolKit
         specs={specs}
         params={Object.fromEntries(specs.map((s) => [s.id, paramsFor(s)]))}
+        selected={selectedTool}
+        onSelect={select}
         onParam={(tool, name, value) => setParams((p) => ({ ...p, [tool]: { ...p[tool], [name]: value } }))}
         onRun={trigger}
         busy={run.isPending}
@@ -236,47 +259,64 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
 
   return (
     <div className="relative flex min-h-dvh flex-col overflow-x-hidden bg-[radial-gradient(ellipse_at_50%_0%,#151b28_0%,#0a0d13_55%,#07080b_100%)] md:h-dvh md:overflow-hidden">
-      <header className="relative z-20 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-black/60 bg-[#0b0d12]/90 px-3 py-2 backdrop-blur sm:px-5">
+      <header className="relative z-20 flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-white/5 bg-[#0b0d12]/90 px-4 py-3 backdrop-blur sm:px-6">
         <Link href="/office" onClick={() => sfx.play("tick")} className="font-display text-lg font-black italic text-[#ffd9da] [text-shadow:0_0_10px_rgba(229,72,77,0.8)]" title="Back to the case desk">
           The Auditor
         </Link>
-        <div className="min-w-0 flex-1">
-          <p className="font-type text-[10px] tracking-[0.35em] text-amber/80">CASE No. {String(meta.level).padStart(2, "0")}</p>
-          <h1 data-testid="case-title" className="truncate font-display text-lg italic leading-tight text-paper sm:text-xl">
+        <div className="min-w-0 flex-1 lg:flex-none">
+          <p className="text-xs text-amber/80">Case {meta.level}</p>
+          <h1 data-testid="case-title" className="truncate font-display text-xl italic leading-tight text-paper">
             {meta.title}
           </h1>
         </div>
-        <CaseTimer caseId={caseId} />
-        <BudgetMeter budget={meta.budget} left={meta.budget_left} errorTick={errorTick} />
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => updateSettings({ muted: !muted })}
-            aria-label={muted ? "Unmute sound" : "Mute sound"}
-            className="rounded border border-line px-2 py-1 font-mono text-xs text-muted hover:border-amber hover:text-amber"
-          >
-            {muted ? "♪ OFF" : "♪ ON"}
-          </button>
-          <button onClick={() => setSettings(true)} aria-label="Settings" className="rounded border border-line px-2 py-1 font-mono text-xs text-muted hover:border-amber hover:text-amber">
-            ⚙
-          </button>
+        <div className="hidden flex-1 justify-center lg:flex">
+          <StepGuide results={store.results.length} pinned={store.pinned.length} />
+        </div>
+        <div className="flex items-center gap-5">
+          <CaseTimer caseId={caseId} />
+          <BudgetMeter budget={meta.budget} left={meta.budget_left} errorTick={errorTick} />
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => updateSettings({ muted: !muted })}
+              aria-label={muted ? "Unmute sound" : "Mute sound"}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-paper/60 hover:bg-white/5 hover:text-amber"
+            >
+              {muted ? "🔇" : "🔊"}
+            </button>
+            <button onClick={() => setSettings(true)} aria-label="Settings" className="flex h-8 w-8 items-center justify-center rounded-md text-paper/60 hover:bg-white/5 hover:text-amber">
+              ⚙
+            </button>
+          </div>
         </div>
       </header>
 
       {desktop ? (
-        /* Desktop / tablet: suspects | workspace | evidence, over a docked tool kit */
-        <div className="grid min-h-0 flex-1 grid-cols-[210px_minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto] lg:grid-cols-[230px_minmax(0,1fr)_250px]">
-          <aside className="min-h-0 overflow-y-auto border-r border-line/60 p-3">{panels.suspects}</aside>
-          <main className="min-h-0 overflow-y-auto p-4">
+        /* Desktop: tool kit | result | suspects + evidence. Tablet: tool kit | result with the rest below. */
+        <div className="grid min-h-0 flex-1 grid-cols-[264px_minmax(0,1fr)] lg:grid-cols-[288px_minmax(0,1fr)_280px]">
+          <aside className="min-h-0 overflow-y-auto border-r border-white/5 bg-black/20 px-3 py-5">{panels.tools}</aside>
+          <main className="min-h-0 overflow-y-auto px-5 py-5 xl:px-8">
             {panels.result}
-            {!wide && <div className="mt-4">{panels.evidence}</div>}
+            {!wide && (
+              <div className="mt-6 grid grid-cols-2 gap-6">
+                {panels.suspects}
+                {panels.evidence}
+              </div>
+            )}
           </main>
-          {wide && <aside className="min-h-0 overflow-y-auto border-l border-line/60 p-3">{panels.evidence}</aside>}
-          <footer className="col-span-full border-t border-line/70 bg-[#0b0d12]/95 p-3">{panels.tools}</footer>
+          {wide && (
+            <aside className="flex min-h-0 flex-col gap-8 overflow-y-auto border-l border-white/5 bg-black/20 px-4 py-5">
+              {panels.suspects}
+              {panels.evidence}
+            </aside>
+          )}
         </div>
       ) : (
         /* Phone: one panel at a time with a bottom tab bar */
         <>
-          <div className="flex-1 p-3 pb-24">{panels[tab]}</div>
+          <div className="border-b border-white/5 px-4 py-2.5">
+            <StepGuide results={store.results.length} pinned={store.pinned.length} />
+          </div>
+          <div className="flex-1 px-4 pb-24 pt-4">{panels[tab]}</div>
           <nav aria-label="Investigation sections" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-[#0b0d12]/95 backdrop-blur">
             {TABS.map((t) => (
               <button
@@ -286,12 +326,12 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
                   setTab(t.id);
                 }}
                 aria-current={tab === t.id}
-                className={cn("relative flex flex-col items-center gap-0.5 py-2 font-type text-[11px] tracking-widest", tab === t.id ? "text-amber" : "text-muted")}
+                className={cn("relative flex flex-col items-center gap-0.5 py-2 text-xs", tab === t.id ? "text-amber" : "text-paper/55")}
               >
                 <span aria-hidden className="text-base leading-none">{t.icon}</span>
                 {t.label}
                 {t.id === "evidence" && store.pinned.length > 0 && (
-                  <span className="absolute right-[22%] top-1 rounded-full bg-red px-1.5 font-mono text-[9px] text-paper">{store.pinned.length}</span>
+                  <span className="absolute right-[22%] top-1 rounded-full bg-red px-1.5 text-[10px] text-paper">{store.pinned.length}</span>
                 )}
               </button>
             ))}
@@ -307,7 +347,7 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -16 }}
-            className="fixed left-1/2 top-16 z-[110] w-[min(92vw,460px)] -translate-x-1/2 rounded-md border border-red/60 bg-ink-900/95 px-4 py-3 text-center font-type text-sm text-[#ffd9da] shadow-2xl"
+            className="fixed left-1/2 top-20 z-[110] w-[min(92vw,460px)] -translate-x-1/2 rounded-lg border border-red/60 bg-ink-900/95 px-4 py-3 text-center text-[15px] text-[#ffd9da] shadow-2xl"
           >
             {toast}
           </motion.div>

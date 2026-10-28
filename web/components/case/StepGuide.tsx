@@ -1,0 +1,31 @@
+"use client";
+import { cn } from "@/lib/cn";
+
+const STEPS = ["Investigate", "Pin 2 clues", "Accuse"];
+
+/** 1 Investigate · 2 Pin 2 clues · 3 Accuse — highlights where the player is. */
+export function StepGuide({ results, pinned }: { results: number; pinned: number }) {
+  const current = results === 0 ? 0 : pinned < 2 ? 1 : 2;
+  return (
+    <ol data-testid="step-guide" aria-label="Your progress" className="flex items-center gap-1 text-[13px]">
+      {STEPS.map((label, i) => {
+        const done = i < current;
+        const now = i === current;
+        return (
+          <li key={label} aria-current={now ? "step" : undefined} className="flex items-center gap-1">
+            {i > 0 && <span aria-hidden className={cn("mx-1 h-px w-5", done || now ? "bg-amber/50" : "bg-line")} />}
+            <span
+              className={cn(
+                "flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-semibold",
+                done ? "bg-green/20 text-green" : now ? "bg-amber text-ink-950" : "bg-ink-800 text-paper/45",
+              )}
+            >
+              {done ? "✓" : i + 1}
+            </span>
+            <span className={cn(now ? "text-paper" : done ? "text-paper/60" : "text-paper/40")}>{label}</span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}

@@ -15,10 +15,15 @@ function ChartSkeleton() {
   );
 }
 
-export function PlotlyChart({ figure, height = 380, compact = false }: { figure: object; height?: number; compact?: boolean }) {
+export function PlotlyChart({ figure, height = 380, compact = false, hideTitle = false }: {
+  figure: object;
+  height?: number;
+  compact?: boolean;
+  hideTitle?: boolean;
+}) {
   return (
     <div data-testid="plotly-chart" className="w-full" style={{ minHeight: height }}>
-      <PlotlyInner figure={figure as { data?: unknown[] }} height={height} compact={compact} />
+      <PlotlyInner figure={figure as { data?: unknown[] }} height={height} compact={compact} hideTitle={hideTitle} />
     </div>
   );
 }

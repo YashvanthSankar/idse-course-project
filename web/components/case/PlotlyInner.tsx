@@ -9,7 +9,12 @@ type Figure = { data?: unknown[]; layout?: Layout };
 
 const axisKeys = (layout: Layout) => Object.keys(layout).filter((k) => /^[xy]axis\d*$/.test(k));
 
-export default function PlotlyInner({ figure, height, compact }: { figure: Figure; height: number; compact: boolean }) {
+export default function PlotlyInner({ figure, height, compact, hideTitle = false }: {
+  figure: Figure;
+  height: number;
+  compact: boolean;
+  hideTitle?: boolean;
+}) {
   const base = figure.layout ?? {};
   const layout: Layout = { ...base, autosize: true, height };
   // Let Plotly make room for long suspect names instead of clipping them.
@@ -17,13 +22,11 @@ export default function PlotlyInner({ figure, height, compact }: { figure: Figur
     layout[key] = { ...(base[key] as object), automargin: true };
   }
   const title = typeof base.title === "object" && base.title ? (base.title as Record<string, unknown>) : { text: base.title };
-  layout.title = {
-    ...title,
-    x: 0.01,
-    xanchor: "left",
-    font: { ...(title.font as object), size: compact ? 13 : 16 },
-  };
-  layout.margin = { ...base.margin, l: 8, r: 8, t: compact ? 34 : 42, b: 8 };
+  // The surrounding panel usually titles the chart already; then the figure's own title goes.
+  layout.title = hideTitle
+    ? { text: "" }
+    : { ...title, x: 0.01, xanchor: "left", font: { ...(title.font as object), size: compact ? 13 : 16 } };
+  layout.margin = { ...base.margin, l: 8, r: 8, t: hideTitle ? 12 : compact ? 34 : 42, b: 8 };
   if (compact) layout.font = { ...(base.font as object), size: 10 };
 
   return (
