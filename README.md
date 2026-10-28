@@ -2,6 +2,8 @@
 
 > *"Every number tells a story. Some of them lie."*
 
+### ▶ Play it: **[otlr.vercel.app](https://otlr.vercel.app)**
+
 A noir detective web game where you catch corporate fraudsters with **real Python data analysis**.
 Built for **IDSE (Introduction to Data Science for Engineers)**.
 
