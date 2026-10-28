@@ -30,7 +30,7 @@
   --color-cyan: var(--cyan);
   --color-text: var(--text);
   --color-muted: var(--muted);
-  --font-display: var(--font-playfair);
+  --font-display: var(--font-crt);
   --font-type: var(--font-special-elite);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains);
@@ -224,3 +224,12 @@ html[data-reduce-effects="true"] .animate-hop { animation: none; }
 
 .font-pixel { font-family: var(--font-arcade), ui-monospace, monospace; }
 .font-terminal { font-family: var(--font-crt), ui-monospace, monospace; }
+
+/* Headings speak the cabinet's language: the CRT terminal face, upright, a touch larger */
+.font-display {
+  font-family: var(--font-crt), ui-monospace, monospace !important;
+  font-style: normal !important;
+  font-weight: 400 !important;
+  font-size-adjust: 0.56;
+  letter-spacing: 0.01em;
+}

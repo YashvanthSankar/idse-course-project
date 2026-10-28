@@ -111,8 +111,8 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
       <header className="relative z-30 flex items-center justify-between gap-3 border-b border-black/60 bg-[#0b0d12]/85 px-4 py-2 backdrop-blur">
         <div className="flex shrink-0 items-center gap-3">
           <BackButton href="/office" label="Case desk" short="Desk" />
-          <Link href="/office" className="hidden whitespace-nowrap font-display text-lg font-black italic text-[#ffd9da] [text-shadow:0_0_10px_rgba(229,72,77,0.8)] sm:inline">
-            Outlier
+          <Link href="/office" className="hidden whitespace-nowrap arcade-logo font-pixel text-xs sm:inline">
+            OUTLIER
           </Link>
         </div>
         <p className="truncate font-type text-[10px] tracking-[0.35em] text-amber/80 sm:text-xs">

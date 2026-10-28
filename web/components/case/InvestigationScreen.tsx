@@ -312,8 +312,8 @@ export function InvestigationScreen({
     <div className="relative flex min-h-dvh flex-col overflow-x-hidden bg-[radial-gradient(ellipse_at_50%_0%,#151b28_0%,#0a0d13_55%,#07080b_100%)] md:h-dvh md:overflow-hidden">
       <header className="relative z-20 flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-white/5 bg-[#0b0d12]/90 px-4 py-3 backdrop-blur sm:px-6">
         <BackButton href="/office" label="Case desk" short="Desk" />
-        <Link href="/office" onClick={() => sfx.play("tick")} className="hidden font-display text-lg font-black italic text-[#ffd9da] [text-shadow:0_0_10px_rgba(229,72,77,0.8)] sm:inline" title="Back to the case desk">
-          Outlier
+        <Link href="/office" onClick={() => sfx.play("tick")} className="hidden arcade-logo font-pixel text-xs sm:inline" title="Back to the case desk">
+          OUTLIER
         </Link>
         <div className="min-w-0 flex-1 lg:flex-none">
           <p className="text-xs text-amber/80">Case {meta.level}</p>
