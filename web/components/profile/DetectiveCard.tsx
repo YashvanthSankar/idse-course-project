@@ -1,4 +1,5 @@
 "use client";
+import { BackButton } from "@/components/ui/BackButton";
 import { useQuery } from "@tanstack/react-query";
 import { toPng } from "html-to-image";
 import Link from "next/link";
@@ -29,7 +30,8 @@ export function DetectiveCardPage({ playerId }: { playerId: string }) {
   });
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-8 bg-[radial-gradient(ellipse_at_50%_0%,#1b2540_0%,#07080b_70%)] px-4 py-10">
+    <main className="relative flex min-h-dvh flex-col items-center justify-center gap-8 bg-[radial-gradient(ellipse_at_50%_0%,#1b2540_0%,#07080b_70%)] px-4 py-16">
+      <BackButton href="/" label="Menu" className="absolute left-4 top-4" />
       {profile.isPending && <p className="text-xl text-paper/60">Pulling your file…</p>}
       {profile.isError && (
         <div className="max-w-sm text-center">

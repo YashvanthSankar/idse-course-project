@@ -1,4 +1,5 @@
 "use client";
+import { BackButton } from "@/components/ui/BackButton";
 import confetti from "canvas-confetti";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
@@ -108,9 +109,12 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
     <div className="tex-desk relative min-h-dvh overflow-x-hidden pb-20">
       <LampLight size={900} />
       <header className="relative z-30 flex items-center justify-between gap-3 border-b border-black/60 bg-[#0b0d12]/85 px-4 py-2 backdrop-blur">
-        <Link href="/office" className="shrink-0 whitespace-nowrap font-display text-lg font-black italic text-[#ffd9da] [text-shadow:0_0_10px_rgba(229,72,77,0.8)]">
-          The Auditor
-        </Link>
+        <div className="flex shrink-0 items-center gap-3">
+          <BackButton href="/office" label="Case desk" short="Desk" />
+          <Link href="/office" className="hidden whitespace-nowrap font-display text-lg font-black italic text-[#ffd9da] [text-shadow:0_0_10px_rgba(229,72,77,0.8)] sm:inline">
+            The Auditor
+          </Link>
+        </div>
         <p className="truncate font-type text-[10px] tracking-[0.35em] text-amber/80 sm:text-xs">
           CASE No. {String(meta.level).padStart(2, "0")} · {meta.title.toUpperCase()}
         </p>

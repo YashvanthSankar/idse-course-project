@@ -1,7 +1,7 @@
 "use client";
+import { BackButton } from "@/components/ui/BackButton";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { PlotlyChart } from "@/components/case/PlotlyChart";
 import { Typewriter } from "@/components/fx/Typewriter";
@@ -66,7 +66,7 @@ export function AutopsyDeck({ code }: { code: string }) {
   return (
     <main className="flex min-h-dvh flex-col bg-[radial-gradient(ellipse_at_50%_-20%,#1b2540_0%,#07080b_60%)] px-4 py-6 sm:px-10 sm:py-8 lg:h-dvh lg:overflow-hidden">
       <header className="flex items-center justify-between text-lg text-paper/60">
-        <Link href={`/host/${code}`} className="hover:text-paper">← Room {code}</Link>
+        <BackButton href={`/host/${code}`} label={`Room ${code}`} />
         <span data-testid="slide-counter">
           {index + 1} / {total}
         </span>
