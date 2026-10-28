@@ -18,3 +18,13 @@ def test_log_and_read_back(tmp_path):
 
 def test_empty_db(tmp_path):
     assert Telemetry(str(tmp_path / "e.db")).events_df().empty
+
+
+def test_logging_is_fast_enough_for_a_lecture_hall(tmp_path):
+    import time
+
+    t = Telemetry(str(tmp_path / "speed.db"))
+    start = time.perf_counter()
+    for i in range(200):
+        t.log("case_started", player_id=f"P{i}", case_id=f"c{i}", room_code="ROOM")
+    assert time.perf_counter() - start < 0.5

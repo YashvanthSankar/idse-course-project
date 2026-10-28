@@ -156,9 +156,15 @@ class RoomManager:
             still_here = any(pid == player_id for _, pid, _ in self.sockets[code].values())
             self.rooms[code].players[player_id].connected = still_here
 
-    async def broadcast(self, code: str, message: dict) -> None:
-        for ws in list(self.sockets.get(code, {})):
-            await self._send(code, ws, message)
+    async def broadcast(self, code: str, message: dict, hosts_only: bool = False) -> None:
+        for ws, (role, _, _) in list(self.sockets.get(code, {}).items()):
+            if not hosts_only or role == "host":
+                await self._send(code, ws, message)
+
+    async def to_hosts(self, code: str, message: dict) -> None:
+        """Lobby, leaderboard and ticker are for the projector only: phones don't need the
+        roster, and sending it to every phone on every join would be O(players^2)."""
+        await self.broadcast(code, message, hosts_only=True)
 
     async def send_to_player(self, code: str, player_id: str, message: dict) -> None:
         for ws, (_, pid, _) in list(self.sockets.get(code, {}).items()):
@@ -180,7 +186,7 @@ class RoomManager:
             self.sockets.get(code, {}).pop(ws, None)
 
     def broadcast_threadsafe(self, code: str, message: dict) -> None:
-        """Called from sync request handlers (thread pool): send on each socket's own loop."""
-        for ws, (_, _, owner) in list(self.sockets.get(code, {}).items()):
-            if owner.is_running():
+        """Called from sync request handlers (thread pool): reach each host on its own loop."""
+        for ws, (role, _, owner) in list(self.sockets.get(code, {}).items()):
+            if role == "host" and owner.is_running():
                 asyncio.run_coroutine_threadsafe(ws.send_json(message), owner)

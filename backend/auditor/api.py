@@ -281,7 +281,7 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
                 if case_id:
                     await ws.send_json(rooms.round_start(code))
                     await ws.send_json({"type": "your_case", "case_id": case_id})
-                await rooms.broadcast(code, rooms.lobby(code))
+                await rooms.to_hosts(code, rooms.lobby(code))
             while True:
                 message = await ws.receive_json()
                 if role != "host":
@@ -294,17 +294,17 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
                     for player, case_id in assignments.items():
                         await rooms.send_to_player(code, player,
                                                    {"type": "your_case", "case_id": case_id})
-                    await rooms.broadcast(code, rooms.leaderboard(code))
+                    await rooms.to_hosts(code, rooms.leaderboard(code))
                 elif message.get("type") == "end":
                     rooms.end(code)
                     await rooms.broadcast(code, {"type": "round_end"})
-                    await rooms.broadcast(code, rooms.leaderboard(code))
+                    await rooms.to_hosts(code, rooms.leaderboard(code))
         except WebSocketDisconnect:
             pass
         finally:
             rooms.remove_socket(code, ws)
             if role == "player":
-                await rooms.broadcast(code, rooms.lobby(code))
+                await rooms.to_hosts(code, rooms.lobby(code))
 
     @app.get("/api/rooms/{code}/autopsy", response_model=Autopsy)
     def autopsy(code: str):

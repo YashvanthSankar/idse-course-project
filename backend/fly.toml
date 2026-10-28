@@ -1,0 +1,23 @@
+app = "the-auditor-api"
+primary_region = "bom"  # Mumbai
+
+[build]
+
+[env]
+  AUDITOR_DB = "/data/auditor.db"
+
+[[mounts]]
+  source = "auditor_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1  # never asleep during a class demo
+
+[[vm]]
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1

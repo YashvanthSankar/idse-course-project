@@ -284,8 +284,8 @@ Class Mode runs on FastAPI WebSockets with in-memory rooms. Telemetry is stored 
 | GET | `/api/players/{player_id}/profile` | → `Profile` |
 
 ### 10.2 WebSocket messages (`{"type": ..., ...}`)
-Server→all: `lobby {players}`, `round_start {level, ends_at}`, `round_end`, `leaderboard {top: [...], solved, total}`,
-`ticker {text}`. Server→player: `your_case {case_id}`. Host→server: `start {level, seconds}`, `end`.
+Server→host: `lobby {players}`, `leaderboard {top: [...], solved, total}`, `ticker {text}`. Server→all: `round_start {level, ends_at}`, `round_end`.
+Server→player: `welcome {player_id, status}`, `your_case {case_id}`. Host→server: `start {level, seconds}`, `end`.
 
 ---
 
