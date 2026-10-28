@@ -63,6 +63,14 @@ class Budget(BaseModel):
     budget_left: int
 
 
+class CaseState(BaseModel):
+    """Everything needed to restore a case after a reload or a locked phone."""
+
+    meta: CaseMeta
+    results: list[ToolResult]
+    verdict: Verdict | None
+
+
 class RoomCreated(BaseModel):
     code: str
 
@@ -145,6 +153,12 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
     @app.get("/api/cases/{case_id}", response_model=CaseMeta)
     def get_case(case_id: str):
         return _meta(session_for(case_id))
+
+    @app.get("/api/cases/{case_id}/state", response_model=CaseState)
+    def case_state(case_id: str):
+        session = session_for(case_id)
+        return CaseState(meta=_meta(session), results=list(session.results.values()),
+                         verdict=session.verdict)
 
     @app.get("/api/cases/{case_id}/rows", response_model=Rows)
     def rows(case_id: str, offset: int = Query(0, ge=0), limit: int = Query(200, ge=1, le=2000)):
