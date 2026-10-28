@@ -122,7 +122,7 @@ uv run uvicorn auditor.api:app --host 0.0.0.0 --port 8000
 ```bash
 cd web
 pnpm install
-pnpm dev --port 3100          # open http://localhost:3100
+pnpm dev --port 3200          # open http://localhost:3200
 ```
 
 For Class Mode, phones on the same Wi-Fi join via the QR code on the host screen.
