@@ -34,6 +34,7 @@
   --font-type: var(--font-special-elite);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains);
+  --font-poster: var(--font-bebas);
 }
 
 html,

@@ -10,10 +10,10 @@ import { Manual } from "./Manual";
 import { Skyline } from "./Skyline";
 
 const MENU = [
-  { id: "new", label: "New Case" },
-  { id: "class", label: "Class Mode" },
-  { id: "manual", label: "Detective's Manual" },
-  { id: "settings", label: "Settings" },
+  { id: "new", label: "New Case", hint: "Solve a fraud case on your own" },
+  { id: "class", label: "Class Mode", hint: "The whole class plays live from their phones" },
+  { id: "manual", label: "Detective's Manual", hint: "How to play, and every tool in the kit" },
+  { id: "settings", label: "Settings", hint: "Sound, effects and unlocking cases" },
 ] as const;
 
 export function TitleScreen() {
@@ -71,14 +71,14 @@ export function TitleScreen() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.8 }}
           transition={{ duration: 2 }}
-          className="neon-cyan mb-4 font-type text-[11px] tracking-[0.22em] text-cyan sm:text-sm sm:tracking-[0.45em]"
+          className="mb-3 font-poster text-base tracking-[0.22em] text-cyan [text-shadow:0_0_10px_rgba(76,201,240,0.55)] sm:text-2xl sm:tracking-[0.4em]"
         >
           FORENSIC ACCOUNTING · MUMBAI
         </motion.p>
         <h1 className="animate-neon font-display text-[3.4rem] font-black italic leading-none text-[#ffd9da] sm:text-8xl md:text-9xl">
           The Auditor
         </h1>
-        <p className="mt-6 h-6 font-type text-sm text-paper/80 sm:text-base">
+        <p className="mt-5 min-h-8 text-balance font-display text-lg italic text-paper/85 sm:text-2xl">
           <Typewriter text="Every number tells a story. Some of them lie." delay={900} speed={45} sound={false} />
         </p>
 
@@ -88,7 +88,7 @@ export function TitleScreen() {
               <motion.p
                 key="press"
                 exit={{ opacity: 0 }}
-                className="animate-blink font-type text-sm tracking-[0.4em] text-amber"
+                className="animate-blink font-poster text-2xl tracking-[0.3em] text-amber"
               >
                 PRESS ANY KEY
               </motion.p>
@@ -99,7 +99,7 @@ export function TitleScreen() {
                 initial="hidden"
                 animate="show"
                 variants={{ show: { transition: { staggerChildren: 0.12 } } }}
-                className="flex flex-col items-center gap-3"
+                className="flex flex-col items-center gap-1"
               >
                 {MENU.map((item, i) => (
                   <motion.button
@@ -110,21 +110,32 @@ export function TitleScreen() {
                       sfx.play("tick");
                     }}
                     onClick={() => choose(item.id)}
-                    className={`group min-h-10 font-type text-lg tracking-[0.18em] transition-colors sm:text-2xl sm:tracking-[0.25em] ${
-                      focus === i ? "text-amber" : "text-paper/60 hover:text-paper"
+                    className={`group relative min-h-12 whitespace-nowrap px-7 font-poster text-[1.7rem] leading-none tracking-[0.08em] transition-colors sm:px-8 sm:text-[2.6rem] sm:tracking-[0.12em] ${
+                      focus === i
+                        ? "text-amber [text-shadow:0_0_18px_rgba(245,165,36,0.45)]"
+                        : "text-paper/70 hover:text-paper"
                     }`}
                   >
-                    <span className={`mr-3 inline-block transition-opacity ${focus === i ? "opacity-100" : "opacity-0"}`}>▸</span>
+                    <span aria-hidden className={`absolute left-0 top-1/2 -translate-y-1/2 text-[0.6em] transition-opacity ${focus === i ? "opacity-100" : "opacity-0"}`}>▸</span>
                     {item.label.toUpperCase()}
+                    <span aria-hidden className={`absolute right-0 top-1/2 -translate-y-1/2 text-[0.6em] transition-opacity ${focus === i ? "opacity-100" : "opacity-0"}`}>◂</span>
                   </motion.button>
                 ))}
+                <motion.p
+                  key={MENU[focus].id}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 text-sm text-paper/65 sm:text-base"
+                >
+                  {MENU[focus].hint}
+                </motion.p>
               </motion.nav>
             )}
           </AnimatePresence>
         </div>
       </div>
 
-      <p className="absolute bottom-4 z-10 font-mono text-[10px] tracking-widest text-muted/60">
+      <p className="absolute inset-x-4 bottom-4 z-10 text-center font-mono text-[9px] tracking-widest text-paper/45 sm:text-[11px]">
         POWERED BY NUMPY · PANDAS · SCIPY · SCIKIT-LEARN
       </p>
 
