@@ -42,3 +42,9 @@ export function browserStorage(): KV | null {
     return null;
   }
 }
+
+/** "2 of 7 cases closed · best 1,540" — for the title screen. */
+export function progressSummary(p: Progress): { closed: number; best: number } {
+  const scores = Object.values(p.best);
+  return { closed: scores.length, best: scores.length ? Math.max(...scores) : 0 };
+}

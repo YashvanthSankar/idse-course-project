@@ -130,7 +130,22 @@ body {
   50% { box-shadow: 0 0 0 8px transparent; }
 }
 
+@keyframes fog-drift {
+  0% { transform: translateX(-12%); }
+  50% { transform: translateX(12%); }
+  100% { transform: translateX(-12%); }
+}
+
+@keyframes searchlight {
+  0%, 100% { transform: rotate(-24deg); }
+  50% { transform: rotate(24deg); }
+}
+
 .animate-grain { animation: grain-shift 0.6s steps(4) infinite; }
+.animate-fog { animation: fog-drift 46s ease-in-out infinite; }
+.animate-fog-slow { animation: fog-drift 70s ease-in-out infinite reverse; }
+.animate-searchlight { animation: searchlight 16s ease-in-out infinite; }
+.animate-searchlight-slow { animation: searchlight 23s ease-in-out infinite reverse; }
 .animate-neon { animation: neon-flicker 4s infinite; }
 .animate-blink { animation: blink 1s steps(1) infinite; }
 .animate-pulse-red { animation: pulse-red 1.6s ease-out infinite; }
@@ -143,7 +158,11 @@ body {
   .animate-grain,
   .animate-neon,
   .animate-blink,
-  .animate-pulse-red {
+  .animate-pulse-red,
+  .animate-fog,
+  .animate-fog-slow,
+  .animate-searchlight,
+  .animate-searchlight-slow {
     animation: none;
   }
 }

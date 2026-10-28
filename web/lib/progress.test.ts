@@ -41,3 +41,13 @@ describe("progress", () => {
     expect(loadProgress(s)).toEqual(EMPTY_PROGRESS);
   });
 });
+
+describe("progressSummary", () => {
+  it("counts closed cases and the best score", async () => {
+    const { progressSummary } = await import("./progress");
+    expect(progressSummary(EMPTY_PROGRESS)).toEqual({ closed: 0, best: 0 });
+    let p = recordResult(EMPTY_PROGRESS, 1, true, 1200);
+    p = recordResult(p, 2, true, 1540);
+    expect(progressSummary(p)).toEqual({ closed: 2, best: 1540 });
+  });
+});
