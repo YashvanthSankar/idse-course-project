@@ -1,11 +1,11 @@
 "use client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BriefingModal } from "@/components/case/BriefingModal";
 import { LampLight } from "@/components/fx/LampLight";
 import { createCase, listLevels } from "@/lib/api";
-import { isUnlocked } from "@/lib/progress";
+import { browserStorage, isUnlocked, loadProgress } from "@/lib/progress";
 import { useProgress } from "@/lib/useProgress";
 import { useSettings } from "@/lib/settings";
 import { sfx } from "@/lib/sound";
@@ -34,6 +34,21 @@ export function OfficeScene() {
     sfx.loop("rain");
     sfx.loop("jazz");
   }, []);
+
+  // "NEXT CASE" / "TRY AGAIN" on the verdict screen land here with ?open=N:
+  // open that case's briefing straight away (only if it is really unlocked).
+  const opened = useRef(false);
+  useEffect(() => {
+    if (opened.current) return;
+    const level = Number(new URLSearchParams(window.location.search).get("open"));
+    if (!level) return;
+    opened.current = true;
+    router.replace("/office");
+    const saved = loadProgress(browserStorage());
+    if (level >= 1 && level <= 7 && (useSettings.getState().unlockAll || isUnlocked(saved, level))) {
+      open.mutate(level);
+    }
+  }, [open, router]);
 
   return (
     <div className="relative flex min-h-dvh flex-col overflow-x-hidden bg-ink-950">

@@ -104,6 +104,13 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
   const resultTitle = (id: string, tool: string) => results.find((r) => r.result_id === id)?.title ?? TOOL_NAMES[tool] ?? tool;
   const showScore = phase !== "stamp";
   const nextLevel = Math.min(7, meta.level + 1);
+  // Right: the next case (endless repeats). Wrong: the same case again, with fresh data.
+  const target = verdict.correct ? nextLevel : meta.level;
+  const nextLabel = !verdict.correct
+    ? `TRY AGAIN · No. ${String(meta.level).padStart(2, "0")} →`
+    : meta.level < 7
+      ? `NEXT CASE · No. ${String(nextLevel).padStart(2, "0")} →`
+      : "ANOTHER ENDLESS CASE →";
 
   return (
     <div className="tex-desk relative min-h-dvh overflow-x-hidden pb-20">
@@ -217,12 +224,12 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
                 </Link>
               )}
               <Link
-                href="/office"
+                href={`/office?open=${target}`}
                 onClick={() => sfx.play("pin")}
                 data-testid="next-case"
                 className="rounded-sm border-2 border-amber bg-amber/15 px-6 py-3 text-center font-type whitespace-nowrap tracking-[0.18em] text-amber shadow-[0_0_30px_rgba(245,165,36,0.25)] hover:bg-amber/25"
               >
-                {verdict.correct && meta.level < 7 ? `NEXT CASE · No. ${String(nextLevel).padStart(2, "0")} →` : "TRY ANOTHER CASE →"}
+                {nextLabel}
               </Link>
               <Link
                 href="/office"

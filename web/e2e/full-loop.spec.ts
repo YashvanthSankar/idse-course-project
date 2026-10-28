@@ -57,8 +57,12 @@ test("solve case 1 end to end: tools → board → spotlight → GUILTY → case
   await expect(page.getByTestId("reveal")).toBeVisible({ timeout: 10_000 });
   await expect(page.getByTestId("reveal-replay")).toBeVisible();
 
+  // NEXT CASE goes straight to case 2's briefing, not just back to the desk
+  await expect(page.getByTestId("next-case")).toContainText("NEXT CASE · No. 02");
   await page.getByTestId("next-case").click();
-  await expect(page).toHaveURL(/\/office/);
+  await expect(page).toHaveURL(/\/office$/);
+  await expect(page.getByText("Case No. 02")).toBeVisible({ timeout: 20_000 });
+  await page.keyboard.press("Escape");
   await expect(page.getByTestId("case-folder").nth(1)).not.toHaveAttribute("data-locked", "true", { timeout: 10_000 });
 });
 
@@ -87,4 +91,33 @@ test("letting go early cancels the accusation", async ({ page, request }) => {
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("spotlight")).toHaveCount(0);
   await expect(page).toHaveURL(new RegExp(`/case/${meta.case_id}$`));
+});
+
+test("a wrong verdict offers to try the same case again", async ({ page, request }) => {
+  test.setTimeout(120_000);
+  const meta = await (await request.post(`${API}/api/cases`, { data: { level: 1 } })).json();
+  const truth = await (await request.get(`${API}/api/debug/cases/${meta.case_id}/truth`)).json();
+  const wrong = meta.suspects.find((s: { id: string }) => s.id !== truth.fraudster_id).id;
+  await page.goto(`/case/${meta.case_id}`);
+  for (const tool of ["Z-Score Scan", "Box & Whisker"]) {
+    await runTool(page, tool);
+    await expect(page.getByTestId("result-view")).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("button", { name: "📌 Pin as evidence" }).click();
+  }
+  await page.keyboard.press("b");
+  await page.waitForTimeout(600);
+  const suspect = page.locator(`[data-testid=board-suspect][data-suspect=${wrong}]`);
+  for (const i of [0, 1]) {
+    await page.getByTestId("board-evidence").nth(i).click();
+    await suspect.click();
+  }
+  await page.getByRole("button", { name: /MAKE THE ACCUSATION/ }).click();
+  const box = (await page.getByTestId("hold-to-accuse").boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.waitForTimeout(1900);
+  await page.mouse.up();
+  await expect(page.getByTestId("next-case")).toContainText("TRY AGAIN · No. 01", { timeout: 20_000 });
+  await page.getByTestId("next-case").click();
+  await expect(page.getByText("Case No. 01")).toBeVisible({ timeout: 20_000 });
 });
