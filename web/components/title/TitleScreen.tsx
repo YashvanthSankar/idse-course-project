@@ -88,7 +88,7 @@ export function TitleScreen() {
         >
           FORENSIC ACCOUNTING · MUMBAI
         </motion.p>
-        <h1 className="animate-neon font-display text-[4.2rem] font-black italic leading-none text-[#ffd9da] sm:text-[8.5rem] md:text-[10rem]">
+        <h1 className="animate-neon font-title text-[3.2rem] font-black uppercase leading-none tracking-[0.14em] text-[#fff1f1] sm:text-[7rem] md:text-[8.5rem]">
           Outlier
         </h1>
         <p className="mt-5 min-h-8 text-balance font-display text-lg italic text-paper/85 sm:text-2xl">
