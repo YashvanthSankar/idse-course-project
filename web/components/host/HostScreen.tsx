@@ -1,4 +1,5 @@
 "use client";
+import { BackButton } from "@/components/ui/BackButton";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -161,9 +162,12 @@ function Shell({ code, connected = true, children }: { code: string; connected?:
   return (
     <main className="flex min-h-dvh flex-col bg-[radial-gradient(ellipse_at_50%_-20%,#1b2540_0%,#07080b_65%)]">
       <header className="flex items-center justify-between px-10 py-6">
-        <p className="font-display text-3xl font-black italic text-[#ffd9da] [text-shadow:0_0_14px_rgba(229,72,77,0.7)]">
-          The Auditor
-        </p>
+        <div className="flex items-center gap-4">
+          <BackButton href="/host" label="Class Mode" short="Back" />
+          <p className="font-display text-3xl font-black italic text-[#ffd9da] [text-shadow:0_0_14px_rgba(229,72,77,0.7)]">
+            The Auditor
+          </p>
+        </div>
         <div className="flex items-center gap-4 text-lg text-paper/60">
           <span>Class Mode · Room {code}</span>
           <span

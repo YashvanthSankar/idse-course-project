@@ -39,7 +39,7 @@ def test_accuse_correct_flow(env):
     v = client.post(f"/api/cases/{cid}/accuse", json={
         "suspect_id": truth["fraudster_id"], "evidence_ids": [r1["result_id"], r2["result_id"]]
     }).json()
-    assert v["correct"] and v["score"] == 1000 + 500 + 20 * 4 + 250
+    assert v["correct"] and v["score"] == 1000 + 500 + 40 * 1  # 5 coins - 4 spent
     assert [g["grade"] for g in v["evidence"]] == ["strong", "strong"]
     assert v["reveal_figure"]["data"]
 

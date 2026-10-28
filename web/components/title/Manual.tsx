@@ -6,7 +6,7 @@ const STEPS = [
   ["Investigate", "Run detective tools on the ledger. Each one is real Python analysis and costs budget. Re-running the same tool is free."],
   ["Pin evidence", "Pin results that point at someone. On the corkboard, drag them onto a suspect — red string ties the case together."],
   ["Accuse", "Choose one suspect and attach exactly two pieces of evidence. One shot. No take-backs."],
-  ["Verdict", "Right suspect = 1000 points. Strong evidence +250 each, leftover budget and speed add bonuses. Irrelevant evidence costs you."],
+  ["Verdict", "Right suspect = 1000 points. Strong evidence +250 each, and every coin you didn't spend +40. There's no clock — the budget is the challenge: you can't run every tool, so pick the analysis that fits the clue. Irrelevant evidence costs you."],
 ];
 
 const TOOLS = [

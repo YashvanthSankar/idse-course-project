@@ -20,15 +20,15 @@ STRONG2 = result("r2", "iqr_box", ["E2"])
 
 
 def test_perfect_score():
-    v = score_accusation(TRUTH, SUSPECTS, "E2", [STRONG, STRONG2], budget_left=4, elapsed_s=100)
+    v = score_accusation(TRUTH, SUSPECTS, "E2", [STRONG, STRONG2], budget_left=4)
     assert v.correct
-    assert v.score == 1830
-    assert v.breakdown == {"base": 1000, "evidence": 500, "budget_bonus": 80, "time_bonus": 250}
+    assert v.score == 1660
+    assert v.breakdown == {"base": 1000, "evidence": 500, "budget_bonus": 160}
     assert [g.grade for g in v.evidence] == ["strong", "strong"]
 
 
 def test_wrong_suspect_scores_zero():
-    v = score_accusation(TRUTH, SUSPECTS, "E3", [STRONG, STRONG2], budget_left=4, elapsed_s=100)
+    v = score_accusation(TRUTH, SUSPECTS, "E3", [STRONG, STRONG2], budget_left=4)
     assert not v.correct and v.score == 0
     assert v.fraudster.id == "E2" and v.explanation == "x"
     assert v.fraud_txn_ids == ["T00007"]
@@ -47,18 +47,18 @@ def test_grades(res, grade, points):
                                                            res.tool_id)
 
 
-def test_time_bonus_floor():
-    v = score_accusation(TRUTH, SUSPECTS, "E2", [STRONG, STRONG2], budget_left=0, elapsed_s=900)
-    assert v.breakdown["time_bonus"] == 0
+def test_no_time_pressure():
+    v = score_accusation(TRUTH, SUSPECTS, "E2", [STRONG, STRONG2], budget_left=0)
+    assert "time_bonus" not in v.breakdown  # take your time: learning beats speed
 
 
 def test_score_with_irrelevant_evidence():
     bad = [result("x", "zscore", ["E4"]), result("y", "zscore", ["E5"])]
-    v = score_accusation(TRUTH, SUSPECTS, "E2", bad, budget_left=0, elapsed_s=900)
+    v = score_accusation(TRUTH, SUSPECTS, "E2", bad, budget_left=0)
     assert v.score == 800
 
 
 def test_wrong_suspect_still_grades_evidence():
-    v = score_accusation(TRUTH, SUSPECTS, "E4", [STRONG, result("z", "zscore", ["E4"])], 0, 10)
+    v = score_accusation(TRUTH, SUSPECTS, "E4", [STRONG, result("z", "zscore", ["E4"])], 0)
     assert [g.grade for g in v.evidence] == ["irrelevant", "strong"]
     assert v.score == 0

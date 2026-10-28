@@ -266,7 +266,7 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
             elapsed = int(app.state.clock() - session.started_at)
             verdict = score_accusation(truth, meta.suspects, body.suspect_id,
                                        [session.results[e] for e in body.evidence_ids],
-                                       session.budget_left, elapsed)
+                                       session.budget_left)
             names = {s.id: s.name for s in meta.suspects}
             verdict.reveal_figure = reveal_figure(session.bundle.df, truth.fraudster_id,
                                                   truth.fraud_txn_ids, names)

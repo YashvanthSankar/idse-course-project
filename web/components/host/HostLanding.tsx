@@ -1,4 +1,5 @@
 "use client";
+import { BackButton } from "@/components/ui/BackButton";
 import { useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
@@ -20,6 +21,7 @@ export function HostLanding() {
 
   return (
     <main className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-[radial-gradient(ellipse_at_50%_0%,#1b2540_0%,#07080b_70%)] px-6">
+      <BackButton href="/" label="Menu" className="absolute left-4 top-4 z-20" />
       <Rain density={200} />
       <motion.div
         initial={{ opacity: 0, y: 20 }}

@@ -68,6 +68,6 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 
 ## 🧠 BRAIN MODE
 
-### M15 · Tighter budget & clock
-- [ ] T28 · Per-case time limits, server-enforced "trail goes cold", tighter budgets, bigger efficiency + speed bonus
-- [ ] T29 · Countdown HUD, cold-case states, budgets/clock on folders and briefing
+### M15 · Tighter budget (no clock, so students can think)
+- [x] T28 · Tighter budgets (5·5·6·7·7·9·10) that never cover every tool, +40 per unused coin, no time bonus
+- [x] T29 · Budget-first briefing and manual, timer removed from the case HUD, visible ← back buttons on every screen

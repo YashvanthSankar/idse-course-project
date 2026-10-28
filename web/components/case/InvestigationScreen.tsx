@@ -16,7 +16,6 @@ import { useCaseStore } from "@/lib/store";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import type { ToolId, ToolResult, ToolSpec } from "@/lib/types";
 import { BudgetMeter } from "./BudgetMeter";
-import { CaseTimer } from "./CaseTimer";
 import { CodeDrawer } from "./CodeDrawer";
 import { DataTable } from "./DataTable";
 import { EvidenceTray } from "./EvidenceTray";
@@ -25,6 +24,7 @@ import { StepGuide } from "./StepGuide";
 import { SuspectRail } from "./SuspectRail";
 import { ToolKit } from "./ToolKit";
 import { HackerConsole } from "@/components/hacker/HackerConsole";
+import { BackButton } from "@/components/ui/BackButton";
 
 type Tab = "suspects" | "tools" | "result" | "evidence";
 const TABS: { id: Tab; label: string; icon: string }[] = [
@@ -311,7 +311,8 @@ export function InvestigationScreen({
   return (
     <div className="relative flex min-h-dvh flex-col overflow-x-hidden bg-[radial-gradient(ellipse_at_50%_0%,#151b28_0%,#0a0d13_55%,#07080b_100%)] md:h-dvh md:overflow-hidden">
       <header className="relative z-20 flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-white/5 bg-[#0b0d12]/90 px-4 py-3 backdrop-blur sm:px-6">
-        <Link href="/office" onClick={() => sfx.play("tick")} className="font-display text-lg font-black italic text-[#ffd9da] [text-shadow:0_0_10px_rgba(229,72,77,0.8)]" title="Back to the case desk">
+        <BackButton href="/office" label="Case desk" short="Desk" />
+        <Link href="/office" onClick={() => sfx.play("tick")} className="hidden font-display text-lg font-black italic text-[#ffd9da] [text-shadow:0_0_10px_rgba(229,72,77,0.8)] sm:inline" title="Back to the case desk">
           The Auditor
         </Link>
         <div className="min-w-0 flex-1 lg:flex-none">
@@ -324,7 +325,6 @@ export function InvestigationScreen({
           <StepGuide results={store.results.length} pinned={store.pinned.length} />
         </div>
         <div className="flex items-center gap-5">
-          <CaseTimer caseId={caseId} />
           <BudgetMeter budget={meta.budget} left={meta.budget_left} errorTick={errorTick} />
           <div className="flex items-center gap-1">
             <button

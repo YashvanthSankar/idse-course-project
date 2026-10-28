@@ -13,10 +13,10 @@ test("reloading restores results, pins and the verdict", async ({ page, request 
   await expect(page.getByRole("button", { name: "📌 Pin as evidence" })).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "📌 Pin as evidence" }).click();
   await runTool(page, "Box & Whisker");
-  await expect(page.getByTestId("budget-meter")).toContainText("4/8", { timeout: 15_000 });
+  await expect(page.getByTestId("budget-meter")).toContainText("1/5", { timeout: 15_000 });
 
   await page.reload();
-  await expect(page.getByTestId("budget-meter")).toContainText("4/8");
+  await expect(page.getByTestId("budget-meter")).toContainText("1/5");
   await expect(page.getByRole("button", { name: /Z-Score Scan/ }).first()).toBeVisible();
   await expect(page.getByRole("button", { name: /Box & Whisker/ }).first()).toBeVisible();
   await expect(page.getByText("1 of 2")).toBeVisible();

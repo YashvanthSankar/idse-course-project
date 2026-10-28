@@ -30,7 +30,7 @@ def test_levels(client):
 
 def test_create_case_returns_meta(client):
     meta = new_case(client)
-    assert meta["budget_left"] == 8 and len(meta["suspects"]) == 5
+    assert meta["budget_left"] == 5 and len(meta["suspects"]) == 5
     assert len(meta["case_id"]) == 12
 
 
@@ -58,11 +58,11 @@ def test_tools_list_marks_locks(client):
 def test_tool_run_charges_budget(client):
     cid = new_case(client)["case_id"]
     res = client.post(f"/api/cases/{cid}/tools/zscore", json={"params": {}}).json()
-    assert res["cost_charged"] == 2 and res["budget_left"] == 6
+    assert res["cost_charged"] == 2 and res["budget_left"] == 3
     assert res["params"] == {"scope": "per_employee", "threshold": 3.0}
     assert res["code"].startswith("def analyze")
     assert res["figure"]["data"]
-    assert client.get(f"/api/cases/{cid}").json()["budget_left"] == 6
+    assert client.get(f"/api/cases/{cid}").json()["budget_left"] == 3
 
 
 def test_cached_rerun_is_free(client):
@@ -70,15 +70,13 @@ def test_cached_rerun_is_free(client):
     a = client.post(f"/api/cases/{cid}/tools/zscore", json={"params": {}}).json()
     b = client.post(f"/api/cases/{cid}/tools/zscore",
                     json={"params": {"scope": "per_employee"}}).json()
-    assert b["cost_charged"] == 0 and b["result_id"] == a["result_id"] and b["budget_left"] == 6
+    assert b["cost_charged"] == 0 and b["result_id"] == a["result_id"] and b["budget_left"] == 3
 
 
 def test_over_budget_409(client):
-    cid = new_case(client)["case_id"]  # budget 8
+    cid = new_case(client)["case_id"]  # budget 5
     for scope in ("per_employee", "global"):
-        client.post(f"/api/cases/{cid}/tools/zscore", json={"params": {"scope": scope}})
-    client.post(f"/api/cases/{cid}/tools/iqr_box", json={"params": {}})  # 6 spent
-    client.post(f"/api/cases/{cid}/tools/summary", json={"params": {}})  # 7 spent
+        client.post(f"/api/cases/{cid}/tools/zscore", json={"params": {"scope": scope}})  # 4 spent
     res = client.post(f"/api/cases/{cid}/tools/zscore",
                       json={"params": {"scope": "global", "threshold": 2.5}})
     assert res.status_code == 409 and res.json() == {"detail": "Out of budget"}
@@ -94,7 +92,7 @@ def test_bad_params_422(client):
     cid = new_case(client)["case_id"]
     res = client.post(f"/api/cases/{cid}/tools/groupby", json={"params": {"by": "colour"}})
     assert res.status_code == 422
-    assert client.get(f"/api/cases/{cid}").json()["budget_left"] == 8
+    assert client.get(f"/api/cases/{cid}").json()["budget_left"] == 5
 
 
 def test_unknown_tool_422(client):
@@ -125,8 +123,8 @@ def test_csv_download(client):
 
 def test_hacker_charge(client):
     cid = new_case(client)["case_id"]
-    assert client.post(f"/api/cases/{cid}/hacker-charge").json() == {"budget_left": 7}
-    for _ in range(7):
+    assert client.post(f"/api/cases/{cid}/hacker-charge").json() == {"budget_left": 4}
+    for _ in range(4):
         client.post(f"/api/cases/{cid}/hacker-charge")
     assert client.post(f"/api/cases/{cid}/hacker-charge").status_code == 409
 

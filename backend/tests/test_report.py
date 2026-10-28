@@ -28,7 +28,7 @@ def case_session(level: int, *, with_verdict: bool = True) -> CaseSession:
             session.results[result.result_id] = result
         session.verdict = score_accusation(
             bundle.truth, bundle.meta.suspects, bundle.truth.fraudster_id,
-            evidence, session.budget_left, elapsed_s=60,
+            evidence, session.budget_left,
         )
     return session
 

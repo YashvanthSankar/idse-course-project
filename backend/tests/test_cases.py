@@ -17,7 +17,7 @@ def test_different_seeds_differ():
 
 
 def test_level_table_matches_spec():
-    assert [LEVELS[i].budget for i in range(1, 8)] == [8, 8, 10, 10, 12, 14, 14]
+    assert [LEVELS[i].budget for i in range(1, 8)] == [5, 5, 6, 7, 7, 9, 10]
     assert [LEVELS[i].scheme for i in range(1, 7)] == [
         "big_invoice", "duplicates", "fabricated", "weekend", "inflated_ratio", "under_limit",
     ]
@@ -60,7 +60,7 @@ def test_meta_unlocked_tools():
 
 def test_meta_budget_and_rows():
     case = build_case(1, 0)
-    assert case.meta.budget == case.meta.budget_left == 8
+    assert case.meta.budget == case.meta.budget_left == 5
     assert case.meta.n_rows == len(case.df)
     assert case.meta.columns == list(case.df.columns)
     assert 800 <= case.meta.n_rows <= 1500

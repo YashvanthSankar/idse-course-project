@@ -11,8 +11,7 @@ from auditor.models import (
 
 BASE = 1000
 POINTS = {"strong": 250, "supportive": 100, "weak": 0, "irrelevant": -100}
-BUDGET_POINT = 20
-TIME_BONUS_MAX = 300
+BUDGET_POINT = 40  # every coin you didn't need: careful analysis beats running everything
 
 
 def grade_evidence(result: ToolResult, accused: str, catching_tools: list[ToolId]) -> EvidenceGrade:
@@ -34,7 +33,6 @@ def score_accusation(
     accused: str,
     evidence: list[ToolResult],
     budget_left: int,
-    elapsed_s: int,
 ) -> Verdict:
     grades = [grade_evidence(r, accused, truth.catching_tools) for r in evidence]
     correct = accused == truth.fraudster_id
@@ -43,10 +41,9 @@ def score_accusation(
             "base": BASE,
             "evidence": sum(g.points for g in grades),
             "budget_bonus": BUDGET_POINT * budget_left,
-            "time_bonus": max(0, TIME_BONUS_MAX - elapsed_s // 2),
-        }
+        }  # no time bonus: there's no clock, take the time to think
     else:
-        breakdown = {"base": 0, "evidence": 0, "budget_bonus": 0, "time_bonus": 0}
+        breakdown = {"base": 0, "evidence": 0, "budget_bonus": 0}
     return Verdict(
         correct=correct,
         score=max(0, sum(breakdown.values())),

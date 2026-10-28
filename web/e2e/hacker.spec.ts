@@ -12,7 +12,7 @@ test("hacker mode runs pandas and survives an endless loop", async ({ page, requ
   await page.getByLabel("Python code").fill("print(df.shape)");
   await run.click();
   await expect(page.getByText(/\(\d+, 9\)/)).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByText("7/8")).toBeVisible();
+  await expect(page.getByText("4/5")).toBeVisible();
 
   await page.getByLabel("Python code").fill("while True: pass");
   await run.click();

@@ -1,4 +1,5 @@
 "use client";
+import { BackButton } from "@/components/ui/BackButton";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -166,7 +167,8 @@ function NoSuchRoom({ code }: { code: string }) {
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center bg-[radial-gradient(ellipse_at_50%_0%,#1b2540_0%,#07080b_70%)] px-6 text-center">
+    <main className="relative flex min-h-dvh flex-col items-center justify-center bg-[radial-gradient(ellipse_at_50%_0%,#1b2540_0%,#07080b_70%)] px-6 text-center">
+      <BackButton href="/" label="Menu" className="absolute left-4 top-4" />
       <div className="flex w-full max-w-sm flex-col items-center">{children}</div>
     </main>
   );

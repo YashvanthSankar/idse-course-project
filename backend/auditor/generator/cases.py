@@ -47,14 +47,14 @@ LEVELS: dict[int, LevelSpec] = {
         "Rookie. {company}'s internal audit flagged something, then went home. One of these "
         "five has slipped a monster invoice past the system. Careful — the boss spends big "
         "on everything, and big isn't the same as crooked. Compare people with themselves.",
-        "big_invoice", 8, ("ceo",), ("summary", "groupby", "zscore", "iqr_box"), 1,
+        "big_invoice", 5, ("ceo",), ("summary", "groupby", "zscore", "iqr_box"), 1,
     ),
     2: LevelSpec(
         2, "Déjà Vu",
         "Some dinners at {company} were paid for twice.",
         "{company} paid the same restaurant twice for the same night — more than once. "
         "Somebody's been recycling receipts with fresh invoice numbers. Line them up.",
-        "duplicates", 8, (), ("duplicates",), 2,
+        "duplicates", 5, (), ("duplicates",), 2,
     ),
     3: LevelSpec(
         3, "Too Random To Be True",
@@ -62,14 +62,14 @@ LEVELS: dict[int, LevelSpec] = {
         "Every claim at {company} is the right size, filed on time, signed off. And yet "
         "the numbers feel… made up. Real money has a shape, kid. Look at the very first "
         "digit of every amount.",
-        "fabricated", 10, (), ("benford",), 2,
+        "fabricated", 6, (), ("benford",), 2,
     ),
     4: LevelSpec(
         4, "Weekend Warrior",
         "{company}'s card keeps working while the office sleeps.",
         "{company} closes on Saturdays and Sundays. Someone's company card doesn't. Mind "
         "the Diwali bonus week — everyone got paid then, that's the festival, not a crime.",
-        "weekend", 10, ("diwali",), ("timeseries",), 3,
+        "weekend", 7, ("diwali",), ("timeseries",), 3,
     ),
     5: LevelSpec(
         5, "The Margin Call",
@@ -77,7 +77,7 @@ LEVELS: dict[int, LevelSpec] = {
         "Every expense at {company} serves a deal, and bigger deals cost more to win. That "
         "relationship is steady — for most people. Draw the honest line and see who lives "
         "above it.",
-        "inflated_ratio", 12, (), ("regression",), 3,
+        "inflated_ratio", 7, (), ("regression",), 3,
     ),
     6: LevelSpec(
         6, "Ghost Vendor",
@@ -85,14 +85,14 @@ LEVELS: dict[int, LevelSpec] = {
         "Big payments at {company}, odd hours, a vendor name nobody in the office "
         "recognises. Each clue alone is nothing. Together they're a ghost. Let the machine "
         "find what doesn't belong — and don't get distracted by the CEO or the Diwali bonuses.",
-        "under_limit", 14, ("ceo", "diwali"), ("isoforest",), 4,
+        "under_limit", 9, ("ceo", "diwali"), ("isoforest",), 4,
     ),
     7: LevelSpec(
         7, "The Adaptive Fraudster",
         "Endless mode: the fraudster has studied your methods.",
         "Word on the street is they've been watching how you work, rookie. Whatever trick "
         "you lean on, they've learned to hide from it. Use the whole kit.",
-        None, 14, (), (), 5,
+        None, 10, (), (), 5,
     ),
 }
 

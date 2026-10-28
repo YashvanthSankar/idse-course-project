@@ -8,8 +8,7 @@ import { useReducedEffects } from "@/lib/useReducedEffects";
 const LINES = [
   ["base", "Caught the right suspect"],
   ["evidence", "Evidence on the board"],
-  ["budget_bonus", "Budget left over"],
-  ["time_bonus", "Speed bonus"],
+  ["budget_bonus", "Coins left over · +40 each"],
 ] as const;
 
 const fmt = (n: number) => new Intl.NumberFormat("en-IN").format(Math.round(n));

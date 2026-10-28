@@ -17,11 +17,21 @@ test("four clues on one suspect: the accuse button still appears and you pick 2"
   const meta = await (await request.post(`${API}/api/cases`, { data: { level: 1, seed: 11 } })).json();
   const truth = await (await request.get(`${API}/api/debug/cases/${meta.case_id}/truth`)).json();
   await page.goto(`/case/${meta.case_id}`);
-  for (const tool of ["Case Summary", "Pattern Matrix", "Z-Score Scan", "Box & Whisker"]) {
-    await runTool(page, tool);
+  // budget 5: four different clues for exactly 5 coins (1 + 1 + 1 + 2)
+  const pin = async () => {
     await expect(page.getByTestId("result-view")).toBeVisible({ timeout: 15_000 });
     await page.getByRole("button", { name: "📌 Pin as evidence" }).click();
-  }
+  };
+  await runTool(page, "Case Summary");
+  await pin();
+  await runTool(page, "Pattern Matrix"); // by weekday
+  await pin();
+  await page.locator("[data-tool=groupby]").getByRole("radio", { name: /category/i }).click();
+  await page.getByRole("button", { name: "Run Pattern Matrix" }).click();
+  await expect(page.getByTestId("evidence-count")).toHaveText("2 of 2 ✓");
+  await pin();
+  await runTool(page, "Z-Score Scan");
+  await pin();
   await expect(page.getByTestId("evidence-count")).toHaveText("4 pinned · you'll file 2");
 
   await page.keyboard.press("b");
@@ -41,9 +51,8 @@ test("four clues on one suspect: the accuse button still appears and you pick 2"
   await expect(exhibits).toHaveCount(4);
   await expect(page.getByText("2 of 2 chosen")).toBeVisible();
   await expect(page.getByTestId("exhibits")).toContainText("Doesn't point at"); // the summary clue
-  // the sharpest clues (z-score + box plot) are pre-selected
+  // the sharpest clue (the z-score that points at the fraudster) is pre-selected
   await expect(exhibits.filter({ hasText: "Z-Score Scan" })).toHaveAttribute("aria-pressed", "true");
-  await expect(exhibits.filter({ hasText: "Box & Whisker" })).toHaveAttribute("aria-pressed", "true");
 
   // everything fits on a 720px-tall laptop screen: no scrolling to find the button
   await page.waitForTimeout(800);
@@ -57,7 +66,7 @@ test("four clues on one suspect: the accuse button still appears and you pick 2"
 test("budget spent with no clues: you can still accuse", async ({ page, request }) => {
   test.setTimeout(90_000);
   const meta = await (await request.post(`${API}/api/cases`, { data: { level: 1, seed: 12 } })).json();
-  for (let i = 0; i < 8; i++) await request.post(`${API}/api/cases/${meta.case_id}/hacker-charge`);
+  for (let i = 0; i < 5; i++) await request.post(`${API}/api/cases/${meta.case_id}/hacker-charge`);
   await page.goto(`/case/${meta.case_id}`);
   await expect(page.getByTestId("case-title")).toBeVisible();
   await page.keyboard.press("b");

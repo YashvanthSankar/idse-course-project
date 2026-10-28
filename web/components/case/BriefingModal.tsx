@@ -55,7 +55,10 @@ export function BriefingModal({ meta, onClose, onOpenFiles }: {
             </p>
             <p className="mt-4 font-type text-[13px] opacity-75">
               Ledger: {meta.n_rows.toLocaleString("en-IN")} transactions · Investigation budget:{" "}
-              <span className="font-bold">{meta.budget} points</span>
+              <span className="font-bold">{meta.budget} coins</span>
+            </p>
+            <p className="mt-1 font-type text-[13px] opacity-75">
+              Not enough to run every tool. Think before you spend — each coin you save is worth 40 points. No clock: take your time.
             </p>
             <p className="mt-2 text-right font-display text-xl italic">— R.D.</p>
           </motion.article>

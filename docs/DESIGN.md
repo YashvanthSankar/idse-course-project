@@ -47,11 +47,12 @@ else:
                     +100  SUPPORTIVE  accused ∈ implicates AND len(implicates) ≤ 2 (tool not catching)
                        0  WEAK        accused ∈ implicates but len(implicates) > 2
                     -100  IRRELEVANT  accused ∉ implicates
-  budget_bonus  = 20 × budget_left
-  time_bonus    = max(0, 300 − elapsed_seconds // 2)
-  score         = max(0, base + evidence + budget_bonus + time_bonus)
+  budget_bonus  = 40 × budget_left
+  score         = max(0, base + evidence + budget_bonus)
 ```
-Elapsed time is measured on the server from case creation, or from round start in Class Mode.
+**No clock (by design).** Students should think, not rush. The budget is the challenge: it never covers every
+tool, so each run is a decision, and every coin you don't need is worth 40 points. Class Mode keeps its round
+timer, because the teacher chooses that.
 
 ---
 
@@ -84,13 +85,13 @@ Columns of the player-visible table (truth is **never** included):
 
 | L | Title | Scheme | Budget | Red herrings | Catching tools | Unlocks |
 |---|---|---|---|---|---|---|
-| 1 | The Midnight Invoice | `big_invoice`: 1–2 txns at 12–16× that employee's category median | 8 | ceo | zscore, iqr_box | summary, groupby, zscore, iqr_box |
-| 2 | Déjà Vu | `duplicates`: ~8 invoices re-submitted (same vendor and amount, 1–3 days later, new invoice_id) | 8 | none | duplicates | duplicates |
-| 3 | Too Random To Be True | `fabricated`: every claim invented, with realistic size but a random leading digit (flat digits) | 10 | none | benford | benford |
-| 4 | Weekend Warrior | `weekend`: ~15 personal purchases on Sat/Sun | 10 | diwali | timeseries | timeseries |
-| 5 | The Margin Call | `inflated_ratio`: every travel and dining claim padded 1.6–2.0× vs. its deal revenue | 12 | none | regression | regression |
-| 6 | Ghost Vendor | `under_limit`: ~12 txns of 45,000–49,999 (just under the 50k approval limit), 1–4 AM, to a vendor nobody else uses | 14 | ceo, diwali | isoforest, groupby | isoforest |
-| 7+ | Adaptive (endless) | chosen by the Adaptive Fraudster (§6) | 14 | random | per scheme | — |
+| 1 | The Midnight Invoice | `big_invoice`: 1–2 txns at 12–16× that employee's category median | 5 | ceo | zscore, iqr_box | summary, groupby, zscore, iqr_box |
+| 2 | Déjà Vu | `duplicates`: ~8 invoices re-submitted (same vendor and amount, 1–3 days later, new invoice_id) | 5 | none | duplicates | duplicates |
+| 3 | Too Random To Be True | `fabricated`: every claim invented, with realistic size but a random leading digit (flat digits) | 6 | none | benford | benford |
+| 4 | Weekend Warrior | `weekend`: ~15 personal purchases on Sat/Sun | 7 | diwali | timeseries | timeseries |
+| 5 | The Margin Call | `inflated_ratio`: every travel and dining claim padded 1.6–2.0× vs. its deal revenue | 7 | none | regression | regression |
+| 6 | Ghost Vendor | `under_limit`: ~12 txns of 45,000–49,999 (just under the 50k approval limit), 1–4 AM, to a vendor nobody else uses | 9 | ceo, diwali | isoforest, groupby | isoforest |
+| 7+ | Adaptive (endless) | chosen by the Adaptive Fraudster (§6) | 10 | random | per scheme | — |
 
 ---
 
