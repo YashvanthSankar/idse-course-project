@@ -63,4 +63,11 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 ## 🚀 SHIP
 
 ### M14 · Ship & Demo
-- [ ] T27 · Deploy, 200-player load test, README, demo script
+- [x] T27a · 200-player load test, Dockerfile + Fly.io config, README, demo script
+- [ ] T27b · Deploy online (needs your Fly.io + Vercel login)
+
+## 🧠 BRAIN MODE
+
+### M15 · Tighter budget & clock
+- [ ] T28 · Per-case time limits, server-enforced "trail goes cold", tighter budgets, bigger efficiency + speed bonus
+- [ ] T29 · Countdown HUD, cold-case states, budgets/clock on folders and briefing
