@@ -18,14 +18,14 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 - [x] T9 · Fairness tests (every level is solvable, honest data stays quiet)
 
 ### M3 · Game Rules
-- [ ] T10 · Scoring + Adaptive Fraudster
+- [x] T10 · Scoring + Adaptive Fraudster
 
 ### M4 · API
-- [ ] T11 · Case sessions + tool routes (budget, locks, no answer leaks)
-- [ ] T12 · Accuse + telemetry + debug truth
+- [x] T11 · Case sessions + tool routes (budget, locks, no answer leaks)
+- [x] T12 · Accuse + telemetry + debug truth
 
 ### M5 · Notebooks (graded proof)
-- [ ] T13 · `01_case_generator` + `02_detection_tools` notebooks
+- [x] T13 · `01_case_generator` + `02_detection_tools` notebooks
 
 ### M6 · Frontend Foundation
 - [ ] T14 · Next.js scaffold, design tokens, FX layer, sound, API client
@@ -34,12 +34,12 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 - [x] T15 · Title screen, office desk, briefing memo
 
 ### M8 · Investigation Screen
-- [ ] T16 · Suspects, Tool Kit, results, budget meter, timer
-- [ ] T17 · Data table + "Under the hood" code drawer
+- [x] T16 · Suspects, Tool Kit, results, budget meter, timer
+- [x] T17 · Data table + "Under the hood" code drawer
 
 ### M9 · Board, Accuse, Verdict
-- [ ] T18 · Corkboard with red string
-- [ ] T19 · Spotlight accusation, GUILTY stamp, reveal
+- [x] T18 · Corkboard with red string
+- [x] T19 · Spotlight accusation, GUILTY stamp, reveal
 
 ## 🟧 SHOULD
 
@@ -47,11 +47,11 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 - [ ] T20 · Sound, polish, reduced motion, phone layout
 
 ### M11 · Class Mode
-- [ ] T21 · Rooms backend + WebSocket
+- [x] T21 · Rooms backend + WebSocket
 - [ ] T22 · Host projector + player phone pages
 
 ### M12 · Autopsy & Profiles
-- [ ] T23 · Class Autopsy analytics + KMeans detective profiles (+ notebook 03)
+- [x] T23 · Class Autopsy analytics + KMeans detective profiles (+ notebook 03)
 - [ ] T24 · Autopsy slide deck + detective trading card
 
 ## 🟨 COULD
