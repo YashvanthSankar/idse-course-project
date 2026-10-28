@@ -16,7 +16,7 @@ SCHEME_CATCHERS: dict[SchemeId, list[ToolId]] = {
     "big_invoice": ["zscore", "iqr_box"],
     "duplicates": ["duplicates"],
     "fabricated": ["benford"],
-    "weekend": ["timeseries", "groupby"],
+    "weekend": ["timeseries"],
     "inflated_ratio": ["regression"],
     "under_limit": ["isoforest", "groupby"],
 }
@@ -93,7 +93,7 @@ def _big_invoice(df, fraudster_id, rng):
     for idx in picks:
         cat = df.at[idx, "category"]
         median = mine.loc[mine["category"] == cat, "amount"].median()
-        df.at[idx, "amount"] = round(float(median * rng.uniform(9, 12)), 2)
+        df.at[idx, "amount"] = round(float(median * rng.uniform(12, 16)), 2)
     return df, df.loc[picks, "txn_id"].tolist()
 
 

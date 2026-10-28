@@ -5,17 +5,17 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 ## 🟥 MUST
 
 ### M1 · Case Engine (Python)
-- [ ] T1 · Backend scaffold + shared models
-- [ ] T2 · Honest transaction generator
-- [ ] T3 · 6 fraud schemes + red herrings (CEO, Diwali)
-- [ ] T4 · Level catalog + `build_case`
+- [x] T1 · Backend scaffold + shared models
+- [x] T2 · Honest transaction generator
+- [x] T3 · 6 fraud schemes + red herrings (CEO, Diwali)
+- [x] T4 · Level catalog + `build_case`
 
 ### M2 · Detective Tools (Python)
-- [ ] T5 · Tool framework, noir chart theme, Summary + Pattern Matrix
-- [ ] T6 · Z-Score, Box Plot, Twin Finder (duplicates)
-- [ ] T7 · Benford's Law, Timeline
-- [ ] T8 · Margin Regression, IsolationForest
-- [ ] T9 · Fairness tests (every level is solvable, honest data stays quiet)
+- [x] T5 · Tool framework, noir chart theme, Summary + Pattern Matrix
+- [x] T6 · Z-Score, Box Plot, Twin Finder (duplicates)
+- [x] T7 · Benford's Law, Timeline
+- [x] T8 · Margin Regression, IsolationForest
+- [x] T9 · Fairness tests (every level is solvable, honest data stays quiet)
 
 ### M3 · Game Rules
 - [ ] T10 · Scoring + Adaptive Fraudster
@@ -31,7 +31,7 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 - [ ] T14 · Next.js scaffold, design tokens, FX layer, sound, API client
 
 ### M7 · Title & Office
-- [ ] T15 · Title screen, office desk, briefing memo
+- [x] T15 · Title screen, office desk, briefing memo
 
 ### M8 · Investigation Screen
 - [ ] T16 · Suspects, Tool Kit, results, budget meter, timer

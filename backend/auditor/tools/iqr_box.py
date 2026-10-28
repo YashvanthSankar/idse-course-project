@@ -9,21 +9,23 @@ from auditor.tools.base import Analysis, Tool
 def analyze(df: pd.DataFrame) -> Analysis:
     # How many times bigger is each claim than that person's usual claim in the category?
     log_amount = np.log10(df["amount"])
-    group = log_amount.groupby([df["employee_id"], df["category"]])
-    q1, q3 = group.transform(lambda s: s.quantile(0.25)), group.transform(lambda s: s.quantile(0.75))
-    iqr = q3 - q1
-    size = group.transform("size")
+    usual = log_amount.groupby([df["employee_id"], df["category"]]).transform("median")
+    relative = log_amount - usual  # 0 = exactly usual, 1 = ten times usual
 
-    # Tukey's far-out fence: beyond Q3 + 3 x IQR (only for groups with enough claims)
-    outside = (log_amount > q3 + 3 * iqr) & (size >= 4)
-    ratio = 10 ** (log_amount - group.transform("median"))
+    # One box per person (all their claims, relative to usual). Tukey's far-out fence:
+    # anything beyond Q3 + 3 x IQR is not just big — it's in a different league.
+    by_person = relative.groupby(df["employee_id"])
+    q1, q3 = by_person.transform(lambda s: s.quantile(0.25)), by_person.transform(
+        lambda s: s.quantile(0.75))
+    outside = relative > q3 + 3 * (q3 - q1)
+    ratio = 10**relative
     flagged = df.loc[outside].assign(times_usual=ratio[outside].round(1))
     implicates = sorted(flagged["employee_id"].unique())
     return Analysis(
         title="Box & Whisker",
         summary=(
             f"{len(flagged)} claim(s) beyond the far-out fence (Q3 + 3·IQR) of the person's own "
-            f"category. Flagged: {', '.join(implicates) or 'nobody'}."
+            f"spending pattern. Flagged: {', '.join(implicates) or 'nobody'}."
         ),
         stats={"flagged_rows": len(flagged),
                **{f"max_times_usual_{e}": float(ratio[df["employee_id"] == e].max())
