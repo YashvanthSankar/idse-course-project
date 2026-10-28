@@ -15,7 +15,9 @@ COLUMNS = ["ts", "type", "player_id", "case_id", "room_code", "tool_id", "payloa
 
 class Telemetry:
     def __init__(self, path: str | None = None):
-        self.path = path or os.getenv("AUDITOR_DB", "auditor.db")
+        # Serverless hosts (Vercel) only allow writes under /tmp
+        default = "/tmp/auditor.db" if os.getenv("VERCEL") else "auditor.db"
+        self.path = path or os.getenv("AUDITOR_DB", default)
         self._lock = Lock()
         self._db = sqlite3.connect(self.path, check_same_thread=False)
         self._db.execute(
