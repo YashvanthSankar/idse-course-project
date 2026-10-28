@@ -1,4 +1,4 @@
-import type { CaseMeta, ToolId, ToolResult, ToolSpec, Verdict } from "./types";
+import type { CaseMeta, LevelInfo, ToolId, ToolResult, ToolSpec, Verdict } from "./types";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -52,3 +52,5 @@ export const accuse = (caseId: string, suspectId: string, evidenceIds: string[])
 
 export const csvUrl = (caseId: string) => `${API_URL}/api/cases/${caseId}/data.csv`;
 export const reportUrl = (caseId: string) => `${API_URL}/api/cases/${caseId}/report.pdf`;
+
+export const listLevels = () => request<LevelInfo[]>("/api/levels");

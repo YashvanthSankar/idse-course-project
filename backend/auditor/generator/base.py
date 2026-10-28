@@ -46,11 +46,15 @@ SUSPECT_POOL: list[dict] = [
     {"name": "Aditya Banerjee", "role": "Operations Analyst", "department": "Operations",
      "bio": "Quiet, punctual, works weekends. Nobody asks why."},
 ]
+# Portrait keys tell the frontend's procedural portraits which look family to draw:
+# "a" = long hair / saree / kurta looks, "b" = short hair / tie / beard looks.
+_LOOK = {"Priya": "a", "Meera": "a", "Ananya": "a", "Sneha": "a", "Divya": "a", "Kavya": "a",
+         "Ishita": "a", "Tanvi": "a"}
 for i, s in enumerate(SUSPECT_POOL, start=1):
-    s["portrait"] = f"p{i:02d}"
+    s["portrait"] = f"{_LOOK.get(s['name'].split()[0], 'b')}{i:02d}"
 
 CEO: dict = {
-    "name": "Vikram Kapoor", "role": "CEO", "department": "Leadership", "portrait": "p00",
+    "name": "Vikram Kapoor", "role": "CEO", "department": "Leadership", "portrait": "b00",
     "bio": "Built the firm from a Dadar garage. Spends like a man who owns the building — because he does.",
 }
 

@@ -11,3 +11,4 @@ export type ToolResult = S["ToolResult"];
 export type Verdict = S["Verdict"];
 export type EvidenceGrade = S["EvidenceGrade"];
 export type ToolId = ToolResult["tool_id"];
+export type LevelInfo = S["LevelInfo"];
