@@ -44,7 +44,7 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 ## 🟧 SHOULD
 
 ### M10 · Juice & Mobile
-- [ ] T20 · Sound, polish, reduced motion, phone layout
+- [x] T20 · Sound, polish, reduced motion, phone layout
 
 ### M11 · Class Mode
 - [x] T21 · Rooms backend + WebSocket
