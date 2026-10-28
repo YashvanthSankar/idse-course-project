@@ -1,0 +1,1379 @@
+{
+ "url": "http://localhost:3200/",
+ "at": "2026-10-28T15:36:21.544Z",
+ "allow": [],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 1,
+   "filled": [
+    1
+   ],
+   "motion": {
+    "elements": 37,
+    "css": 36,
+    "transitions": 0,
+    "scripted": 1,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 900,
+     "screens": 1,
+     "words": 23,
+     "img": 0,
+     "video": 0,
+     "canvas": 1,
+     "svg": 2,
+     "sections": 0,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "OUTLIER",
+     "words": 1,
+     "chars": 7,
+     "lines": 1,
+     "size": 136,
+     "vw": 9.4,
+     "font": "Bodoni Moda",
+     "weight": 900,
+     "tracking": 0.14,
+     "leading": 1,
+     "upper": true,
+     "italic": false,
+     "mono": false,
+     "align": "center",
+     "position": "center",
+     "widthRatio": 0.55,
+     "top": 170,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "OUTLIER",
+     "words": 1,
+     "lines": 1,
+     "size": 136,
+     "font": "Bodoni Moda"
+    },
+    "headings": [
+     {
+      "text": "OUTLIER",
+      "words": 1,
+      "chars": 7,
+      "lines": 1,
+      "size": 136,
+      "vw": 9.4,
+      "font": "Bodoni Moda",
+      "weight": 900,
+      "tracking": 0.14,
+      "leading": 1,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.55,
+      "top": 170,
+      "tag": "h1",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 1,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 1,
+     "medianWords": null,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "JetBrains Mono",
+       "share": 0.37,
+       "mono": true
+      },
+      {
+       "family": "Bebas Neue",
+       "share": 0.32,
+       "mono": false
+      },
+      {
+       "family": "Playfair Display",
+       "share": 0.26,
+       "mono": false
+      },
+      {
+       "family": "Bodoni Moda",
+       "share": 0.05,
+       "mono": false
+      }
+     ],
+     "familyCount": 4,
+     "sizes": [
+      11,
+      24,
+      136
+     ],
+     "sizeCount": 3,
+     "notLoaded": [],
+     "body": null,
+     "measureChars": null,
+     "max": {
+      "size": 136,
+      "vw": 9.4,
+      "font": "Bodoni Moda",
+      "text": "Outlier"
+     },
+     "monoShare": 0.37,
+     "monoProseShare": 0.37,
+     "monoFamilies": [
+      "JetBrains Mono"
+     ],
+     "monoSamples": [
+      "POWERED BY NUMPY · PANDAS · SCIPY · SCIK"
+     ],
+     "microLabels": 1,
+     "microLabelShare": 0.372,
+     "microSamples": [
+      "POWERED BY NUMPY · PANDAS · SCIPY · SCIK"
+     ],
+     "upperShare": 0.74,
+     "centerShare": 1,
+     "smallText": 1
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#07080b",
+     "bodyBgHsl": {
+      "h": 225,
+      "s": 0.22,
+      "l": 0.04
+     },
+     "dark": true,
+     "sectionBgs": [],
+     "textColors": [
+      {
+       "color": "#efe7d3",
+       "share": 0.37
+      },
+      {
+       "color": "#efe6d2",
+       "share": 0.26
+      },
+      {
+       "color": "#4cc9f0",
+       "share": 0.22
+      },
+      {
+       "color": "#f5a524",
+       "share": 0.1
+      },
+      {
+       "color": "#fff1f1",
+       "share": 0.05
+      }
+     ],
+     "button": null,
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 0,
+     "inHero": 0,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": []
+    },
+    "surfaces": {
+     "shadowStatic": 1,
+     "shadowOverlay": 0,
+     "shadowSamples": [
+      "div.absolute.right-[7%] → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0"
+     ],
+     "gradients": 5,
+     "scrims": 1,
+     "gradientSamples": [
+      "main.relative.flex → radial-gradient(at 50% -10%, rgb(27, 37, 64) 0%, rgb(11, 15, 26) 45%, rgb(7, 8, 11) 100%)",
+      "div.animate-searchlight.absolute → linear-gradient(to top, rgba(76, 201, 240, 0.16), rgba(0, 0, 0, 0) 85%)",
+      "div.animate-searchlight-slow.absolute → linear-gradient(to top, rgba(245, 165, 36, 0.12), rgba(0, 0, 0, 0) 85%)",
+      "div.animate-fog.absolute → radial-gradient(at 30% 70%, rgba(160, 180, 210, 0.16), rgba(0, 0, 0, 0) 60%)"
+     ],
+     "gradientText": 0,
+     "hairlines": 1,
+     "hairlineSamples": [
+      "div.absolute.inset-x-0 1440px rule"
+     ],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 2,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 3,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "canvas",
+      "ratio": 1
+     },
+     {
+      "type": "bg-image",
+      "ratio": 1
+     },
+     {
+      "type": "svg",
+      "ratio": 0.61
+     },
+     {
+      "type": "svg",
+      "ratio": 0.17
+     }
+    ],
+    "nav": null,
+    "fontsLoaded": [
+     "playfair display",
+     "playfair display fallback",
+     "inter",
+     "bodoni moda",
+     "bebas neue",
+     "jetbrains mono"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 900,
+    "margins": {
+     "left": 322,
+     "right": 322
+    },
+    "sections": [
+     {
+      "sel": "div.pointer-events-none.absolute",
+      "tag": "div",
+      "top": -63,
+      "height": 765,
+      "words": 0,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": null,
+      "right": null,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.pointer-events-none.absolute",
+      "tag": "div",
+      "top": 198,
+      "height": 702,
+      "words": 0,
+      "media": 2,
+      "middle": 0,
+      "heading": null,
+      "left": null,
+      "right": null,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": true,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.pointer-events-none.absolute",
+      "tag": "div",
+      "top": 468,
+      "height": 306,
+      "words": 0,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": null,
+      "right": null,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "canvas.pointer-events-none.absolute",
+      "tag": "canvas",
+      "top": 0,
+      "height": 900,
+      "words": 0,
+      "media": 1,
+      "middle": 0,
+      "heading": null,
+      "left": null,
+      "right": null,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": true,
+      "footer": true,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "OUTLIER",
+      "size": 136,
+      "top": 170,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [],
+    "leftBlocks": 0,
+    "bodySize": 11,
+    "stage": true,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 1,
+   "filled": [
+    1
+   ],
+   "motion": {
+    "elements": 37,
+    "css": 35,
+    "transitions": 0,
+    "scripted": 2,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 1024,
+     "screens": 1,
+     "words": 24,
+     "img": 0,
+     "video": 0,
+     "canvas": 1,
+     "svg": 2,
+     "sections": 0,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "OUTLIER",
+     "words": 1,
+     "chars": 7,
+     "lines": 1,
+     "size": 136,
+     "vw": 17.7,
+     "font": "Bodoni Moda",
+     "weight": 900,
+     "tracking": 0.14,
+     "leading": 1,
+     "upper": true,
+     "italic": false,
+     "mono": false,
+     "align": "center",
+     "position": "center",
+     "widthRatio": 1.04,
+     "top": 187,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "OUTLIER",
+     "words": 1,
+     "lines": 1,
+     "size": 136,
+     "font": "Bodoni Moda"
+    },
+    "headings": [
+     {
+      "text": "OUTLIER",
+      "words": 1,
+      "chars": 7,
+      "lines": 1,
+      "size": 136,
+      "vw": 17.7,
+      "font": "Bodoni Moda",
+      "weight": 900,
+      "tracking": 0.14,
+      "leading": 1,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 1.04,
+      "top": 187,
+      "tag": "h1",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 1,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 1,
+     "medianWords": null,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "JetBrains Mono",
+       "share": 0.37,
+       "mono": true
+      },
+      {
+       "family": "Bebas Neue",
+       "share": 0.32,
+       "mono": false
+      },
+      {
+       "family": "Playfair Display",
+       "share": 0.26,
+       "mono": false
+      },
+      {
+       "family": "Bodoni Moda",
+       "share": 0.05,
+       "mono": false
+      }
+     ],
+     "familyCount": 4,
+     "sizes": [
+      11,
+      24,
+      136
+     ],
+     "sizeCount": 3,
+     "notLoaded": [],
+     "body": null,
+     "measureChars": null,
+     "max": {
+      "size": 136,
+      "vw": 17.7,
+      "font": "Bodoni Moda",
+      "text": "Outlier"
+     },
+     "monoShare": 0.37,
+     "monoProseShare": 0.37,
+     "monoFamilies": [
+      "JetBrains Mono"
+     ],
+     "monoSamples": [
+      "POWERED BY NUMPY · PANDAS · SCIPY · SCIK"
+     ],
+     "microLabels": 1,
+     "microLabelShare": 0.372,
+     "microSamples": [
+      "POWERED BY NUMPY · PANDAS · SCIPY · SCIK"
+     ],
+     "upperShare": 0.74,
+     "centerShare": 1,
+     "smallText": 1
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#07080b",
+     "bodyBgHsl": {
+      "h": 225,
+      "s": 0.22,
+      "l": 0.04
+     },
+     "dark": true,
+     "sectionBgs": [],
+     "textColors": [
+      {
+       "color": "#efe7d3",
+       "share": 0.37
+      },
+      {
+       "color": "#efe6d2",
+       "share": 0.26
+      },
+      {
+       "color": "#4cc9f0",
+       "share": 0.22
+      },
+      {
+       "color": "#f5a524",
+       "share": 0.1
+      },
+      {
+       "color": "#fff1f1",
+       "share": 0.05
+      }
+     ],
+     "button": null,
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 0,
+     "inHero": 0,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": []
+    },
+    "surfaces": {
+     "shadowStatic": 1,
+     "shadowOverlay": 0,
+     "shadowSamples": [
+      "div.absolute.right-[7%] → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0"
+     ],
+     "gradients": 5,
+     "scrims": 1,
+     "gradientSamples": [
+      "main.relative.flex → radial-gradient(at 50% -10%, rgb(27, 37, 64) 0%, rgb(11, 15, 26) 45%, rgb(7, 8, 11) 100%)",
+      "div.animate-searchlight.absolute → linear-gradient(to top, rgba(76, 201, 240, 0.16), rgba(0, 0, 0, 0) 85%)",
+      "div.animate-searchlight-slow.absolute → linear-gradient(to top, rgba(245, 165, 36, 0.12), rgba(0, 0, 0, 0) 85%)",
+      "div.animate-fog.absolute → radial-gradient(at 30% 70%, rgba(160, 180, 210, 0.16), rgba(0, 0, 0, 0) 60%)"
+     ],
+     "gradientText": 0,
+     "hairlines": 1,
+     "hairlineSamples": [
+      "div.absolute.inset-x-0 768px rule"
+     ],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 2,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 3,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "canvas",
+      "ratio": 1
+     },
+     {
+      "type": "bg-image",
+      "ratio": 1
+     },
+     {
+      "type": "svg",
+      "ratio": 0.61
+     },
+     {
+      "type": "svg",
+      "ratio": 0.17
+     }
+    ],
+    "nav": null,
+    "fontsLoaded": [
+     "playfair display",
+     "playfair display fallback",
+     "inter",
+     "bodoni moda",
+     "bebas neue",
+     "jetbrains mono"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "pageH": 1024,
+    "margins": {
+     "left": 132,
+     "right": 132
+    },
+    "sections": [
+     {
+      "sel": "div.pointer-events-none.absolute",
+      "tag": "div",
+      "top": -72,
+      "height": 870,
+      "words": 0,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": null,
+      "right": null,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.pointer-events-none.absolute",
+      "tag": "div",
+      "top": 225,
+      "height": 799,
+      "words": 0,
+      "media": 2,
+      "middle": 0,
+      "heading": null,
+      "left": null,
+      "right": null,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": true,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.pointer-events-none.absolute",
+      "tag": "div",
+      "top": 532,
+      "height": 348,
+      "words": 0,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": null,
+      "right": null,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "canvas.pointer-events-none.absolute",
+      "tag": "canvas",
+      "top": 0,
+      "height": 1024,
+      "words": 0,
+      "media": 1,
+      "middle": 0,
+      "heading": null,
+      "left": null,
+      "right": null,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": true,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.relative.z-10",
+      "tag": "div",
+      "top": 143,
+      "height": 504,
+      "words": 11,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Outlier",
+       "size": 136,
+       "tag": "h1"
+      },
+      "left": 132,
+      "right": 132,
+      "textLeft": -14,
+      "textRight": -14,
+      "fullBleed": false,
+      "footer": true,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "OUTLIER",
+      "size": 136,
+      "top": 187,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [],
+    "leftBlocks": 0,
+    "bodySize": 11,
+    "stage": true,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 1,
+   "filled": [
+    1
+   ],
+   "motion": {
+    "elements": 37,
+    "css": 35,
+    "transitions": 0,
+    "scripted": 2,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 844,
+     "screens": 1,
+     "words": 24,
+     "img": 0,
+     "video": 0,
+     "canvas": 1,
+     "svg": 2,
+     "sections": 0,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "OUTLIER",
+     "words": 1,
+     "chars": 7,
+     "lines": 1,
+     "size": 51.2,
+     "vw": 13.1,
+     "font": "Bodoni Moda",
+     "weight": 900,
+     "tracking": 0.14,
+     "leading": 1,
+     "upper": true,
+     "italic": false,
+     "mono": false,
+     "align": "center",
+     "position": "center",
+     "widthRatio": 0.77,
+     "top": 154,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "OUTLIER",
+     "words": 1,
+     "lines": 1,
+     "size": 51.2,
+     "font": "Bodoni Moda"
+    },
+    "headings": [
+     {
+      "text": "OUTLIER",
+      "words": 1,
+      "chars": 7,
+      "lines": 1,
+      "size": 51.2,
+      "vw": 13.1,
+      "font": "Bodoni Moda",
+      "weight": 900,
+      "tracking": 0.14,
+      "leading": 1,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.77,
+      "top": 154,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "PRESS ANY KEY",
+      "words": 3,
+      "chars": 13,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Bebas Neue",
+      "weight": 400,
+      "tracking": 0.3,
+      "leading": 1.33,
+      "upper": true,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.69,
+      "top": 321,
+      "tag": "p",
+      "kind": "statement"
+     }
+    ],
+    "headingSummary": {
+     "count": 2,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 1,
+     "centered": 2,
+     "medianWords": 3,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "JetBrains Mono",
+       "share": 0.37,
+       "mono": true
+      },
+      {
+       "family": "Bebas Neue",
+       "share": 0.32,
+       "mono": false
+      },
+      {
+       "family": "Playfair Display",
+       "share": 0.26,
+       "mono": false
+      },
+      {
+       "family": "Bodoni Moda",
+       "share": 0.05,
+       "mono": false
+      }
+     ],
+     "familyCount": 4,
+     "sizes": [
+      9,
+      16,
+      18,
+      24,
+      51
+     ],
+     "sizeCount": 5,
+     "notLoaded": [],
+     "body": null,
+     "measureChars": null,
+     "max": {
+      "size": 51.2,
+      "vw": 13.1,
+      "font": "Bodoni Moda",
+      "text": "Outlier"
+     },
+     "monoShare": 0.37,
+     "monoProseShare": 0.37,
+     "monoFamilies": [
+      "JetBrains Mono"
+     ],
+     "monoSamples": [
+      "POWERED BY NUMPY · PANDAS · SCIPY · SCIK"
+     ],
+     "microLabels": 1,
+     "microLabelShare": 0.372,
+     "microSamples": [
+      "POWERED BY NUMPY · PANDAS · SCIPY · SCIK"
+     ],
+     "upperShare": 0.74,
+     "centerShare": 1,
+     "smallText": 1
+    },
+    "eyebrows": [
+     {
+      "text": "FORENSIC ACCOUNTING · MUMBAI",
+      "above": "OUTLIER",
+      "upper": true,
+      "tracked": true,
+      "mono": false,
+      "pill": false,
+      "size": 16,
+      "top": 118
+     }
+    ],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#07080b",
+     "bodyBgHsl": {
+      "h": 225,
+      "s": 0.22,
+      "l": 0.04
+     },
+     "dark": true,
+     "sectionBgs": [],
+     "textColors": [
+      {
+       "color": "#efe7d3",
+       "share": 0.37
+      },
+      {
+       "color": "#efe6d2",
+       "share": 0.26
+      },
+      {
+       "color": "#4cc9f0",
+       "share": 0.22
+      },
+      {
+       "color": "#f5a524",
+       "share": 0.1
+      },
+      {
+       "color": "#fff1f1",
+       "share": 0.05
+      }
+     ],
+     "button": null,
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 0,
+     "inHero": 0,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": []
+    },
+    "surfaces": {
+     "shadowStatic": 1,
+     "shadowOverlay": 0,
+     "shadowSamples": [
+      "div.absolute.right-[7%] → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0"
+     ],
+     "gradients": 5,
+     "scrims": 1,
+     "gradientSamples": [
+      "main.relative.flex → radial-gradient(at 50% -10%, rgb(27, 37, 64) 0%, rgb(11, 15, 26) 45%, rgb(7, 8, 11) 100%)",
+      "div.animate-searchlight.absolute → linear-gradient(to top, rgba(76, 201, 240, 0.16), rgba(0, 0, 0, 0) 85%)",
+      "div.animate-searchlight-slow.absolute → linear-gradient(to top, rgba(245, 165, 36, 0.12), rgba(0, 0, 0, 0) 85%)",
+      "div.animate-fog.absolute → radial-gradient(at 30% 70%, rgba(160, 180, 210, 0.16), rgba(0, 0, 0, 0) 60%)"
+     ],
+     "gradientText": 0,
+     "hairlines": 1,
+     "hairlineSamples": [
+      "div.absolute.inset-x-0 390px rule"
+     ],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 0,
+     "boxRadius": 0,
+     "squareMedia": 2,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 3,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "canvas",
+      "ratio": 1
+     },
+     {
+      "type": "bg-image",
+      "ratio": 1
+     },
+     {
+      "type": "svg",
+      "ratio": 0.61
+     },
+     {
+      "type": "svg",
+      "ratio": 0.17
+     }
+    ],
+    "nav": null,
+    "fontsLoaded": [
+     "playfair display",
+     "playfair display fallback",
+     "inter",
+     "bodoni moda",
+     "bebas neue",
+     "jetbrains mono"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 844,
+    "margins": {
+     "left": 44,
+     "right": 44
+    },
+    "sections": [
+     {
+      "sel": "div.pointer-events-none.absolute",
+      "tag": "div",
+      "top": -59,
+      "height": 717,
+      "words": 0,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": null,
+      "right": null,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.pointer-events-none.absolute",
+      "tag": "div",
+      "top": 186,
+      "height": 658,
+      "words": 0,
+      "media": 2,
+      "middle": 0,
+      "heading": null,
+      "left": null,
+      "right": null,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": true,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.pointer-events-none.absolute",
+      "tag": "div",
+      "top": 439,
+      "height": 287,
+      "words": 0,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": null,
+      "right": null,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "canvas.pointer-events-none.absolute",
+      "tag": "canvas",
+      "top": 0,
+      "height": 844,
+      "words": 0,
+      "media": 1,
+      "middle": 0,
+      "heading": null,
+      "left": null,
+      "right": null,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": true,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "div.relative.z-10",
+      "tag": "div",
+      "top": 118,
+      "height": 403,
+      "words": 11,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Outlier",
+       "size": 51,
+       "tag": "h1"
+      },
+      "left": 45,
+      "right": 45,
+      "textLeft": 45,
+      "textRight": 45,
+      "fullBleed": false,
+      "footer": true,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "OUTLIER",
+      "size": 51,
+      "top": 154,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [],
+    "leftBlocks": 0,
+    "bodySize": 9,
+    "stage": true,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  }
+ ],
+ "findings": [
+  {
+   "level": "FAIL",
+   "id": "mono",
+   "width": 1440,
+   "message": "Monospace type outside code: JetBrains Mono — e.g. \"POWERED BY NUMPY · PANDAS · SCIPY · SCIK\"",
+   "fix": "Set it in the text face. Monospace is for literal code inside <pre>/<code> only.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "micro-label",
+   "width": 1440,
+   "message": "1 tiny uppercase letter-spaced label(s): \"POWERED BY NUMPY · PANDAS · SCIPY · SCIK\"",
+   "fix": "Prefer sentence case at body size.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "gradient",
+   "width": 1440,
+   "message": "5 gradient fill(s): main.relative.flex → radial-gradient(at 50% -10%, rgb(27, 37, 64) 0%, rgb(11, 15, 26) 45%, rgb(7, 8, 11) 100%) | div.animate-searchlight.absolute → linear-gradient(to top, rgba(76, 201, 240, 0.16), rgba(0, 0, 0, 0) 85%) | div.animate-searchlight-slow.absolute → linear-gradient(to top, rgba(245, 165, 36, 0.12), rgba(0, 0, 0, 0) 85%)",
+   "fix": "Use a flat colour or a real image. The only gradient allowed by default is a neutral scrim over a photo for legibility.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "shadow",
+   "width": 1440,
+   "message": "1 box-shadow(s) on elements at rest: div.absolute.right-[7%] → rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0",
+   "fix": "Remove. Separate surfaces with a tone step or space. Shadows are for things that really float (menus, dialogs, sticky bars).",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "text-shadow",
+   "width": 1440,
+   "message": "3 text-shadow(s).",
+   "fix": "Remove; fix legibility with a scrim or a different crop.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "hairline",
+   "width": 1440,
+   "message": "1 thin rule(s)/divider line(s): div.absolute.inset-x-0 1440px rule",
+   "fix": "Delete. Separate with space, a tone change, or scale. Lines are only for real tables and form fields.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "palette-cream",
+   "width": 1440,
+   "message": "Yellow-cream background (text #efe7d3, text #efe6d2).",
+   "fix": "Use the drawn palette. If you want warmth, take a low-chroma stone or bone, not a yellow cream.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "font-count",
+   "width": 1440,
+   "message": "4 typefaces in use (JetBrains Mono, Bebas Neue, Playfair Display, Bodoni Moda).",
+   "fix": "Two at most: one display, one text. Often one is enough.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "first-action",
+   "width": 1440,
+   "message": "No visible button in the first screen.",
+   "fix": "Give the one primary action a real button in the first screen (a filled or solid-bordered control, 44px or taller), not only a link in the navigation.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "few-pictures",
+   "width": 1440,
+   "message": "Only 0 picture(s) on the page (0 photographs, footage or raster images, 0 interface fragments). Drawings in SVG do not count.",
+   "fix": "Find real pictures of the subject's world with scripts/assets.mjs (photographs, archival images, maps, engravings, footage), download them to assets/ and give them room: a hero picture, one per section that has a subject, a full-width band. At least four, usually six to twelve."
+  },
+  {
+   "level": "WARN",
+   "id": "no-footage",
+   "width": 1440,
+   "message": "No video anywhere on the page.",
+   "fix": "Look for one honest clip with scripts/assets.mjs --video (the place, the material, the process) and use it as a muted loop with a poster frame. Defend its absence only if no clip fits the subject."
+  },
+  {
+   "level": "WARN",
+   "id": "small-text",
+   "width": 1440,
+   "message": "1 text block(s) under 13px.",
+   "fix": "Nothing meant to be read goes below 13px.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "covered-text",
+   "width": 1440,
+   "message": "Large text lies under another element at some scroll position: \"FORENSIC ACCOUNTING · MUMBAI\" (screen 1, 100% hidden); \"OUTLIER\" (screen 1, 100% hidden); \"Every number tells a st\" (screen 1, 100% hidden); \"PRESS ANY KEY\" (screen 1, 100% hidden)",
+   "fix": "Nothing may sit on top of a headline or statement. Move the picture, shorten the pinned run, or raise the text above it (z-index) and give it a ground.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "eyebrow",
+   "width": 390,
+   "message": "1 eyebrow/kicker label(s) above headings: \"FORENSIC ACCOUNTING · MUMBAI\" above \"OUTLIER\"",
+   "fix": "Delete them. If the label carried real information, fold it into the headline or the supporting sentence."
+  }
+ ],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "/Users/yashvanths/Study/IDSE/idse-game/web/.taste-skill/before/desktop-fold.jpg",
+   "pages": [
+    "/Users/yashvanths/Study/IDSE/idse-game/web/.taste-skill/before/desktop-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "/Users/yashvanths/Study/IDSE/idse-game/web/.taste-skill/before/tablet-fold.jpg",
+   "pages": [
+    "/Users/yashvanths/Study/IDSE/idse-game/web/.taste-skill/before/tablet-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "/Users/yashvanths/Study/IDSE/idse-game/web/.taste-skill/before/mobile-fold.jpg",
+   "pages": [
+    "/Users/yashvanths/Study/IDSE/idse-game/web/.taste-skill/before/mobile-page-01.jpg"
+   ],
+   "film": []
+  }
+ ]
+}

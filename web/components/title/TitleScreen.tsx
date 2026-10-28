@@ -1,9 +1,8 @@
 "use client";
-import { AnimatePresence, motion, useMotionValue } from "framer-motion";
+import { motion, useMotionValue } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Rain } from "@/components/fx/Rain";
-import { Typewriter } from "@/components/fx/Typewriter";
 import { SettingsPanel } from "@/components/settings/SettingsPanel";
 import { progressSummary } from "@/lib/progress";
 import { sfx } from "@/lib/sound";
@@ -63,101 +62,75 @@ export function TitleScreen() {
     };
   });
 
+  const letters = ["O", "U", "T", "L", "I", "E", "R"];
+
   return (
-    <main className="relative flex min-h-dvh flex-col items-center overflow-hidden bg-[radial-gradient(ellipse_at_50%_-10%,#1b2540_0%,#0b0f1a_45%,#07080b_100%)]">
-      <div aria-hidden className="absolute right-[7%] top-[3%] h-14 w-14 rounded-full bg-[#f3ead2] opacity-80 blur-[1px] shadow-[0_0_60px_20px_rgba(243,234,210,0.12)] sm:left-[72%] sm:right-auto sm:top-[10%] sm:h-28 sm:w-28 sm:shadow-[0_0_80px_30px_rgba(243,234,210,0.15)]" />
-      {/* two searchlights sweeping the night sky behind the city */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-[22%] h-[85%] overflow-hidden">
-        <div className="animate-searchlight absolute bottom-0 left-[18%] h-[120%] w-40 origin-bottom bg-[linear-gradient(to_top,rgba(76,201,240,0.16),transparent_85%)] [clip-path:polygon(46%_100%,54%_100%,100%_0,0_0)]" />
-        <div className="animate-searchlight-slow absolute bottom-0 right-[16%] h-[120%] w-48 origin-bottom bg-[linear-gradient(to_top,rgba(245,165,36,0.12),transparent_85%)] [clip-path:polygon(46%_100%,54%_100%,100%_0,0_0)]" />
-      </div>
+    <main className="relative flex min-h-dvh flex-col overflow-hidden bg-[#070a12]">
+      {/* the city, low and dark, with the moon behind it */}
+      <div aria-hidden className="absolute left-[44%] top-[7%] h-16 w-16 rounded-full bg-[#f3ead2] opacity-70 shadow-[0_0_70px_24px_rgba(243,234,210,0.12)] sm:h-24 sm:w-24" />
       <Skyline pointerX={pointerX} />
-      {/* low fog rolling between the buildings */}
       <div aria-hidden className="pointer-events-none absolute inset-x-[-20%] bottom-[14%] h-[34%]">
-        <div className="animate-fog absolute inset-0 bg-[radial-gradient(ellipse_at_30%_70%,rgba(160,180,210,0.16),transparent_60%)] blur-2xl" />
-        <div className="animate-fog-slow absolute inset-0 bg-[radial-gradient(ellipse_at_75%_60%,rgba(160,180,210,0.12),transparent_55%)] blur-3xl" />
+        <div className="animate-fog absolute inset-0 bg-[radial-gradient(ellipse_at_30%_70%,rgba(160,180,210,0.14),transparent_60%)] blur-2xl" />
       </div>
-      <Rain lightning density={340} />
+      <Rain lightning density={300} />
+      {/* darken the lower half so the monument reads over the lights */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%] bg-[linear-gradient(to_top,#070a12_35%,transparent)]" />
 
-      <div className="relative z-10 mt-[14vh] flex flex-col items-center px-4 text-center">
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.8 }}
-          transition={{ duration: 2 }}
-          className="mb-3 font-poster text-base tracking-[0.22em] text-cyan [text-shadow:0_0_10px_rgba(76,201,240,0.55)] sm:text-2xl sm:tracking-[0.4em]"
-        >
-          FORENSIC ACCOUNTING · MUMBAI
-        </motion.p>
-        <h1 className="animate-neon font-title text-[3.2rem] font-black uppercase leading-none tracking-[0.14em] text-[#fff1f1] sm:text-[7rem] md:text-[8.5rem]">
-          Outlier
-        </h1>
-        <p className="mt-5 min-h-8 text-balance font-display text-lg italic text-paper/85 sm:text-2xl">
-          <Typewriter text="Every number tells a story. Some of them lie." delay={900} speed={45} sound={false} />
+      {/* top corners: what this is / the menu */}
+      <header className="relative z-10 flex items-start justify-between gap-6 px-5 pt-5 sm:px-8 sm:pt-7">
+        <p className="max-w-[22ch] text-[15px] leading-snug text-paper/85 sm:text-lg">
+          A detective game. Catch the fraudster with real statistics.
+          <span className="block text-paper/50">
+            {summary.closed > 0
+              ? `${summary.closed} of 7 cases closed · best ${summary.best.toLocaleString("en-IN")}`
+              : "Mumbai · 2 AM · raining"}
+          </span>
         </p>
+        <nav aria-label="Main menu" className="flex flex-col items-end gap-1 text-right">
+          {MENU.map((item, i) => (
+            <button
+              key={item.id}
+              onMouseEnter={() => {
+                setFocus(i);
+                sfx.play("tick");
+              }}
+              onFocus={() => setFocus(i)}
+              onClick={() => choose(item.id)}
+              className={`min-h-11 text-xl font-medium leading-tight transition-colors sm:text-2xl ${
+                focus === i ? "text-amber [text-shadow:0_0_16px_rgba(245,165,36,0.4)]" : "text-paper/80 hover:text-paper"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+          <p className="mt-2 hidden max-w-[28ch] text-base text-paper/60 sm:block" aria-live="polite">
+            {MENU[focus].hint}
+          </p>
+        </nav>
+      </header>
 
-        <div className="mt-10 min-h-56 w-full max-w-md px-4 py-6 [text-shadow:0_2px_14px_rgba(0,0,0,0.9)] sm:mt-12 sm:px-8">
-          <AnimatePresence mode="wait">
-            {!awake ? (
-              <motion.p
-                key="press"
-                exit={{ opacity: 0 }}
-                className="animate-blink font-poster text-2xl tracking-[0.3em] text-amber"
-              >
-                PRESS ANY KEY
-              </motion.p>
-            ) : (
-              <motion.nav
-                key="menu"
-                aria-label="Main menu"
-                initial="hidden"
-                animate="show"
-                variants={{ show: { transition: { staggerChildren: 0.12 } } }}
-                className="flex flex-col items-center gap-1"
-              >
-                {MENU.map((item, i) => (
-                  <motion.button
-                    key={item.id}
-                    variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
-                    onMouseEnter={() => {
-                      setFocus(i);
-                      sfx.play("tick");
-                    }}
-                    onClick={() => choose(item.id)}
-                    className={`group relative min-h-12 whitespace-nowrap px-7 font-poster text-[1.7rem] leading-none tracking-[0.08em] transition-colors sm:px-8 sm:text-[2.6rem] sm:tracking-[0.12em] ${
-                      focus === i
-                        ? "text-amber [text-shadow:0_0_18px_rgba(245,165,36,0.45)]"
-                        : "text-paper/70 hover:text-paper"
-                    }`}
-                  >
-                    <span aria-hidden className={`absolute left-0 top-1/2 -translate-y-1/2 text-[0.6em] transition-opacity ${focus === i ? "opacity-100" : "opacity-0"}`}>▸</span>
-                    <span className="mr-3 align-middle font-mono text-xs tracking-normal text-paper/40 sm:text-sm">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    {item.label.toUpperCase()}
-                    <span aria-hidden className={`absolute right-0 top-1/2 -translate-y-1/2 text-[0.6em] transition-opacity ${focus === i ? "opacity-100" : "opacity-0"}`}>◂</span>
-                  </motion.button>
-                ))}
-                <motion.p
-                  key={MENU[focus].id}
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 text-sm text-paper/75 sm:text-base"
-                >
-                  {MENU[focus].hint}
-                </motion.p>
-                <p className="mt-1 text-xs text-paper/45">
-                  {summary.closed > 0
-                    ? `${summary.closed} of 7 cases closed · best score ${summary.best.toLocaleString("en-IN")}`
-                    : "↑ ↓ to choose · Enter to open"}
-                </p>
-              </motion.nav>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      <p className="absolute inset-x-4 bottom-4 z-10 text-center font-mono text-[9px] tracking-widest text-paper/45 sm:text-[11px]">
-        POWERED BY NUMPY · PANDAS · SCIPY · SCIKIT-LEARN
+      {/* the monument: the name fills the width, and one letter is the outlier */}
+      <h1
+        aria-label="Outlier"
+        className="relative z-10 mt-auto flex w-full items-end justify-between px-5 pb-2 font-title font-black uppercase leading-none text-[#e8e6e1] sm:px-8"
+        style={{ fontSize: "clamp(3.2rem, 17.5vw, 19rem)" }}
+      >
+        {letters.map((ch, i) => (
+          <motion.span
+            key={i}
+            aria-hidden
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: i === 0 ? "-0.22em" : 0, opacity: 1 }}
+            transition={{ delay: 0.15 + i * 0.07, type: "spring", stiffness: 120, damping: 18 }}
+            className={i === 0 ? "animate-neon text-[#ffd9da]" : ""}
+          >
+            {ch}
+          </motion.span>
+        ))}
+      </h1>
+      <p className="relative z-10 px-5 pb-5 text-base text-paper/70 sm:px-8 sm:pb-7 sm:text-lg">
+        <span className="text-[#ffd9da]">One</span> of them doesn&apos;t fit. Find out who.
+        <span className="float-right hidden text-paper/40 sm:inline">numpy · pandas · scipy · scikit-learn</span>
       </p>
 
       <Manual open={panel === "manual"} onClose={() => setPanel(null)} />

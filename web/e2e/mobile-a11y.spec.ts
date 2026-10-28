@@ -38,11 +38,9 @@ test.describe("reduced motion", () => {
     expect(b).toBe(a);
   });
 
-  test("typewriter text appears instantly", async ({ page }) => {
+  test("the title is there at once", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByText("Every number tells a story. Some of them lie.", { exact: false }).first())
-      .toBeAttached();
-    const typed = await page.locator("[aria-label='Every number tells a story. Some of them lie.'] > span").first().textContent();
-    expect(typed).toBe("Every number tells a story. Some of them lie.");
+    await expect(page.getByRole("heading", { name: "Outlier" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Main menu" })).toBeVisible();
   });
 });
