@@ -6,6 +6,7 @@ import { BriefingModal } from "@/components/case/BriefingModal";
 import { LampLight } from "@/components/fx/LampLight";
 import { createCase, listLevels } from "@/lib/api";
 import { EMPTY_PROGRESS, isUnlocked, loadProgress } from "@/lib/progress";
+import { useSettings } from "@/lib/settings";
 import { sfx } from "@/lib/sound";
 import { useCaseStore } from "@/lib/store";
 import type { CaseMeta } from "@/lib/types";
@@ -31,6 +32,7 @@ function subscribeStorage(cb: () => void) {
 }
 
 export function OfficeScene() {
+  const unlockAll = useSettings((s) => s.unlockAll);
   const router = useRouter();
   const raw = useSyncExternalStore(subscribeStorage, readProgressRaw, () => null);
   const progress = useMemo(
@@ -88,7 +90,7 @@ export function OfficeScene() {
                     <CaseFolder
                       key={info.level}
                       info={info}
-                      locked={!isUnlocked(progress, info.level)}
+                      locked={!unlockAll && !isUnlocked(progress, info.level)}
                       best={progress.best[info.level]}
                       opening={open.isPending && open.variables === info.level}
                       onOpen={() => open.mutate(info.level)}

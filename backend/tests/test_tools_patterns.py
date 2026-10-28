@@ -50,3 +50,21 @@ def test_timeseries_ignores_diwali():
 def test_timeseries_rejects_bad_freq():
     with pytest.raises(ValueError):
         run_tool("timeseries", build_case(4, 0).df, {"freq": "M"})
+
+
+def test_timeline_chart_has_one_row_per_employee_with_weekend_share():
+    case = build_case(4, 0)
+    _, fig, _ = run_tool("timeseries", case.df, {"freq": "D"},
+                         names={s.id: s.name for s in case.meta.suspects})
+    rows = fig["layout"]["yaxis"]["categoryarray"]
+    assert len(rows) == 5
+    fraudster = next(s.name for s in case.meta.suspects if s.id == case.truth.fraudster_id)
+    label = next(r for r in rows if fraudster in r)
+    assert "%" in label  # each row shows that person's weekend share
+
+
+def test_timeline_weekly_groups_weekend_claims():
+    _, fig, _ = run_tool("timeseries", build_case(4, 0).df, {"freq": "W"})
+    sizes = [s for t in fig["data"] if t.get("marker", {}).get("size") is not None
+             and isinstance(t["marker"]["size"], list) for s in t["marker"]["size"]]
+    assert sizes and max(sizes) > min(sizes)  # bubbles scale with the number of claims

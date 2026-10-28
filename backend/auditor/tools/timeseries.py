@@ -41,6 +41,7 @@ def analyze(df: pd.DataFrame, freq: str = "D") -> Analysis:
         plot_data={"dates": spend.index.strftime("%Y-%m-%d").tolist(),
                    "series": {e: spend[e].round(2).tolist() for e in spend.columns},
                    "freq": freq, "implicates": implicates,
+                   "shares": {e: round(float(v), 4) for e, v in weekend_share.items()},
                    "weekend_points": {
                        e: rows[["date", "amount"]].assign(date=rows["date"].dt.strftime("%Y-%m-%d"))
                        .to_dict("list")
@@ -50,31 +51,52 @@ def analyze(df: pd.DataFrame, freq: str = "D") -> Analysis:
 
 
 def chart(a: Analysis, names: dict[str, str] | None = None) -> go.Figure:
+    """One row per person, one dot per weekend claim: the weekend spender's row fills up."""
     p = a.plot_data
+    shares = p["shares"]
+    employees = sorted(shares, key=lambda e: shares[e])  # most weekend-heavy on top
+    label = {e: f"{name_of(names, e)} · {shares[e]:.0%}" for e in employees}
     fig = go.Figure()
-    dates = pd.to_datetime(p["dates"])
-    if p["freq"] == "D":
-        for day in dates[dates.day_of_week == 5]:
-            fig.add_vrect(x0=day - pd.Timedelta(hours=12), x1=day + pd.Timedelta(hours=36),
-                          fillcolor="rgba(76,201,240,0.08)", line_width=0, layer="below")
-    for employee, values in p["series"].items():
+
+    start, end = pd.to_datetime(p["dates"][0]), pd.to_datetime(p["dates"][-1])
+    for day in pd.date_range(start, end, freq="D"):
+        if day.day_of_week == 5:  # shade every weekend: the office is closed
+            fig.add_vrect(x0=day, x1=day + pd.Timedelta(days=2),
+                          fillcolor="rgba(76,201,240,0.07)", line_width=0, layer="below")
+
+    # invisible anchor so people with zero weekend claims still get their (empty) row
+    fig.add_trace(go.Scatter(x=[start] * len(employees), y=[label[e] for e in employees],
+                             mode="markers", marker={"opacity": 0}, hoverinfo="skip",
+                             showlegend=False))
+    for employee in employees:
+        pts = p["weekend_points"].get(employee)
+        if not pts:
+            continue
         bad = employee in p["implicates"]
-        fig.add_trace(go.Scatter(
-            x=p["dates"], y=values, mode="lines", name=name_of(names, employee),
-            line={"color": COLORS["red"] if bad else COLORS["muted"], "width": 2.5 if bad else 1},
-            opacity=1 if bad else 0.5,
-        ))
-    for employee, pts in p["weekend_points"].items():
-        bad = employee in p["implicates"]
-        fig.add_trace(go.Scatter(
-            x=pts["date"], y=pts["amount"], mode="markers", showlegend=False,
-            marker={"color": COLORS["red"] if bad else COLORS["cyan"], "size": 9 if bad else 5,
-                    "symbol": "diamond"},
-            hovertemplate=f"{name_of(names, employee)} · weekend claim<br>%{{x}} ₹%{{y:,.0f}}"
-                          "<extra></extra>",
-        ))
-    fig.update_layout(title="Spending over time — weekends shaded, weekend claims ◆",
-                      yaxis={"title": "₹ spend", "type": "log"})
+        color = COLORS["red"] if bad else COLORS["cyan"]
+        if p["freq"] == "W":
+            weeks = pd.to_datetime(pd.Series(pts["date"])).dt.to_period("W").dt.start_time
+            counts = weeks.value_counts().sort_index()
+            fig.add_trace(go.Scatter(
+                x=counts.index, y=[label[employee]] * len(counts), mode="markers",
+                marker={"color": color, "size": [8 + 6 * c for c in counts], "opacity": 0.85},
+                customdata=counts.to_numpy(), showlegend=False,
+                hovertemplate="week of %{x|%d %b}: %{customdata} weekend claim(s)<extra></extra>",
+            ))
+        else:
+            fig.add_trace(go.Scatter(
+                x=pts["date"], y=[label[employee]] * len(pts["date"]), mode="markers",
+                marker={"color": color, "size": 12 if bad else 8, "symbol": "diamond",
+                        "line": {"width": 1, "color": COLORS["ink_950"]}},
+                customdata=pts["amount"], showlegend=False,
+                hovertemplate="%{x|%a %d %b}<br>₹%{customdata:,.0f}<extra></extra>",
+            ))
+    fig.update_layout(
+        title="Weekend claims per person (weekends shaded) · % = share of their claims",
+        xaxis={"range": [start, end + pd.Timedelta(days=1)]},
+        yaxis={"categoryorder": "array", "categoryarray": [label[e] for e in employees],
+               "type": "category"},
+    )
     return fig
 
 

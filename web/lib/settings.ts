@@ -1,10 +1,10 @@
 import { create } from "zustand";
 
-export type Settings = { volume: number; muted: boolean; reduceEffects: boolean };
+export type Settings = { volume: number; muted: boolean; reduceEffects: boolean; unlockAll: boolean };
 type KV = { getItem: (k: string) => string | null; setItem: (k: string, v: string) => void };
 
 const KEY = "auditor.settings.v1";
-export const DEFAULT_SETTINGS: Settings = { volume: 0.7, muted: false, reduceEffects: false };
+export const DEFAULT_SETTINGS: Settings = { volume: 0.7, muted: false, reduceEffects: false, unlockAll: false };
 
 export function loadSettings(storage: KV): Settings {
   try {
@@ -46,8 +46,8 @@ export const useSettings = create<SettingsState>()((set, get) => ({
   },
   update: (patch) => {
     set(patch);
-    const { volume, muted, reduceEffects } = get();
+    const { volume, muted, reduceEffects, unlockAll } = get();
     const storage = browserStorage();
-    if (storage) saveSettings(storage, { volume, muted, reduceEffects });
+    if (storage) saveSettings(storage, { volume, muted, reduceEffects, unlockAll });
   },
 }));

@@ -4,7 +4,7 @@ import { useSettings } from "@/lib/settings";
 import { sfx } from "@/lib/sound";
 
 export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { volume, muted, reduceEffects, update } = useSettings();
+  const { volume, muted, reduceEffects, unlockAll, update } = useSettings();
   return (
     <Modal open={open} onClose={onClose} label="Settings" className="max-w-md">
       <div className="rounded-lg border border-line bg-ink-900 p-6 shadow-2xl">
@@ -31,6 +31,11 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
           checked={reduceEffects}
           onChange={(v) => update({ reduceEffects: v })}
         />
+        <Toggle
+          label="Unlock all cases (practice & demos)"
+          checked={unlockAll}
+          onChange={(v) => update({ unlockAll: v })}
+        />
         <button
           onClick={onClose}
           className="mt-6 w-full rounded border border-amber/60 py-2 font-type tracking-widest text-amber hover:bg-amber/10"
@@ -50,6 +55,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-label={label}
         onClick={() => {
           onChange(!checked);
           sfx.play("tick");
