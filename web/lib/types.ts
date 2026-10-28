@@ -12,3 +12,7 @@ export type Verdict = S["Verdict"];
 export type EvidenceGrade = S["EvidenceGrade"];
 export type ToolId = ToolResult["tool_id"];
 export type LevelInfo = S["LevelInfo"];
+export type RoomCreated = S["RoomCreated"];
+export type Autopsy = S["Autopsy"];
+export type AutopsySlide = S["AutopsySlide"];
+export type Profile = S["Profile"];

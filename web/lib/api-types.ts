@@ -157,6 +157,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cases/{case_id}/report.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Report */
+        get: operations["report_api_cases__case_id__report_pdf_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rooms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Room */
+        post: operations["create_room_api_rooms_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rooms/{code}/autopsy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Autopsy */
+        get: operations["autopsy_api_rooms__code__autopsy_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/players/{player_id}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Profile */
+        get: operations["profile_api_players__player_id__profile_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/debug/cases/{case_id}/truth": {
         parameters: {
             query?: never;
@@ -184,6 +252,26 @@ export interface components {
             suspect_id: string;
             /** Evidence Ids */
             evidence_ids: string[];
+        };
+        /** Autopsy */
+        Autopsy: {
+            /** Slides */
+            slides: components["schemas"]["AutopsySlide"][];
+        };
+        /** AutopsySlide */
+        AutopsySlide: {
+            /** Title */
+            title: string;
+            /** Figure */
+            figure: {
+                [key: string]: unknown;
+            };
+            /** Code */
+            code: string;
+            /** Stats */
+            stats: {
+                [key: string]: unknown;
+            };
         };
         /** Budget */
         Budget: {
@@ -277,6 +365,30 @@ export interface components {
             budget: number;
             /** Difficulty */
             difficulty: number;
+        };
+        /** Profile */
+        Profile: {
+            /** Player Id */
+            player_id: string;
+            /** Name */
+            name: string;
+            /** Archetype */
+            archetype: string;
+            /** Tagline */
+            tagline: string;
+            /** Stats */
+            stats: {
+                [key: string]: number;
+            };
+            /** Radar Figure */
+            radar_figure: {
+                [key: string]: unknown;
+            };
+        };
+        /** RoomCreated */
+        RoomCreated: {
+            /** Code */
+            code: string;
         };
         /** Rows */
         Rows: {
@@ -692,6 +804,119 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Verdict"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    report_api_cases__case_id__report_pdf_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_room_api_rooms_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoomCreated"];
+                };
+            };
+        };
+    };
+    autopsy_api_rooms__code__autopsy_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Autopsy"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    profile_api_players__player_id__profile_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                player_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
                 };
             };
             /** @description Validation Error */
