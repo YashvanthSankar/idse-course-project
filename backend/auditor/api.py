@@ -6,9 +6,11 @@ import math
 import os
 import secrets
 import time
+from collections import Counter
 from collections.abc import Callable
 from uuid import uuid4
 
+import numpy as np
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.concurrency import run_in_threadpool
@@ -16,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 
+from auditor.adapt import pick_scheme
 from auditor.autopsy import build_autopsy
 from auditor.charts import reveal_figure
 from auditor.generator.cases import build_case, level_infos
@@ -31,6 +34,7 @@ from auditor.models import (
     Verdict,
 )
 from auditor.profiles import profile_for
+from auditor.report import render_report
 from auditor.rooms import RoomManager
 from auditor.scoring import score_accusation
 from auditor.store import CaseSession, SessionStore
@@ -124,7 +128,14 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
     @app.post("/api/cases", response_model=CaseMeta)
     def create_case(body: CaseCreate):
         seed = body.seed if body.seed is not None else secrets.randbelow(2**31)
-        bundle = build_case(body.level, seed, case_id=SessionStore.new_id())
+        scheme = None
+        if body.level == 7 and body.player_id:  # endless mode: the fraudster studies you
+            events = app.state.telemetry.events_df()
+            used = events[(events["player_id"] == body.player_id)
+                          & (events["type"] == "tool_run")]["tool_id"]
+            scheme = pick_scheme(Counter(used), np.random.default_rng(seed))
+        bundle = build_case(body.level, seed, scheme_override=scheme,
+                            case_id=SessionStore.new_id())
         session = CaseSession(bundle=bundle, budget_left=bundle.meta.budget,
                               started_at=app.state.clock(), player_id=body.player_id)
         app.state.store.create(session)
@@ -231,6 +242,15 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
         for hook in app.state.on_verdict:
             hook(session, verdict)
         return verdict
+
+    @app.get("/api/cases/{case_id}/report.pdf")
+    def report(case_id: str):
+        session = session_for(case_id)
+        if session.verdict is None:
+            raise HTTPException(409, "Close the case first")
+        return Response(render_report(session), media_type="application/pdf",
+                        headers={"Content-Disposition":
+                                 f'attachment; filename="case-{case_id}.pdf"'})
 
     @app.post("/api/rooms", response_model=RoomCreated)
     def create_room():
