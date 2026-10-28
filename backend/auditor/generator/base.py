@@ -58,7 +58,7 @@ CEO: dict = {
     "bio": "Built the firm from a Dadar garage. Spends like a man who owns the building — because he does.",
 }
 
-# category -> (median INR, weight). Medians sit 1/6 of a decade apart in log10 so the
+# category -> (median INR, weight). Medians sit about 1/6 of a decade apart in log10 so the
 # mixture has near-uniform mantissas (= Benford). Spread of each category is HONEST_SIGMA.
 CATEGORY_PROFILES: dict[str, tuple[float, float]] = {
     "chai_snacks": (100.0, 0.18),
