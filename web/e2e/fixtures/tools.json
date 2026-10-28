@@ -1,0 +1,83 @@
+[
+ {
+  "id": "summary",
+  "name": "Case Summary",
+  "cost": 1,
+  "unlock_level": 1,
+  "params": {},
+  "visual": false,
+  "unlocked": true
+ },
+ {
+  "id": "groupby",
+  "name": "Pattern Matrix",
+  "cost": 1,
+  "unlock_level": 1,
+  "params": {
+   "by": [
+    "weekday",
+    "vendor",
+    "category",
+    "hour_bucket"
+   ]
+  },
+  "visual": true,
+  "unlocked": true
+ },
+ {
+  "id": "zscore",
+  "name": "Z-Score Scan",
+  "cost": 2,
+  "unlock_level": 1,
+  "params": {
+   "scope": [
+    "per_employee",
+    "global"
+   ],
+   "threshold": 3.0
+  },
+  "visual": true,
+  "unlocked": true
+ },
+ {
+  "id": "iqr_box",
+  "name": "Box & Whisker",
+  "cost": 2,
+  "unlock_level": 1,
+  "params": {},
+  "visual": true,
+  "unlocked": true
+ },
+ {
+  "id": "duplicates",
+  "name": "Twin Finder",
+  "cost": 2,
+  "unlock_level": 2,
+  "params": {},
+  "visual": true,
+  "unlocked": false
+ },
+ {
+  "id": "benford",
+  "name": "Benford's Law",
+  "cost": 3,
+  "unlock_level": 3,
+  "params": {},
+  "visual": true,
+  "unlocked": false
+ },
+ {
+  "id": "timeseries",
+  "name": "Timeline",
+  "cost": 3,
+  "unlock_level": 4,
+  "params": {
+   "freq": [
+    "D",
+    "W"
+   ]
+  },
+  "visual": true,
+  "unlocked": false
+ }
+]

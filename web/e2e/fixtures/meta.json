@@ -1,0 +1,68 @@
+{
+ "case_id": "case01",
+ "level": 1,
+ "title": "The Midnight Invoice",
+ "briefing": "Rookie. Horizon Realty Developers's internal audit flagged something, then went home. One of these five has slipped a monster invoice past the system. Careful \u2014 the boss spends big on everything, and big isn't the same as crooked. Compare people with themselves.",
+ "budget": 8,
+ "budget_left": 8,
+ "suspects": [
+  {
+   "id": "E1",
+   "name": "Vikram Kapoor",
+   "role": "CEO",
+   "department": "Leadership",
+   "bio": "Built the firm from a Dadar garage. Spends like a man who owns the building \u2014 because he does.",
+   "portrait": "b00"
+  },
+  {
+   "id": "E2",
+   "name": "Farhan Qureshi",
+   "role": "Logistics Head",
+   "department": "Operations",
+   "bio": "Runs the warehouse like a ship. Nobody has ever seen the captain's log.",
+   "portrait": "b08"
+  },
+  {
+   "id": "E3",
+   "name": "Ananya Rao",
+   "role": "HR Business Partner",
+   "department": "People",
+   "bio": "Organises every offsite. Somehow the venue is always her cousin's resort.",
+   "portrait": "a05"
+  },
+  {
+   "id": "E4",
+   "name": "Aditya Banerjee",
+   "role": "Operations Analyst",
+   "department": "Operations",
+   "bio": "Quiet, punctual, works weekends. Nobody asks why.",
+   "portrait": "b16"
+  },
+  {
+   "id": "E5",
+   "name": "Divya Menon",
+   "role": "Marketing Manager",
+   "department": "Marketing",
+   "bio": "Her campaigns go viral. So do her expense reports, around the office.",
+   "portrait": "a09"
+  }
+ ],
+ "columns": [
+  "txn_id",
+  "date",
+  "hour",
+  "employee_id",
+  "vendor",
+  "category",
+  "amount",
+  "revenue",
+  "invoice_id"
+ ],
+ "n_rows": 1143,
+ "unlocked_tools": [
+  "summary",
+  "groupby",
+  "zscore",
+  "iqr_box"
+ ]
+}
