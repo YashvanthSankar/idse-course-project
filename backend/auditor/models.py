@@ -106,3 +106,12 @@ class Verdict(BaseModel):
     catching_tools: list[ToolId]
     evidence: list[EvidenceGrade]
     reveal_figure: dict = Field(default_factory=dict)
+
+
+class Profile(BaseModel):
+    player_id: str
+    name: str
+    archetype: str
+    tagline: str
+    stats: dict[str, float]
+    radar_figure: dict

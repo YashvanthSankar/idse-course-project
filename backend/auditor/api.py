@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 
+from auditor.autopsy import build_autopsy
 from auditor.charts import reveal_figure
 from auditor.generator.cases import build_case, level_infos
 from auditor.models import (
@@ -23,11 +24,13 @@ from auditor.models import (
     CaseMeta,
     CaseTruth,
     LevelInfo,
+    Profile,
     ToolId,
     ToolResult,
     ToolSpec,
     Verdict,
 )
+from auditor.profiles import profile_for
 from auditor.rooms import RoomManager
 from auditor.scoring import score_accusation
 from auditor.store import CaseSession, SessionStore
@@ -58,6 +61,17 @@ class Budget(BaseModel):
 
 class RoomCreated(BaseModel):
     code: str
+
+
+class AutopsySlide(BaseModel):
+    title: str
+    figure: dict
+    code: str
+    stats: dict
+
+
+class Autopsy(BaseModel):
+    slides: list[AutopsySlide]
 
 
 def _records(df: pd.DataFrame) -> list[dict]:
@@ -271,6 +285,26 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
             rooms.remove_socket(code, ws)
             if role == "player":
                 await rooms.broadcast(code, rooms.lobby(code))
+
+    @app.get("/api/rooms/{code}/autopsy", response_model=Autopsy)
+    def autopsy(code: str):
+        if code not in app.state.rooms.rooms:
+            raise HTTPException(404, "Room not found")
+        events = app.state.telemetry.events_df(room_code=code)
+        return Autopsy(slides=[AutopsySlide(**vars(s)) for s in build_autopsy(events)])
+
+    @app.get("/api/players/{player_id}/profile", response_model=Profile)
+    def profile(player_id: str):
+        events = app.state.telemetry.events_df()
+        mine = events[events["player_id"] == player_id]
+        if mine.empty:
+            raise HTTPException(404, "No such detective")
+        room = mine["room_code"].dropna()
+        if not room.empty:  # compare against your own classroom
+            events = app.state.telemetry.events_df(room_code=room.iloc[-1])
+        name = next((r.players[player_id].name for r in app.state.rooms.rooms.values()
+                     if player_id in r.players), "Detective")
+        return profile_for(player_id, events, name=name)
 
     @app.get("/api/debug/cases/{case_id}/truth", response_model=CaseTruth)
     def debug_truth(case_id: str):
