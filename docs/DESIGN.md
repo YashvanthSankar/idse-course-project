@@ -86,7 +86,7 @@ Columns of the player-visible table (truth is **never** included):
 |---|---|---|---|---|---|---|
 | 1 | The Midnight Invoice | `big_invoice`: 1–2 txns at 8–12× that employee's category median | 8 | ceo | zscore, iqr_box | summary, groupby, zscore, iqr_box |
 | 2 | Déjà Vu | `duplicates`: ~8 invoices re-submitted (same vendor and amount, 1–3 days later, new invoice_id) | 8 | none | duplicates | duplicates |
-| 3 | Too Random To Be True | `fabricated`: ~60 amounts drawn uniform 1,000–9,999 (flat leading digits) | 10 | none | benford | benford |
+| 3 | Too Random To Be True | `fabricated`: every claim invented, with realistic size but a random leading digit (flat digits) | 10 | none | benford | benford |
 | 4 | Weekend Warrior | `weekend`: ~15 personal purchases on Sat/Sun | 10 | diwali | timeseries, groupby | timeseries |
 | 5 | The Margin Call | `inflated_ratio`: ~30 expenses inflated 1.8× vs. their deal revenue | 12 | none | regression | regression |
 | 6 | Ghost Vendor | `under_limit`: ~12 txns of 45,000–49,999 (just under the 50k approval limit), 1–4 AM, to a vendor nobody else uses | 14 | ceo, diwali | isoforest, groupby | isoforest |
@@ -102,12 +102,12 @@ Every tool is a pure function `analyze(df, **params) -> Analysis` plus a Plotly 
 | tool_id | Name | Cost | Params | What it computes | `implicates` rule |
 |---|---|---|---|---|---|
 | `summary` | Case Summary | 1 | — | per-employee `describe()` of amount | always `[]` (information only) |
-| `groupby` | Pattern Matrix | 1 | `by ∈ {weekday, vendor, category, hour_bucket}` | employee × `by` count heatmap; chi-square of each employee's distribution vs. everyone else's | employees with p < 0.001 |
-| `zscore` | Z-Score Scan | 2 | `scope ∈ {global, per_employee}`, `threshold=3.0` | z of `log10(amount)`, global or within (employee, category) | employees with ≥ 1 row \|z\| > threshold |
+| `groupby` | Pattern Matrix | 1 | `by ∈ {weekday, vendor, category, hour_bucket}` | employee × `by` count heatmap; chi-square of each employee's distribution vs. everyone else's (for `vendor`: vendor exclusivity, because honest people have favourite vendors) | p < 0.001; for `vendor`: ≥ 5 claims at vendors only they use |
+| `zscore` | Z-Score Scan | 2 | `scope ∈ {per_employee, global}`, `threshold=3.0` | per_employee: z of `log10(amount)` within (employee, category). global: naive z of raw rupees (flags expensive categories and the CEO, which is the red-herring lesson) | employees with ≥ 1 row \|z\| > threshold |
 | `iqr_box` | Box & Whisker | 2 | — | per-employee boxplot of `log10(amount)` within category | employees with a point > Q3 + 3·IQR |
 | `duplicates` | Twin Finder | 2 | — | rows with the same (employee, vendor, amount) ≤ 7 days apart | employees with ≥ 3 twin pairs |
-| `benford` | Benford's Law | 3 | — | first-digit distribution per employee vs. `log10(1+1/d)`, chi-square | employees with n ≥ 50 and p < 0.001; n < 50 → reported `inconclusive`, never implicated |
-| `timeseries` | Timeline | 3 | `freq ∈ {D, W}` | spend over time with weekend shading; weekend share per employee | weekend share > 3 × company median AND ≥ 5 weekend txns |
+| `benford` | Benford's Law | 3 | — | first-digit distribution per employee vs. `log10(1+1/d)`, chi-square | employees with n ≥ 50 and p < 1e-5 (measured: honest ≥ 6e-5, forgers ≤ 2e-6); n < 50 → reported `inconclusive`, never implicated |
+| `timeseries` | Timeline | 3 | `freq ∈ {D, W}` | spend over time with weekend shading; weekend share per employee | one-sided binomial test of their weekend count vs. the rest of the company's weekend rate, p < 0.001 |
 | `regression` | Margin Model | 4 | — | OLS `log(amount) ~ log(revenue)`; mean standardized residual per employee, one-sample t-test | employees with mean resid > 0 and p < 0.001 |
 | `isoforest` | Anomaly Hunter (ML) | 5 | — | IsolationForest on [log amount, hour, vendor frequency, closeness to 50k], `contamination=0.02`, `random_state=0` | employees with ≥ 3 flagged rows AND flagged share > 3 × average |
 
