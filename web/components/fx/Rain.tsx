@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
+import { mulberry32 } from "@/lib/random";
 import { useReducedEffects } from "@/lib/useReducedEffects";
 
 type Drop = { x: number; y: number; len: number; speed: number; alpha: number };
@@ -17,6 +18,10 @@ export function Rain({ density = 300, lightning = false, className = "" }: {
     const canvas = ref.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
+    // Check the media query directly too: the hook can report "no preference" for the very
+    // first render, which would start the animation for a frame before hydration settles.
+    const still = reduced || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const random = still ? mulberry32(7) : Math.random; // a still frame is always the same frame
     let w = 0, h = 0, raf = 0, flash = 0;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const resize = () => {
@@ -28,13 +33,13 @@ export function Rain({ density = 300, lightning = false, className = "" }: {
     };
     resize();
     const make = (): Drop => ({
-      x: Math.random() * (w + 200) - 100,
-      y: Math.random() * h - h,
-      len: 10 + Math.random() * 22,
-      speed: 9 + Math.random() * 10,
-      alpha: 0.08 + Math.random() * 0.25,
+      x: random() * (w + 200) - 100,
+      y: random() * h - h,
+      len: 10 + random() * 22,
+      speed: 9 + random() * 10,
+      alpha: 0.08 + random() * 0.25,
     });
-    const drops = Array.from({ length: density }, make).map((d) => ({ ...d, y: Math.random() * h }));
+    const drops = Array.from({ length: density }, make).map((d) => ({ ...d, y: random() * h }));
 
     const draw = () => {
       ctx.clearRect(0, 0, w, h);
@@ -66,10 +71,10 @@ export function Rain({ density = 300, lightning = false, className = "" }: {
     };
     const onVisibility = () => {
       cancelAnimationFrame(raf);
-      if (!document.hidden && !reduced) raf = requestAnimationFrame(step);
+      if (!document.hidden && !still) raf = requestAnimationFrame(step);
     };
 
-    if (reduced) draw();
+    if (still) draw();
     else raf = requestAnimationFrame(step);
     window.addEventListener("resize", resize);
     document.addEventListener("visibilitychange", onVisibility);
