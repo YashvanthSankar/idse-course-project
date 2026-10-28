@@ -27,6 +27,10 @@ export async function mockCase(page: Page, { budget = meta.budget } = {}) {
   await page.route(`**/api/cases/${CASE_ID}`, (route) =>
     route.fulfill({ json: { ...meta, budget_left: left } }),
   );
+  // The screen restores a case from /state (meta + results so far + verdict).
+  await page.route(`**/api/cases/${CASE_ID}/state`, (route) =>
+    route.fulfill({ json: { meta: { ...meta, budget_left: left }, results: [], verdict: null } }),
+  );
   await page.route("**/api/tools?*", (route) => route.fulfill({ json: tools }));
   await page.route(`**/api/cases/${CASE_ID}/tools/*`, async (route) => {
     const toolId = route.request().url().split("/").pop()!;

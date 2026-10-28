@@ -62,27 +62,27 @@ export function TitleScreen() {
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center overflow-hidden bg-[radial-gradient(ellipse_at_50%_-10%,#1b2540_0%,#0b0f1a_45%,#07080b_100%)]">
-      <div aria-hidden className="absolute left-[72%] top-[10%] h-28 w-28 rounded-full bg-[#f3ead2] opacity-80 blur-[1px] shadow-[0_0_80px_30px_rgba(243,234,210,0.15)]" />
+      <div aria-hidden className="absolute right-[7%] top-[3%] h-14 w-14 rounded-full bg-[#f3ead2] opacity-80 blur-[1px] shadow-[0_0_60px_20px_rgba(243,234,210,0.12)] sm:left-[72%] sm:right-auto sm:top-[10%] sm:h-28 sm:w-28 sm:shadow-[0_0_80px_30px_rgba(243,234,210,0.15)]" />
       <Skyline pointerX={pointerX} />
       <Rain lightning density={340} />
 
       <div className="relative z-10 mt-[14vh] flex flex-col items-center px-4 text-center">
         <motion.p
-          initial={{ opacity: 0, letterSpacing: "0.1em" }}
-          animate={{ opacity: 0.8, letterSpacing: "0.45em" }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.8 }}
           transition={{ duration: 2 }}
-          className="neon-cyan mb-4 font-type text-xs text-cyan sm:text-sm"
+          className="neon-cyan mb-4 font-type text-[11px] tracking-[0.22em] text-cyan sm:text-sm sm:tracking-[0.45em]"
         >
           FORENSIC ACCOUNTING · MUMBAI
         </motion.p>
-        <h1 className="animate-neon font-display text-6xl font-black italic leading-none text-[#ffd9da] sm:text-8xl md:text-9xl">
+        <h1 className="animate-neon font-display text-[3.4rem] font-black italic leading-none text-[#ffd9da] sm:text-8xl md:text-9xl">
           The Auditor
         </h1>
         <p className="mt-6 h-6 font-type text-sm text-paper/80 sm:text-base">
           <Typewriter text="Every number tells a story. Some of them lie." delay={900} speed={45} sound={false} />
         </p>
 
-        <div className="mt-14 min-h-56 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(7,8,11,0.88)_0%,rgba(7,8,11,0.6)_45%,transparent_72%)] px-16 py-8">
+        <div className="mt-14 min-h-56 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(7,8,11,0.88)_0%,rgba(7,8,11,0.6)_45%,transparent_72%)] px-4 py-8 sm:px-16">
           <AnimatePresence mode="wait">
             {!awake ? (
               <motion.p
@@ -110,7 +110,7 @@ export function TitleScreen() {
                       sfx.play("tick");
                     }}
                     onClick={() => choose(item.id)}
-                    className={`group font-type text-xl tracking-[0.25em] transition-colors sm:text-2xl ${
+                    className={`group min-h-10 font-type text-lg tracking-[0.18em] transition-colors sm:text-2xl sm:tracking-[0.25em] ${
                       focus === i ? "text-amber" : "text-paper/60 hover:text-paper"
                     }`}
                   >

@@ -47,3 +47,9 @@ export function statLabel(key: string): { label: string; suspect: string | null 
 export function withNames(text: string, names: Record<string, string>): string {
   return text.replace(/\bE\d+\b/g, (id) => names[id]?.split(" ")[0] ?? id);
 }
+
+/** "p_E2" -> "p · Siddharth": a stats key as a person would read it. */
+export function statName(key: string, names: Record<string, string>): string {
+  const { label, suspect } = statLabel(key);
+  return suspect ? `${label} · ${names[suspect]?.split(" ")[0] ?? suspect}` : label;
+}

@@ -16,3 +16,4 @@ export type RoomCreated = S["RoomCreated"];
 export type Autopsy = S["Autopsy"];
 export type AutopsySlide = S["AutopsySlide"];
 export type Profile = S["Profile"];
+export type CaseState = S["CaseState"];

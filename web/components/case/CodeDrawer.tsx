@@ -1,9 +1,9 @@
 "use client";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { formatStat } from "@/lib/format";
+import { formatStat, statName } from "@/lib/format";
 import { sfx } from "@/lib/sound";
-import type { ToolResult } from "@/lib/types";
+import type { Suspect, ToolResult } from "@/lib/types";
 
 function useHighlighted(code: string | null) {
   const [html, setHtml] = useState<{ code: string; html: string } | null>(null);
@@ -21,7 +21,16 @@ function useHighlighted(code: string | null) {
   return html && html.code === code ? html.html : null;
 }
 
-export function CodeDrawer({ result, onClose }: { result: ToolResult | null; onClose: () => void }) {
+export function CodeDrawer({
+  result,
+  onClose,
+  suspects = [],
+}: {
+  result: ToolResult | null;
+  onClose: () => void;
+  suspects?: Suspect[];
+}) {
+  const names = Object.fromEntries(suspects.map((s) => [s.id, s.name]));
   const html = useHighlighted(result?.code ?? null);
   const [copied, setCopied] = useState(false);
 
@@ -82,16 +91,16 @@ export function CodeDrawer({ result, onClose }: { result: ToolResult | null; onC
                   <pre className="whitespace-pre font-mono text-paper/80">{result.code}</pre>
                 )}
               </div>
-              <dl className="min-h-0 overflow-auto border-t border-line p-4 font-mono text-[11px] md:border-l md:border-t-0">
-                <p className="mb-2 text-[10px] uppercase tracking-[0.3em] text-muted">stats</p>
+              <dl className="min-h-0 overflow-auto border-t border-line p-4 font-mono text-[13px] md:border-l md:border-t-0">
+                <p className="mb-2 text-xs text-paper/60">Numbers behind the finding</p>
                 {Object.entries(result.stats).map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-3 border-b border-line/40 py-1">
-                    <dt className="truncate text-muted">{k}</dt>
+                    <dt className="truncate text-paper/65" title={k}>{statName(k, names)}</dt>
                     <dd className="text-amber">{formatStat(k, v as number | string)}</dd>
                   </div>
                 ))}
-                <p className="mb-2 mt-4 text-[10px] uppercase tracking-[0.3em] text-muted">implicates</p>
-                <p className="text-red">{result.implicates.join(", ") || "—"}</p>
+                <p className="mb-2 mt-4 text-xs text-paper/60">Points at</p>
+                <p className="text-red">{result.implicates.map((id) => names[id] ?? id).join(", ") || "nobody"}</p>
               </dl>
             </div>
           </motion.aside>

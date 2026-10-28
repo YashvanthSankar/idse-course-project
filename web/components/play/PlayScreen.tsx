@@ -1,6 +1,9 @@
 "use client";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { roomExists } from "@/lib/api";
 import { InvestigationScreen } from "@/components/case/InvestigationScreen";
 import { rememberRoomCase } from "@/lib/roomCase";
 import { getPlayerSnapshot, loadPlayer, MAX_NAME, setPlayerName, subscribePlayer } from "@/lib/player";
@@ -22,7 +25,10 @@ function usePlayer() {
 
 export function PlayScreen({ code }: { code: string }) {
   const me = usePlayer();
-  if (me === null) return <Centered><p className="text-paper/60">Opening the case file…</p></Centered>;
+  // Check the room before asking for a name: a typo should be caught at the door.
+  const room = useQuery({ queryKey: ["room-exists", code], queryFn: () => roomExists(code), retry: 1 });
+  if (me === null || room.isPending) return <Centered><p className="text-paper/60">Opening the case file…</p></Centered>;
+  if (room.data === false) return <NoSuchRoom code={code} />;
   if (!me.name) return <NameForm code={code} />;
   return <Joined code={code} playerId={me.id} name={me.name} />;
 }
@@ -72,15 +78,7 @@ function Joined({ code, playerId, name }: { code: string; playerId: string; name
     if (state.caseId) rememberRoomCase(state.caseId, code);
   }, [state.caseId, code]);
 
-  if (status === "not_found") {
-    return (
-      <Centered>
-        <p className="font-display text-4xl italic text-paper">No such room.</p>
-        <p className="mt-3 text-lg text-paper/60">Check the code on the big screen and try again.</p>
-        <Link href="/" className="mt-8 text-amber underline">Back to the title screen</Link>
-      </Centered>
-    );
-  }
+  if (status === "not_found") return <NoSuchRoom code={code} />;
 
   if (state.phase === "ended") {
     return (
@@ -95,7 +93,7 @@ function Joined({ code, playerId, name }: { code: string; playerId: string; name
   if (state.caseId && !closed) {
     return (
       <div data-testid="play-case" data-case-id={state.caseId}>
-        <InvestigationScreen caseId={state.caseId} />
+        <InvestigationScreen caseId={state.caseId} redirectWhenClosed={false} />
       </div>
     );
   }
@@ -126,6 +124,43 @@ function ProfileLink({ playerId }: { playerId: string }) {
     >
       SEE YOUR DETECTIVE CARD
     </Link>
+  );
+}
+
+function NoSuchRoom({ code }: { code: string }) {
+  const router = useRouter();
+  const [next, setNext] = useState("");
+  return (
+    <Centered>
+      <p className="text-lg text-paper/60">Room {code}</p>
+      <h1 className="mt-2 font-display text-4xl font-black italic text-paper">No such room.</h1>
+      <p className="mt-3 text-lg text-paper/70">Check the code on the big screen and try again.</p>
+      <form
+        className="mt-8 w-full space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (next.length === 4) router.push(`/play/${next}`);
+        }}
+      >
+        <input
+          value={next}
+          maxLength={4}
+          autoCapitalize="characters"
+          onChange={(e) => setNext(e.target.value.toUpperCase().replace(/[^A-Z]/g, ""))}
+          placeholder="ABCD"
+          aria-label="Room code"
+          className="w-full rounded-lg border border-line bg-ink-900 px-5 py-4 text-center font-mono text-3xl tracking-[0.5em] text-amber placeholder:text-paper/20 focus:border-amber focus:outline-none"
+        />
+        <button
+          type="submit"
+          disabled={next.length !== 4}
+          className="w-full rounded-lg bg-amber py-4 font-type text-xl tracking-[0.25em] text-ink-950 disabled:opacity-40"
+        >
+          TRY THIS ROOM
+        </button>
+      </form>
+      <Link href="/" className="mt-8 inline-block py-2 text-amber underline">Back to the title screen</Link>
+    </Centered>
   );
 }
 

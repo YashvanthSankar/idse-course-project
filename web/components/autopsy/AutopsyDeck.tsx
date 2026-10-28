@@ -8,6 +8,7 @@ import { Typewriter } from "@/components/fx/Typewriter";
 import { getAutopsy } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { sfx } from "@/lib/sound";
+import { useMediaQuery } from "@/lib/useMediaQuery";
 import { CodePanel } from "./CodePanel";
 import { takeaway } from "./takeaway";
 
@@ -31,6 +32,8 @@ export function AutopsyDeck({ code }: { code: string }) {
   const total = slides.length + 1; // + cold open
   const [index, setIndex] = useState(0);
   const [showCode, setShowCode] = useState(true);
+  // The projector gets a big chart; phones get one that fits above the code.
+  const projector = useMediaQuery("(min-width: 1024px)") ?? true;
 
   const go = useCallback(
     (delta: number) => {
@@ -61,7 +64,7 @@ export function AutopsyDeck({ code }: { code: string }) {
   const slide = index > 0 ? slides[index - 1] : null;
 
   return (
-    <main className="flex h-dvh flex-col overflow-hidden bg-[radial-gradient(ellipse_at_50%_-20%,#1b2540_0%,#07080b_60%)] px-10 py-8">
+    <main className="flex min-h-dvh flex-col bg-[radial-gradient(ellipse_at_50%_-20%,#1b2540_0%,#07080b_60%)] px-4 py-6 sm:px-10 sm:py-8 lg:h-dvh lg:overflow-hidden">
       <header className="flex items-center justify-between text-lg text-paper/60">
         <Link href={`/host/${code}`} className="hover:text-paper">← Room {code}</Link>
         <span data-testid="slide-counter">
@@ -97,19 +100,19 @@ export function AutopsyDeck({ code }: { code: string }) {
           ) : (
             <>
               <div className="mb-6 mt-6">
-                <h2 data-testid="slide-title" className="font-display text-5xl font-black italic text-paper">
+                <h2 data-testid="slide-title" className="font-display text-3xl font-black italic text-paper sm:text-5xl">
                   {slide.title}
                 </h2>
-                <p className="mt-3 text-3xl text-amber">{takeaway(slide.title, slide.stats)}</p>
+                <p className="mt-3 text-xl text-amber sm:text-3xl">{takeaway(slide.title, slide.stats)}</p>
               </div>
               <div
                 className={cn(
                   "grid min-h-0 flex-1 gap-6",
-                  showCode ? "grid-cols-[minmax(0,3fr)_minmax(0,2fr)]" : "grid-cols-1",
+                  showCode ? "grid-cols-1 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]" : "grid-cols-1",
                 )}
               >
                 <div className="min-h-0 rounded-xl border border-line bg-ink-900/60 p-4">
-                  <PlotlyChart figure={forSlide(slide.figure)} height={700} />
+                  <PlotlyChart figure={forSlide(slide.figure)} height={projector ? 700 : 340} />
                 </div>
                 {showCode && (
                   <div className="flex min-h-0 flex-col">

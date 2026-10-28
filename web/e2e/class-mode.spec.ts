@@ -59,9 +59,8 @@ test("class mode: lobby → round on phones → leaderboard → podium", async (
   await expect(host.getByTestId("open-autopsy")).toBeVisible();
 });
 
-test("an unknown room says so on the phone", async ({ page }) => {
+test("an unknown room says so on the phone, before asking for a name", async ({ page }) => {
   await page.goto("/play/QQQQ");
-  await page.getByLabel("Your detective name").fill("Lost");
-  await page.getByRole("button", { name: "JOIN THE INVESTIGATION" }).click();
   await expect(page.getByText("No such room.")).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByLabel("Your detective name")).toHaveCount(0);
 });

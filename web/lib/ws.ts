@@ -15,7 +15,7 @@ export type RoomMessage =
   | { type: "ticker"; text: string }
   | { type: "round_end" };
 
-export type SocketStatus = "connecting" | "open" | "closed" | "not_found";
+export type SocketStatus = "connecting" | "open" | "closed" | "not_found" | "forbidden";
 export type Phase = "lobby" | "running" | "ended";
 
 export type RoomState = {
@@ -74,12 +74,13 @@ export function roomSocketUrl(
   apiUrl: string,
   code: string,
   role: "host" | "player",
-  opts: { playerId?: string; name?: string } = {},
+  opts: { playerId?: string; name?: string; token?: string } = {},
 ): string {
   const base = apiUrl.replace(/\/+$/, "").replace(/^http/, "ws");
   const params = new URLSearchParams({ role });
   if (opts.playerId) params.set("player_id", opts.playerId);
   if (opts.name) params.set("name", opts.name);
+  if (opts.token) params.set("token", opts.token);
   return `${base}/ws/rooms/${encodeURIComponent(code)}?${params.toString()}`;
 }
 
@@ -103,9 +104,9 @@ export const backoffDelay = (attempt: number) => Math.min(5000, 500 * 2 ** attem
 export function useRoomSocket(
   code: string,
   role: "host" | "player",
-  opts: { playerId?: string; name?: string; enabled?: boolean } = {},
+  opts: { playerId?: string; name?: string; token?: string; enabled?: boolean } = {},
 ) {
-  const { playerId, name, enabled = true } = opts;
+  const { playerId, name, token, enabled = true } = opts;
   const [status, setStatus] = useState<SocketStatus>("connecting");
   const [state, dispatch] = useReducer(roomReducer, INITIAL_ROOM);
   const socketRef = useRef<WebSocket | null>(null);
@@ -117,7 +118,7 @@ export function useRoomSocket(
     let timer = 0;
 
     const connect = () => {
-      const ws = new WebSocket(roomSocketUrl(API_URL, code, role, { playerId, name }));
+      const ws = new WebSocket(roomSocketUrl(API_URL, code, role, { playerId, name, token }));
       let opened = false;
       socketRef.current = ws;
       ws.onopen = () => {
@@ -139,6 +140,10 @@ export function useRoomSocket(
         if (stopped) return;
         if (event.code === 4404) {
           setStatus("not_found");
+          return;
+        }
+        if (event.code === 4403) {
+          setStatus("forbidden"); // wrong or missing host token: retrying won't help
           return;
         }
         setStatus("closed");
@@ -164,7 +169,7 @@ export function useRoomSocket(
       socketRef.current?.close();
       socketRef.current = null;
     };
-  }, [code, role, playerId, name, enabled]);
+  }, [code, role, playerId, name, token, enabled]);
 
   const send = useCallback((message: Record<string, unknown>) => {
     const ws = socketRef.current;

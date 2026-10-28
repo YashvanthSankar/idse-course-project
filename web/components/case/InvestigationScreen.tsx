@@ -2,11 +2,13 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Corkboard } from "@/components/board/Corkboard";
 import { LampLight } from "@/components/fx/LampLight";
 import { SettingsPanel } from "@/components/settings/SettingsPanel";
-import { ApiError, getCase, listTools, runTool } from "@/lib/api";
+import { ApiError, getCaseState, listTools, runTool } from "@/lib/api";
+import { loadCaseMemory, restoreSnapshot, saveCaseMemory } from "@/lib/caseMemory";
 import { cn } from "@/lib/cn";
 import { useSettings } from "@/lib/settings";
 import { sfx } from "@/lib/sound";
@@ -40,14 +42,48 @@ function defaultParams(spec: ToolSpec): Record<string, string> {
   );
 }
 
-export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; onOpenBoard?: () => void }) {
+export function InvestigationScreen({
+  caseId,
+  onOpenBoard,
+  redirectWhenClosed = true,
+}: {
+  caseId: string;
+  onOpenBoard?: () => void;
+  /** Solo play jumps to the verdict page when a reloaded case is already closed. */
+  redirectWhenClosed?: boolean;
+}) {
+  const router = useRouter();
   const store = useCaseStore();
   const storeHasCase = store.meta?.case_id === caseId;
-  const fetched = useQuery({ queryKey: ["case", caseId], queryFn: () => getCase(caseId), enabled: !storeHasCase });
+  // Not in memory (reload, locked phone, shared link): restore everything from the server.
+  const fetched = useQuery({
+    queryKey: ["case-state", caseId],
+    queryFn: () => getCaseState(caseId),
+    enabled: !storeHasCase,
+  });
 
   useEffect(() => {
-    if (!storeHasCase && fetched.data) useCaseStore.getState().setMeta(fetched.data);
-  }, [storeHasCase, fetched.data]);
+    if (storeHasCase || !fetched.data) return;
+    useCaseStore.getState().hydrate(restoreSnapshot(fetched.data, loadCaseMemory(caseId)));
+    if (fetched.data.verdict && redirectWhenClosed) router.replace(`/case/${caseId}/verdict`);
+  }, [storeHasCase, fetched.data, caseId, redirectWhenClosed, router]);
+
+  // Keep pinned evidence and red strings across reloads.
+  useEffect(
+    () =>
+      useCaseStore.subscribe((s) => {
+        if (s.meta?.case_id !== caseId) return;
+        const previous = loadCaseMemory(caseId);
+        saveCaseMemory(caseId, { ...previous, pinned: s.pinned, links: s.links });
+      }),
+    [caseId],
+  );
+
+  // Restored results were already "run" before the reload: show them without the terminal replay.
+  const restoredIds = useMemo(
+    () => new Set((fetched.data?.results ?? []).map((r) => r.result_id)),
+    [fetched.data],
+  );
 
   const meta = storeHasCase ? store.meta : null;
   const tools = useQuery({
@@ -58,7 +94,8 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
 
   const [params, setParams] = useState<Record<string, Record<string, string>>>({});
   const [running, setRunning] = useState<Running>(null);
-  const [revealed, setRevealed] = useState<Set<string>>(() => new Set());
+  const [revealedRuns, setRevealed] = useState<Set<string>>(() => new Set());
+  const revealed = useMemo(() => new Set([...restoredIds, ...revealedRuns]), [restoredIds, revealedRuns]);
   const [errorTick, setErrorTick] = useState(0);
   const [cachedId, setCachedId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -368,7 +405,7 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
         )}
       </AnimatePresence>
 
-      <CodeDrawer result={drawer === "code" ? active : null} onClose={closeDrawer} />
+      <CodeDrawer result={drawer === "code" ? active : null} onClose={closeDrawer} suspects={meta.suspects} />
       <DataTable
         caseId={caseId}
         open={drawer === "data"}

@@ -43,9 +43,9 @@ async function play(request: APIRequestContext, caseId: string, tools: string[],
 
 test("autopsy deck walks through six slides and the detective card saves as PNG", async ({ page, request }) => {
   test.setTimeout(120_000);
-  const { code } = await (await request.post(`${API}/api/rooms`)).json();
+  const { code, host_token: token = "" } = await (await request.post(`${API}/api/rooms`)).json();
   const stamp = Date.now();
-  const host = connect(`${WS}/ws/rooms/${code}?role=host`);
+  const host = connect(`${WS}/ws/rooms/${code}?role=host&token=${encodeURIComponent(token)}`);
   const players = [
     { id: `asha-${stamp}`, name: "Asha", tools: ["zscore", "iqr_box", "summary"], correct: true },
     { id: `bilal-${stamp}`, name: "Bilal", tools: ["summary", "groupby"], correct: false },

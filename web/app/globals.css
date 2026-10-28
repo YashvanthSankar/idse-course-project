@@ -45,6 +45,8 @@ body {
 body {
   font-family: var(--font-inter), system-ui, sans-serif;
   overflow-x: hidden;
+  /* Playfair defaults to old-style figures ("0" reads as "o"): use lining numerals everywhere */
+  font-variant-numeric: lining-nums;
 }
 
 ::selection {

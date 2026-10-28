@@ -36,3 +36,17 @@ describe("withNames", () => {
     expect(withNames("Flagged: E4, E1. E12 unknown", names)).toBe("Flagged: Aditya, Priya. E12 unknown");
   });
 });
+
+describe("statName", () => {
+  const names = { E2: "Siddharth Joshi", E4: "Aditya Banerjee" };
+  it("swaps a trailing suspect id for the first name", async () => {
+    const { statName } = await import("./format");
+    expect(statName("p_E2", names)).toBe("p · Siddharth");
+    expect(statName("flagged_share_E4", names)).toBe("flagged share · Aditya");
+  });
+  it("leaves other keys readable", async () => {
+    const { statName } = await import("./format");
+    expect(statName("flagged_rows", names)).toBe("flagged rows");
+    expect(statName("p_E9", names)).toBe("p · E9");
+  });
+});

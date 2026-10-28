@@ -86,7 +86,7 @@ export function HackerConsole({ caseId, open, onClose, onBudget }: {
                 Each run costs 1 coin · results are notes, not evidence.
               </p>
             </div>
-            <button onClick={onClose} className="rounded border border-line px-3 py-1.5 text-sm text-paper/80 hover:border-paper/50">
+            <button onClick={onClose} className="shrink-0 whitespace-nowrap rounded border border-line px-3 py-2 text-sm text-paper/80 hover:border-paper/50">
               Close · Esc
             </button>
           </header>
@@ -118,11 +118,11 @@ export function HackerConsole({ caseId, open, onClose, onBudget }: {
                   </button>
                 ))}
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <button
                   onClick={() => void run()}
                   disabled={state !== "ready" || running}
-                  className="rounded-md bg-green px-5 py-2 font-semibold text-ink-950 transition-opacity disabled:opacity-40"
+                  className="shrink-0 whitespace-nowrap rounded-md bg-green px-5 py-2.5 font-semibold text-ink-950 transition-opacity disabled:opacity-40"
                 >
                   {running ? "Running…" : "Run · 1 coin"}
                 </button>

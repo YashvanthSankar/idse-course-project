@@ -4,13 +4,15 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Rain } from "@/components/fx/Rain";
 import { createRoom } from "@/lib/api";
+import { saveHostToken } from "@/lib/hostToken";
 import { sfx } from "@/lib/sound";
 
 export function HostLanding() {
   const router = useRouter();
   const start = useMutation({
     mutationFn: createRoom,
-    onSuccess: ({ code }) => {
+    onSuccess: ({ code, host_token }) => {
+      if (host_token) saveHostToken(code, host_token);
       sfx.play("stamp");
       router.push(`/host/${code}`);
     },

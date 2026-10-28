@@ -1,8 +1,9 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { listLevels } from "@/lib/api";
+import { loadHostToken } from "@/lib/hostToken";
 import { sfx } from "@/lib/sound";
 import { useClock } from "@/lib/useClock";
 import { useRoomSocket } from "@/lib/ws";
@@ -13,8 +14,12 @@ import { Leaderboard } from "./Leaderboard";
 import { Podium } from "./Podium";
 import { Ticker } from "./Ticker";
 
+const noSubscribe = () => () => {};
+
 export function HostScreen({ code }: { code: string }) {
-  const { status, state, send } = useRoomSocket(code, "host");
+  // null on the server render; "" in the browser when this tab didn't create the room.
+  const token = useSyncExternalStore(noSubscribe, () => loadHostToken(code) ?? "", () => null);
+  const { status, state, send } = useRoomSocket(code, "host", { token: token ?? undefined, enabled: Boolean(token) });
   const levels = useQuery({ queryKey: ["levels"], queryFn: listLevels });
   const [level, setLevel] = useState(1);
   const [minutes, setMinutes] = useState(6);
@@ -39,6 +44,22 @@ export function HostScreen({ code }: { code: string }) {
     setSetupAgain(false);
     send({ type: "start", level, seconds: minutes * 60 });
   };
+
+  if (token === "" || status === "forbidden") {
+    return (
+      <Shell code={code}>
+        <div className="flex flex-1 flex-col items-center justify-center gap-5 px-4 text-center">
+          <p className="font-display text-4xl italic text-paper sm:text-5xl">This screen belongs to another session.</p>
+          <p className="max-w-xl text-lg text-paper/70">
+            Only the browser tab that created room {code} can run it. Start a new class session here instead.
+          </p>
+          <Link href="/host" className="mt-2 rounded-lg border-2 border-amber px-6 py-3 font-type tracking-[0.2em] text-amber hover:bg-amber/10">
+            START A NEW CLASS SESSION
+          </Link>
+        </div>
+      </Shell>
+    );
+  }
 
   if (status === "not_found") {
     return (
@@ -70,18 +91,18 @@ export function HostScreen({ code }: { code: string }) {
       )}
 
       {view === "running" && (
-        <div className="grid flex-1 gap-10 px-10 pb-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div className="grid flex-1 gap-6 px-4 pb-8 sm:gap-10 sm:px-10 sm:pb-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <section className="min-w-0">
             <p className="text-lg text-paper/60">Case {String(state.level ?? "").padStart(2, "0")}</p>
-            <h2 className="mb-6 font-display text-5xl font-black italic text-paper">{caseTitle ?? "In progress"}</h2>
+            <h2 className="mb-6 font-display text-3xl font-black italic text-paper sm:text-5xl">{caseTitle ?? "In progress"}</h2>
             <Leaderboard rows={state.top} />
           </section>
-          <section className="flex flex-col gap-8">
-            <div className="flex items-center gap-8 rounded-2xl border border-line bg-ink-900/60 p-6">
+          <section className="flex min-w-0 flex-col gap-6 sm:gap-8">
+            <div className="flex items-center gap-4 rounded-2xl border border-line bg-ink-900/60 p-4 sm:gap-8 sm:p-6">
               {state.endsAt && <CountdownRing endsAt={state.endsAt} totalSeconds={roundSeconds} />}
-              <div className="flex-1">
+              <div className="min-w-0 flex-1">
                 <p className="text-lg text-paper/60">Cases closed</p>
-                <p data-testid="solved-meter" className="font-mono text-5xl font-bold text-paper">
+                <p data-testid="solved-meter" className="font-mono text-3xl font-bold text-paper sm:text-5xl">
                   {state.solved}
                   <span className="text-paper/40"> / {state.total || state.players.length}</span>
                 </p>
@@ -93,11 +114,11 @@ export function HostScreen({ code }: { code: string }) {
                 </div>
               </div>
             </div>
-            <div className="flex-1 rounded-2xl border border-line bg-ink-900/60 p-6">
+            <div className="flex-1 rounded-2xl border border-line bg-ink-900/60 p-4 sm:p-6">
               <p className="mb-4 text-lg text-paper/60">Live from the field</p>
               <Ticker lines={state.ticker} />
             </div>
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <JoinPanel code={code} compact />
               <button
                 data-testid="end-round"

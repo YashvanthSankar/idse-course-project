@@ -8,7 +8,9 @@ import { Portrait } from "@/components/case/Portrait";
 import { LampLight } from "@/components/fx/LampLight";
 import { Typewriter } from "@/components/fx/Typewriter";
 import { useAccused } from "@/lib/accused";
-import { reportUrl } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { getCaseState, reportUrl } from "@/lib/api";
+import { loadCaseMemory, restoreSnapshot } from "@/lib/caseMemory";
 import { roomForCase } from "@/lib/roomCase";
 import { cn } from "@/lib/cn";
 import type { Figure } from "@/lib/plotlyData";
@@ -45,14 +47,27 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
   const classRoom = useSyncExternalStore(noSubscribe, () => roomForCase(caseId), () => null);
   const verdict = useCaseStore((s) => s.verdict);
   const results = useCaseStore((s) => s.results);
-  const accusedId = useAccused((s) => s.byCase[caseId]);
+  const accusedInMemory = useAccused((s) => s.byCase[caseId]);
+  const accusedStored = useSyncExternalStore(noSubscribe, () => loadCaseMemory(caseId)?.accused ?? null, () => null);
+  const accusedId = accusedInMemory ?? accusedStored;
   const valid = meta?.case_id === caseId && verdict !== null;
   const [phase, setPhase] = useState<Phase>("stamp");
   const revealRef = useRef<HTMLDivElement>(null);
 
+  // A reload loses the in-memory verdict: ask the server. Still open? Back to the files.
+  const restored = useQuery({
+    queryKey: ["case-state", caseId],
+    queryFn: () => getCaseState(caseId),
+    enabled: !valid,
+  });
   useEffect(() => {
-    if (!valid) router.replace(`/case/${caseId}`);
-  }, [valid, caseId, router]);
+    if (valid || !restored.data && !restored.isError) return;
+    if (restored.data?.verdict) {
+      useCaseStore.getState().hydrate(restoreSnapshot(restored.data, loadCaseMemory(caseId)));
+    } else {
+      router.replace(`/case/${caseId}`);
+    }
+  }, [valid, restored.data, restored.isError, caseId, router]);
 
   useEffect(() => {
     sfx.stop("heartbeat");
@@ -79,7 +94,7 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
   if (!valid || !meta || !verdict) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-ink-950">
-        <p className="animate-blink font-type tracking-[0.4em] text-amber">RETURNING TO THE FILE…</p>
+        <p className="animate-blink font-type tracking-[0.4em] text-amber">PULLING THE VERDICT…</p>
       </div>
     );
   }
@@ -186,13 +201,13 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
                 </span>
               ))}
             </div>
-            <div className="mt-10 flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
+            <div className="mt-10 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
               {classRoom && (
                 <Link
                   href={`/play/${classRoom}`}
                   onClick={() => sfx.play("pin")}
                   data-testid="back-to-class"
-                  className="rounded-sm border-2 border-cyan bg-cyan/10 px-6 py-3 text-center font-type tracking-[0.3em] text-cyan hover:bg-cyan/20"
+                  className="rounded-sm border-2 border-cyan bg-cyan/10 px-6 py-3 text-center font-type whitespace-nowrap tracking-[0.18em] text-cyan hover:bg-cyan/20"
                 >
                   BACK TO CLASS · {classRoom} →
                 </Link>
@@ -201,14 +216,14 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
                 href="/office"
                 onClick={() => sfx.play("pin")}
                 data-testid="next-case"
-                className="rounded-sm border-2 border-amber bg-amber/15 px-6 py-3 text-center font-type tracking-[0.3em] text-amber shadow-[0_0_30px_rgba(245,165,36,0.25)] hover:bg-amber/25"
+                className="rounded-sm border-2 border-amber bg-amber/15 px-6 py-3 text-center font-type whitespace-nowrap tracking-[0.18em] text-amber shadow-[0_0_30px_rgba(245,165,36,0.25)] hover:bg-amber/25"
               >
                 {verdict.correct && meta.level < 7 ? `NEXT CASE · No. ${String(nextLevel).padStart(2, "0")} →` : "TRY ANOTHER CASE →"}
               </Link>
               <Link
                 href="/office"
                 onClick={() => sfx.play("tick")}
-                className="rounded-sm border border-line px-6 py-3 text-center font-type tracking-[0.3em] text-paper/70 hover:border-paper/50 hover:text-paper"
+                className="rounded-sm border border-line px-6 py-3 text-center font-type whitespace-nowrap tracking-[0.18em] text-paper/70 hover:border-paper/50 hover:text-paper"
               >
                 BACK TO THE DESK
               </Link>
@@ -216,7 +231,7 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
                 href={reportUrl(meta.case_id)}
                 download
                 onClick={() => sfx.play("rustle")}
-                className="rounded-sm border border-line px-6 py-3 text-center font-type tracking-[0.3em] text-paper/70 hover:border-paper/50 hover:text-paper"
+                className="rounded-sm border border-line px-6 py-3 text-center font-type whitespace-nowrap tracking-[0.18em] text-paper/70 hover:border-paper/50 hover:text-paper"
               >
                 CASE REPORT · PDF
               </a>

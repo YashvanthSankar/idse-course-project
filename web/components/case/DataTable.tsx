@@ -13,7 +13,7 @@ const ROW_H = 34;
 type Row = Record<string, string | number>;
 const COLUMNS: { key: string; label: string; width: string; align?: "right" }[] = [
   { key: "txn_id", label: "txn", width: "80px" },
-  { key: "date", label: "date", width: "96px" },
+  { key: "date", label: "date", width: "112px" },
   { key: "hour", label: "hr", width: "40px", align: "right" },
   { key: "employee_id", label: "employee", width: "140px" },
   { key: "vendor", label: "vendor", width: "minmax(170px,1.4fr)" },
@@ -173,7 +173,7 @@ export function DataTable({ caseId, open, onClose, suspects, implicated, flagged
                         style={{ height: ROW_H, transform: `translateY(${item.start}px)`, gridTemplateColumns: GRID }}
                       >
                         <span className="px-3 text-muted">{flagged ? "⚑ " : ""}{row.txn_id}</span>
-                        <span className="px-3">{row.date}</span>
+                        <span className="whitespace-nowrap px-3">{String(row.date).slice(0, 10)}</span>
                         <span className="px-3 text-right">{row.hour}</span>
                         <span className="truncate px-3 text-paper">{nameOf(emp)}</span>
                         <span className="truncate px-3 text-paper/80">{row.vendor}</span>

@@ -18,7 +18,18 @@ type CaseState = {
   unlink: (resultId: string) => void;
   evidenceFor: (suspectId: string) => string[];
   setVerdict: (verdict: Verdict) => void;
+  hydrate: (snapshot: CaseSnapshot) => void;
   reset: () => void;
+};
+
+/** A whole case at once — used to restore after a reload or a locked phone. */
+export type CaseSnapshot = {
+  meta: CaseMeta;
+  results: ToolResult[];
+  activeResultId: string | null;
+  pinned: string[];
+  links: Record<string, string>;
+  verdict: Verdict | null;
 };
 
 const initial = {
@@ -65,5 +76,6 @@ export const useCaseStore = create<CaseState>()((set, get) => ({
   evidenceFor: (suspectId) =>
     get().pinned.filter((id) => get().links[id] === suspectId),
   setVerdict: (verdict) => set({ verdict }),
+  hydrate: (snapshot) => set({ ...snapshot }),
   reset: () => set(initial),
 }));

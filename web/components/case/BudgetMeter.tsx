@@ -19,7 +19,11 @@ export function BudgetMeter({ budget, left, errorTick }: { budget: number; left:
       className="flex items-center gap-2"
     >
       <span className="hidden text-xs text-paper/55 sm:inline">Budget</span>
-      <div className="flex flex-wrap items-center gap-[3px]">
+      <span
+        aria-hidden
+        className="h-3.5 w-3.5 rounded-full border border-[#8a5a10] bg-[radial-gradient(circle_at_35%_30%,#ffe29a,#f5a524_55%,#9a6212)] sm:hidden"
+      />
+      <div className="hidden flex-nowrap items-center gap-[3px] sm:flex">
         {Array.from({ length: budget }, (_, i) => {
           const full = i < left;
           return (

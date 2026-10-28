@@ -28,16 +28,23 @@ export function JoinPanel({ code, compact = false }: { code: string; compact?: b
       <p className="text-xl text-paper/70">Scan to join on your phone</p>
       <div className="mt-5 rounded-xl bg-paper p-4 shadow-[0_0_60px_rgba(245,165,36,0.15)]">
         {origin ? (
-          <QRCodeSVG value={url} size={280} bgColor="#efe6d2" fgColor="#07080b" data-testid="join-qr" />
+          <QRCodeSVG
+            value={url}
+            size={280}
+            bgColor="#efe6d2"
+            fgColor="#07080b"
+            data-testid="join-qr"
+            style={{ width: "min(280px, 62vw)", height: "auto" }}
+          />
         ) : (
-          <div className="size-[280px]" />
+          <div className="aspect-square w-[min(280px,62vw)]" />
         )}
       </div>
-      <p className="mt-4 font-mono text-lg text-paper/60">{url.replace(/^https?:\/\//, "")}</p>
+      <p className="mt-4 break-all font-mono text-base text-paper/60 sm:text-lg">{url.replace(/^https?:\/\//, "")}</p>
       <p className="mt-8 text-lg text-paper/60">Room code</p>
       <p
         data-testid="room-code"
-        className="font-display text-[clamp(96px,9vw,168px)] font-black leading-none tracking-[0.08em] text-amber [text-shadow:0_0_40px_rgba(245,165,36,0.35)]"
+        className="font-display text-[clamp(64px,9vw,168px)] font-black leading-none tracking-[0.08em] text-amber [text-shadow:0_0_40px_rgba(245,165,36,0.35)]"
       >
         {code}
       </p>

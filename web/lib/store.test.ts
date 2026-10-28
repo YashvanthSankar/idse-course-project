@@ -59,3 +59,23 @@ describe("useCaseStore", () => {
     expect(useCaseStore.getState().verdict).toBeNull();
   });
 });
+
+describe("hydrate", () => {
+  it("restores a whole case in one step", () => {
+    const st = useCaseStore.getState();
+    st.reset();
+    st.hydrate({
+      meta: { case_id: "c9" } as never,
+      results: [result("a"), result("b")],
+      activeResultId: "b",
+      pinned: ["a"],
+      links: { a: "E1" },
+      verdict: null,
+    });
+    const s = useCaseStore.getState();
+    expect(s.meta?.case_id).toBe("c9");
+    expect(s.results).toHaveLength(2);
+    expect(s.activeResultId).toBe("b");
+    expect(s.evidenceFor("E1")).toEqual(["a"]);
+  });
+});

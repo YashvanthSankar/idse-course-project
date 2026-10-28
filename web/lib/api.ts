@@ -1,4 +1,4 @@
-import type { Autopsy, CaseMeta, LevelInfo, Profile, RoomCreated, ToolId, ToolResult, ToolSpec, Verdict } from "./types";
+import type { CaseState, Autopsy, CaseMeta, LevelInfo, Profile, RoomCreated, ToolId, ToolResult, ToolSpec, Verdict } from "./types";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -36,6 +36,9 @@ export const createCase = (level: number, seed?: number, playerId?: string) =>
 
 export const getCase = (caseId: string) => request<CaseMeta>(`/api/cases/${caseId}`);
 
+/** Meta + every result run so far + the verdict (if closed): restores a case after a reload. */
+export const getCaseState = (caseId: string) => request<CaseState>(`/api/cases/${caseId}/state`);
+
 export const getRows = (caseId: string, offset = 0, limit = 200) =>
   request<Rows>(`/api/cases/${caseId}/rows?offset=${offset}&limit=${limit}`);
 
@@ -55,6 +58,18 @@ export const reportUrl = (caseId: string) => `${API_URL}/api/cases/${caseId}/rep
 
 export const listLevels = () => request<LevelInfo[]>("/api/levels");
 
-export const createRoom = () => post<RoomCreated>("/api/rooms");
+/** The host token proves this browser created the room (older servers didn't send one). */
+export const createRoom = () => post<RoomCreated & { host_token?: string }>("/api/rooms");
 export const getAutopsy = (code: string) => request<Autopsy>(`/api/rooms/${code}/autopsy`);
 export const getProfile = (playerId: string) => request<Profile>(`/api/players/${encodeURIComponent(playerId)}/profile`);
+
+/** Does this class room exist? (404 = no; network trouble is thrown, not treated as "no".) */
+export async function roomExists(code: string): Promise<boolean> {
+  try {
+    await getAutopsy(code);
+    return true;
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return false;
+    throw err;
+  }
+}
