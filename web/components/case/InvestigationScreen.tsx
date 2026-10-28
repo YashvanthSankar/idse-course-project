@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Corkboard } from "@/components/board/Corkboard";
 import { LampLight } from "@/components/fx/LampLight";
 import { SettingsPanel } from "@/components/settings/SettingsPanel";
 import { ApiError, getCase, listTools, runTool } from "@/lib/api";
@@ -62,6 +63,13 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
   const [drawer, setDrawer] = useState<"code" | "data" | null>(null);
   const [tab, setTab] = useState<Tab>("tools");
   const [settings, setSettings] = useState(false);
+  const [boardOpen, setBoardOpen] = useState(false);
+  const openBoard = useCallback(() => {
+    if (onOpenBoard) return onOpenBoard();
+    sfx.play("whoosh");
+    setBoardOpen(true);
+  }, [onOpenBoard]);
+  const closeBoard = useCallback(() => setBoardOpen(false), []);
   const desktop = useMediaQuery("(min-width: 768px)");
   const wide = useMediaQuery("(min-width: 1024px)");
   const muted = useSettings((s) => s.muted);
@@ -133,15 +141,15 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
   // Number keys 1–9 run the tools in kit order.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (drawer || settings || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (drawer || settings || boardOpen || e.metaKey || e.ctrlKey || e.altKey) return;
       if ((e.target as HTMLElement)?.closest("input, textarea")) return;
       const n = Number(e.key);
       if (n >= 1 && n <= 9 && specs[n - 1]) trigger(specs[n - 1]);
-      if ((e.key === "b" || e.key === "B") && onOpenBoard) onOpenBoard();
+      if (e.key === "b" || e.key === "B") openBoard();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [specs, trigger, drawer, settings, onOpenBoard]);
+  }, [specs, trigger, drawer, settings, boardOpen, openBoard]);
 
   const active = store.results.find((r) => r.result_id === store.activeResultId) ?? null;
   const flagged = active && revealed.has(active.result_id) ? active.implicates : [];
@@ -211,7 +219,7 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
           store.setActive(id);
           setTab("result");
         }}
-        onOpenBoard={onOpenBoard}
+        onOpenBoard={openBoard}
       />
     ),
     tools: (
@@ -316,6 +324,7 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
         flaggedTxns={flaggedTxns}
       />
       <SettingsPanel open={settings} onClose={() => setSettings(false)} />
+      <Corkboard open={boardOpen} onClose={closeBoard} caseId={caseId} suspects={meta.suspects} results={pinnedResults} />
       <LampLight size={800} />
     </div>
   );
