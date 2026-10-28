@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { InvestigationScreen } from "@/components/case/InvestigationScreen";
+import { rememberRoomCase } from "@/lib/roomCase";
 import { getPlayerSnapshot, loadPlayer, MAX_NAME, setPlayerName, subscribePlayer } from "@/lib/player";
 import { sfx } from "@/lib/sound";
 import { useCaseStore } from "@/lib/store";
@@ -66,6 +67,10 @@ function NameForm({ code }: { code: string }) {
 function Joined({ code, playerId, name }: { code: string; playerId: string; name: string }) {
   const { status, state } = useRoomSocket(code, "player", { playerId, name });
   const closed = useCaseStore((s) => Boolean(s.verdict) && s.meta?.case_id === state.caseId);
+
+  useEffect(() => {
+    if (state.caseId) rememberRoomCase(state.caseId, code);
+  }, [state.caseId, code]);
 
   if (status === "not_found") {
     return (

@@ -3,12 +3,13 @@ import confetti from "canvas-confetti";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Portrait } from "@/components/case/Portrait";
 import { LampLight } from "@/components/fx/LampLight";
 import { Typewriter } from "@/components/fx/Typewriter";
 import { useAccused } from "@/lib/accused";
 import { reportUrl } from "@/lib/api";
+import { roomForCase } from "@/lib/roomCase";
 import { cn } from "@/lib/cn";
 import type { Figure } from "@/lib/plotlyData";
 import { sfx } from "@/lib/sound";
@@ -40,6 +41,8 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
   const reduced = useReducedEffects();
   const phone = useMediaQuery("(max-width: 639px)") ?? false;
   const meta = useCaseStore((s) => s.meta);
+  // Server render has no sessionStorage: read it only on the client, without a mismatch.
+  const classRoom = useSyncExternalStore(noSubscribe, () => roomForCase(caseId), () => null);
   const verdict = useCaseStore((s) => s.verdict);
   const results = useCaseStore((s) => s.results);
   const accusedId = useAccused((s) => s.byCase[caseId]);
@@ -184,6 +187,16 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
               ))}
             </div>
             <div className="mt-10 flex flex-col items-stretch gap-3 sm:flex-row sm:justify-center">
+              {classRoom && (
+                <Link
+                  href={`/play/${classRoom}`}
+                  onClick={() => sfx.play("pin")}
+                  data-testid="back-to-class"
+                  className="rounded-sm border-2 border-cyan bg-cyan/10 px-6 py-3 text-center font-type tracking-[0.3em] text-cyan hover:bg-cyan/20"
+                >
+                  BACK TO CLASS · {classRoom} →
+                </Link>
+              )}
               <Link
                 href="/office"
                 onClick={() => sfx.play("pin")}
@@ -214,3 +227,5 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
     </div>
   );
 }
+
+const noSubscribe = () => () => {};

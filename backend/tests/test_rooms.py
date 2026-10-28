@@ -50,9 +50,11 @@ def test_room_code_format(client):
 
 
 def test_unknown_room_rejected(client):
-    with pytest.raises(WebSocketDisconnect), \
-            client.websocket_connect("/ws/rooms/ZZZZ?role=host") as ws:
+    # accepted then closed with 4404, so a browser can tell "no such room" from a network error
+    with client.websocket_connect("/ws/rooms/ZZZZ?role=host") as ws, \
+            pytest.raises(WebSocketDisconnect) as closed:
         ws.receive_json()
+    assert closed.value.code == 4404
 
 
 def test_join_broadcasts_lobby(client):

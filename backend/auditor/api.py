@@ -260,10 +260,10 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
     async def room_socket(ws: WebSocket, code: str, role: str = "player",
                           player_id: str | None = None, name: str = "Detective"):
         rooms: RoomManager = app.state.rooms
-        if code not in rooms.rooms:
-            await ws.close(code=4404)
-            return
         await ws.accept()
+        if code not in rooms.rooms:
+            await ws.close(code=4404)  # browsers only see close codes after an accept
+            return
         room = rooms.rooms[code]
         pid = player_id or uuid4().hex[:10] if role == "player" else None
         rooms.add_socket(code, ws, role, pid)
