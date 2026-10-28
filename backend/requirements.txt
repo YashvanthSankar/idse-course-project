@@ -20,6 +20,8 @@ packaging==26.3
 pandas==3.1.0
 pillow==13.0.0
 plotly==7.1.0
+psycopg==3.3.6
+psycopg-binary==3.3.6
 pydantic==2.14.1
 pydantic-core==2.50.1
 pyparsing==3.3.3
@@ -30,6 +32,7 @@ scikit-learn==1.9.1
 scipy==1.18.1
 seaborn==0.13.2
 six==1.17.0
+sqlalchemy==2.1.6
 starlette==1.10.0
 threadpoolctl==3.7.0
 typing-extensions==4.16.0

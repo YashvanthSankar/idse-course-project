@@ -28,3 +28,25 @@ def test_logging_is_fast_enough_for_a_lecture_hall(tmp_path):
     for i in range(200):
         t.log("case_started", player_id=f"P{i}", case_id=f"c{i}", room_code="ROOM")
     assert time.perf_counter() - start < 0.5
+
+
+def test_accepts_a_database_url(tmp_path):
+    t = Telemetry(f"sqlite:///{tmp_path / 'url.db'}")
+    t.log("tool_run", player_id="P1", case_id="c1", tool_id="zscore", payload={"cost": 2})
+    assert t.events_df()["tool_id"].tolist() == ["zscore"]
+
+
+def test_postgres_urls_use_the_psycopg_driver():
+    from auditor.telemetry import normalise_url
+
+    assert normalise_url("postgres://u:p@h/db?sslmode=require") == \
+        "postgresql+psycopg://u:p@h/db?sslmode=require"
+    assert normalise_url("postgresql://u:p@h/db").startswith("postgresql+psycopg://")
+    assert normalise_url("/tmp/x.db") == "sqlite:////tmp/x.db"
+
+
+def test_database_url_env_wins(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path / 'env.db'}")
+    t = Telemetry()
+    t.log("case_started", player_id="P", case_id="c")
+    assert (tmp_path / "env.db").exists() and len(t.events_df()) == 1
