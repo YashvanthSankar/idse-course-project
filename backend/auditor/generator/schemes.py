@@ -62,8 +62,10 @@ GHOST_VENDORS = [
 
 
 def inject(
-    scheme: SchemeId, df: pd.DataFrame, fraudster_id: str, rng: np.random.Generator
+    scheme: SchemeId, df: pd.DataFrame, fraudster_id: str, rng: np.random.Generator,
+    scale: float = 1.0,
 ) -> tuple[pd.DataFrame, list[str]]:
+    """`scale` > 1 grows the schemes that add rows, so they stay visible in bigger ledgers."""
     injector = {
         "big_invoice": _big_invoice,
         "duplicates": _duplicates,
@@ -72,6 +74,8 @@ def inject(
         "inflated_ratio": _inflated_ratio,
         "under_limit": _under_limit,
     }[scheme]
+    if scheme in ("weekend", "under_limit"):
+        return injector(df.copy(), fraudster_id, rng, scale)
     return injector(df.copy(), fraudster_id, rng)
 
 
@@ -129,13 +133,17 @@ def _fabricated(df, fraudster_id, rng):
     return df, mine["txn_id"].tolist()
 
 
-def _weekend(df, fraudster_id, rng):
+def _scaled(n: int, scale: float) -> int:
+    return n if scale == 1.0 else round(n * scale)
+
+
+def _weekend(df, fraudster_id, rng, scale=1.0):
     mine = _mine(df, fraudster_id)
     days = pd.to_datetime(df["date"])
     start, end = days.min().date(), days.max().date()
     weekends = [start + timedelta(days=d) for d in range((end - start).days + 1)
                 if (start + timedelta(days=d)).weekday() >= 5]
-    n = int(rng.integers(13, 18))
+    n = _scaled(int(rng.integers(13, 18)), scale)
     cats = rng.choice(["client_meal", "equipment", "hotel", "chai_snacks"], size=n)
     amounts = np.round(honest_amounts(rng, cats), 2)
     vendors = mine["vendor"].value_counts().index[:6]
@@ -159,10 +167,10 @@ def _inflated_ratio(df, fraudster_id, rng):
     return df, df.loc[picks, "txn_id"].tolist()
 
 
-def _under_limit(df, fraudster_id, rng):
+def _under_limit(df, fraudster_id, rng, scale=1.0):
     days = sorted({d for d in df["date"] if d.weekday() < 5})
     vendor = str(rng.choice(GHOST_VENDORS))
-    n = int(rng.integers(10, 15))
+    n = _scaled(int(rng.integers(10, 15)), scale)
     amounts = np.round(rng.uniform(45_000, APPROVAL_LIMIT - 1, n), 2)
     rows = [{
         "date": days[int(rng.integers(len(days)))],

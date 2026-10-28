@@ -5,6 +5,7 @@ from collections import OrderedDict
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from threading import Lock
+from typing import Any
 from uuid import uuid4
 
 from auditor.generator.cases import CaseBundle
@@ -22,6 +23,12 @@ class CaseSession:
     cache: dict[tuple, str] = field(default_factory=dict)
     verdict: Verdict | None = None
     lock: Lock = field(default_factory=Lock)
+    # Career Mode: which career and contract case this is, and who in the lineup is an old
+    # colleague (suspect id -> cameo id)
+    career_code: str | None = None
+    career_index: int | None = None
+    lineup_cameos: dict[str, str] = field(default_factory=dict)
+    career_verdict: Any = None
 
     @property
     def case_id(self) -> str:

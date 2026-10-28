@@ -5,6 +5,7 @@ about three orders of magnitude (₹100 chai to ₹31,600 laptops), the mixture 
 claims follows Benford's law, just like real-world financial data.
 """
 
+from dataclasses import dataclass
 from datetime import date, timedelta
 
 import numpy as np
@@ -23,7 +24,7 @@ SUSPECT_POOL: list[dict] = [
      "bio": "Buys a new laptop every quarter 'for testing'. The old ones are never seen again."},
     {"name": "Ananya Rao", "role": "HR Business Partner", "department": "People",
      "bio": "Organises every offsite. Somehow the venue is always her cousin's resort."},
-    {"name": "Rohan Desai", "role": "Regional Director", "department": "Sales",
+    {"name": "Rohan Saxena", "role": "Regional Director", "department": "Sales",
      "bio": "Flies business class to meetings that could have been emails."},
     {"name": "Sneha Kulkarni", "role": "Finance Controller", "department": "Finance",
      "bio": "Signs off on everything. Reads almost nothing. Smiles a lot."},
@@ -88,6 +89,14 @@ VENDORS: dict[str, list[str]] = {
                   "Andheri Tech Traders"],
 }
 FESTIVAL_VENDOR = "Payroll — Festival Bonus"
+
+
+@dataclass(frozen=True)
+class Culture:
+    """How honest money moves at one company (Career Mode). The defaults are Quick Case."""
+
+    weekend_share: float = WEEKEND_SHARE
+    night_share: float = 0.0  # share of honest claims filed between midnight and 5 AM
 COLUMNS = ["txn_id", "date", "hour", "employee_id", "vendor", "category", "amount", "revenue",
            "invoice_id"]
 
@@ -116,6 +125,7 @@ def make_honest_transactions(
     suspects: list[Suspect],
     n_rows: int = 1000,
     start: date = date(2026, 7, 1),
+    culture: Culture | None = None,
 ) -> pd.DataFrame:
     cats = list(CATEGORY_PROFILES)
     weights = np.array([CATEGORY_PROFILES[c][1] for c in cats])
@@ -139,12 +149,15 @@ def make_honest_transactions(
     ]
 
     weekdays, weekends = business_days(start)
-    on_weekend = rng.random(n_rows) < WEEKEND_SHARE
+    on_weekend = rng.random(n_rows) < (culture.weekend_share if culture else WEEKEND_SHARE)
     dates = [
         weekends[rng.integers(len(weekends))] if w else weekdays[rng.integers(len(weekdays))]
         for w in on_weekend
     ]
     hours = np.clip(np.rint(rng.normal(14, 2.5, n_rows)), 9, 20).astype(int)
+    if culture and culture.night_share > 0:  # ships and night shoots: late payments are normal
+        night = rng.random(n_rows) < culture.night_share
+        hours[night] = rng.integers(0, 6, int(night.sum()))
     margins = np.exp(rng.normal(np.log(MARGIN_MEDIAN), MARGIN_SIGMA, n_rows))
     amounts = np.round(amounts, 2)
 
