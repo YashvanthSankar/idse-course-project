@@ -28,7 +28,7 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 - [x] T13 · `01_case_generator` + `02_detection_tools` notebooks
 
 ### M6 · Frontend Foundation
-- [ ] T14 · Next.js scaffold, design tokens, FX layer, sound, API client
+- [x] T14 · Next.js scaffold, design tokens, FX layer, sound, API client
 
 ### M7 · Title & Office
 - [x] T15 · Title screen, office desk, briefing memo
@@ -57,8 +57,8 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 ## 🟨 COULD
 
 ### M13 · Extras
-- [ ] T25 · Hacker Mode (Python in the browser via Pyodide)
-- [ ] T26 · Case report PDF + adaptive endless mode
+- [x] T25 · Hacker Mode (Python in the browser via Pyodide)
+- [x] T26 · Case report PDF + adaptive endless mode
 
 ## 🚀 SHIP
 
