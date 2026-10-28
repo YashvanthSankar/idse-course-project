@@ -93,7 +93,7 @@ function Card({ profile }: { profile: Profile }) {
           }}
         />
         <div className="flex items-center justify-between text-xs font-semibold tracking-[0.25em] opacity-60">
-          <span>THE AUDITOR</span>
+          <span>OUTLIER</span>
           <span>DETECTIVE CARD</span>
         </div>
         <div className="mt-4 flex items-center gap-4">

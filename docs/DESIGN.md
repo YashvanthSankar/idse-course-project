@@ -1,4 +1,4 @@
-# THE AUDITOR: Game Design Spec
+# OUTLIER: Game Design Spec
 
 > *"Every number tells a story. Some of them lie."*
 
@@ -207,7 +207,7 @@ spend), stamp thud, heartbeat, correct chime, wrong buzzer. Audio starts on the 
 volume + mute are persisted in localStorage.
 
 ### 9.4 Screens
-1. **Title `/`**: rain and a Mumbai skyline silhouette with mouse parallax. A flickering neon sign reading "THE AUDITOR".
+1. **Title `/`**: rain and a Mumbai skyline silhouette with mouse parallax. A flickering neon sign reading "OUTLIER".
    The menu is typed out: *New Case · Class Mode · Detective's Manual · Settings*. "Press any key".
 2. **Office `/office`**: a top-down desk. Case folders are manila cards; locked cases are sealed with red tape. Hovering
    lifts a card with a paper rustle. Each card shows case no., title, difficulty stars and a best-score stamp.

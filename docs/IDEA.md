@@ -1,4 +1,4 @@
-# THE AUDITOR
+# OUTLIER
 
 > *"Every number tells a story. Some of them lie."*
 

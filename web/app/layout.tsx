@@ -12,7 +12,7 @@ const bebas = Bebas_Neue({ variable: "--font-bebas", subsets: ["latin"], weight:
 const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "The Auditor",
+  title: "Outlier",
   description: "A noir detective game where you catch fraudsters with real Python data analysis.",
 };
 

@@ -17,7 +17,7 @@ export function TopBar() {
       <BackButton href="/" label="Menu" />
       <Link href="/" className="group flex items-center gap-3" onClick={() => sfx.play("tick")}>
         <span className="font-display text-xl font-black italic text-[#ffd9da] [text-shadow:0_0_10px_rgba(229,72,77,0.8)]">
-          The Auditor
+          Outlier
         </span>
         <span className="hidden font-type text-[10px] tracking-[0.35em] text-muted sm:inline">
           BUREAU OF FORENSIC AUDIT · MUMBAI

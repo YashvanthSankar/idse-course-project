@@ -88,14 +88,14 @@ export function TitleScreen() {
         >
           FORENSIC ACCOUNTING · MUMBAI
         </motion.p>
-        <h1 className="animate-neon font-display text-[3.4rem] font-black italic leading-none text-[#ffd9da] sm:text-8xl md:text-9xl">
-          The Auditor
+        <h1 className="animate-neon font-display text-[4.2rem] font-black italic leading-none text-[#ffd9da] sm:text-[8.5rem] md:text-[10rem]">
+          Outlier
         </h1>
         <p className="mt-5 min-h-8 text-balance font-display text-lg italic text-paper/85 sm:text-2xl">
           <Typewriter text="Every number tells a story. Some of them lie." delay={900} speed={45} sound={false} />
         </p>
 
-        <div className="mt-10 min-h-56 w-full max-w-md rounded-2xl border border-white/10 bg-ink-950/75 px-4 py-6 shadow-[0_30px_80px_rgba(0,0,0,0.6)] backdrop-blur-md sm:mt-12 sm:px-8">
+        <div className="mt-10 min-h-56 w-full max-w-md px-4 py-6 [text-shadow:0_2px_14px_rgba(0,0,0,0.9)] sm:mt-12 sm:px-8">
           <AnimatePresence mode="wait">
             {!awake ? (
               <motion.p
@@ -141,7 +141,7 @@ export function TitleScreen() {
                   key={MENU[focus].id}
                   initial={{ opacity: 0, y: 4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 border-t border-white/10 pt-4 text-sm text-paper/70 sm:text-base"
+                  className="mt-4 text-sm text-paper/75 sm:text-base"
                 >
                   {MENU[focus].hint}
                 </motion.p>

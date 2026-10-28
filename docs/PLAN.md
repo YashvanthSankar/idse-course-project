@@ -1,4 +1,4 @@
-# THE AUDITOR Implementation Plan
+# OUTLIER Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -462,7 +462,7 @@ Each notebook imports `auditor` (run with `uv run --project backend jupyter lab`
 **Interfaces:** consumes `createCase`, `sfx`, FX components. Progress (unlocked level, best score per level) lives in localStorage under `auditor.progress.v1`, wrapped in try/catch.
 
 Acceptance (visual, §9.4 screens 1–3):
-- Title: a neon "THE AUDITOR" with CSS flicker keyframes, a skyline SVG parallax driven by pointer position (Framer `useMotionValue`), a typewritten menu, and rain + jazz starting on the first keypress or click.
+- Title: a neon "OUTLIER" with CSS flicker keyframes, a skyline SVG parallax driven by pointer position (Framer `useMotionValue`), a typewritten menu, and rain + jazz starting on the first keypress or click.
 - Office: folders laid out with a slight random rotation. Hover lifts them (spring, shadow) with a paper rustle. Locked folders have a red tape overlay and are not clickable. Each folder shows its best-score stamp.
 - Clicking an unlocked folder calls `createCase(level)` → the Briefing modal (memo typewritten with key sounds, polaroids sliding in staggered) → "Open the files" navigates to `/case/{id}`.
 

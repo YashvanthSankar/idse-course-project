@@ -10,7 +10,7 @@
 
 ## 1 · The hook (30 s)
 Open the title screen. Let the rain and the neon sign do the talking.
-> "This is The Auditor, a detective game where every clue is real data analysis in Python."
+> "This is Outlier, a detective game where every clue is real data analysis in Python."
 
 ## 2 · Solve a case live (2 min)
 **New Case → Case 03 "Too Random To Be True"** (Benford's law is the crowd-pleaser).

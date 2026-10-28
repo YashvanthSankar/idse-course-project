@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* ── THE AUDITOR design tokens (docs/DESIGN.md §9.1) — dark only ───────── */
+/* ── OUTLIER design tokens (docs/DESIGN.md §9.1) — dark only ───────── */
 :root {
   --ink-950: #07080b;
   --ink-900: #0e1117;

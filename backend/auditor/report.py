@@ -27,10 +27,10 @@ LINE = COLORS["line"]
 
 def _page(title: str, number: int):
     fig = plt.figure(figsize=(11.7, 8.3), facecolor=BG)
-    fig.text(0.055, 0.925, "THE AUDITOR  /  CONFIDENTIAL", color=AMBER, size=10, weight="bold")
+    fig.text(0.055, 0.925, "OUTLIER  /  CONFIDENTIAL", color=AMBER, size=10, weight="bold")
     fig.text(0.055, 0.865, title, color=PAPER, size=27, weight="bold")
     fig.add_artist(plt.Line2D([0.055, 0.945], [0.84, 0.84], color=LINE, transform=fig.transFigure))
-    fig.text(0.055, 0.035, f"THE AUDITOR · Bureau of Forensic Audit, Mumbai · page {number}/3",
+    fig.text(0.055, 0.035, f"OUTLIER · Bureau of Forensic Audit, Mumbai · page {number}/3",
              color=MUTED, size=9)
     return fig
 

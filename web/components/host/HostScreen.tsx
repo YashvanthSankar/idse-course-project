@@ -165,7 +165,7 @@ function Shell({ code, connected = true, children }: { code: string; connected?:
         <div className="flex items-center gap-4">
           <BackButton href="/host" label="Class Mode" short="Back" />
           <p className="font-display text-3xl font-black italic text-[#ffd9da] [text-shadow:0_0_14px_rgba(229,72,77,0.7)]">
-            The Auditor
+            Outlier
           </p>
         </div>
         <div className="flex items-center gap-4 text-lg text-paper/60">

@@ -110,7 +110,7 @@ def _meta(session: CaseSession) -> CaseMeta:
 
 def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = None,
                clock: Callable[[], float] = time.monotonic, rate_limit: int = 240) -> FastAPI:
-    app = FastAPI(title="The Auditor — Python brain", version="1.0.0")
+    app = FastAPI(title="Outlier — Python brain", version="1.0.0")
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"],
                        allow_headers=["*"])
     app.state.store = store or SessionStore()

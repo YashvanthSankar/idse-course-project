@@ -1,4 +1,4 @@
-# THE AUDITOR: TODO
+# OUTLIER: TODO
 
 Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN.md); the game design is in [DESIGN.md](DESIGN.md).
 
