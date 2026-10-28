@@ -22,6 +22,7 @@ import { ResultPanel, type Running } from "./ResultPanel";
 import { StepGuide } from "./StepGuide";
 import { SuspectRail } from "./SuspectRail";
 import { ToolKit } from "./ToolKit";
+import { HackerConsole } from "@/components/hacker/HackerConsole";
 
 type Tab = "suspects" | "tools" | "result" | "evidence";
 const TABS: { id: Tab; label: string; icon: string }[] = [
@@ -66,6 +67,7 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [settings, setSettings] = useState(false);
   const [boardOpen, setBoardOpen] = useState(false);
+  const [hackerOpen, setHackerOpen] = useState(false);
   const openBoard = useCallback(() => {
     if (onOpenBoard) return onOpenBoard();
     sfx.play("whoosh");
@@ -244,16 +246,28 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
       />
     ),
     tools: (
-      <ToolKit
-        specs={specs}
-        params={Object.fromEntries(specs.map((s) => [s.id, paramsFor(s)]))}
-        selected={selectedTool}
-        onSelect={select}
-        onParam={(tool, name, value) => setParams((p) => ({ ...p, [tool]: { ...p[tool], [name]: value } }))}
-        onRun={trigger}
-        busy={run.isPending}
-        budgetLeft={meta.budget_left}
-      />
+      <>
+        <ToolKit
+          specs={specs}
+          params={Object.fromEntries(specs.map((s) => [s.id, paramsFor(s)]))}
+          selected={selectedTool}
+          onSelect={select}
+          onParam={(tool, name, value) => setParams((p) => ({ ...p, [tool]: { ...p[tool], [name]: value } }))}
+          onRun={trigger}
+          busy={run.isPending}
+          budgetLeft={meta.budget_left}
+        />
+        <button
+          onClick={() => setHackerOpen(true)}
+          className="mt-6 flex w-full items-center gap-3 rounded-lg border border-green/30 px-3 py-2.5 text-left text-sm text-green/90 transition-colors hover:border-green/60 hover:bg-green/5"
+        >
+          <span className="font-mono">&gt;_</span>
+          <span>
+            Hacker Mode
+            <span className="block text-xs text-paper/50">Write your own pandas · 1 coin a run</span>
+          </span>
+        </button>
+      </>
     ),
   } satisfies Record<Tab, React.ReactNode>;
 
@@ -366,6 +380,12 @@ export function InvestigationScreen({ caseId, onOpenBoard }: { caseId: string; o
       <SettingsPanel open={settings} onClose={() => setSettings(false)} />
       <Corkboard open={boardOpen} onClose={closeBoard} caseId={caseId} suspects={meta.suspects} results={pinnedResults} />
       <LampLight size={800} />
+      <HackerConsole
+        caseId={caseId}
+        open={hackerOpen}
+        onClose={() => setHackerOpen(false)}
+        onBudget={(left) => useCaseStore.getState().setBudgetLeft(left)}
+      />
     </div>
   );
 }
