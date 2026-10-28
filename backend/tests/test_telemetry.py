@@ -50,3 +50,21 @@ def test_database_url_env_wins(tmp_path, monkeypatch):
     t = Telemetry()
     t.log("case_started", player_id="P", case_id="c")
     assert (tmp_path / "env.db").exists() and len(t.events_df()) == 1
+
+
+def test_logging_never_waits_on_a_slow_database(tmp_path, monkeypatch):
+    import time as _time
+
+    t = Telemetry(str(tmp_path / "slow.db"))
+    real = t._write_batch
+
+    def slow(rows):
+        _time.sleep(0.5)  # a far-away database
+        real(rows)
+
+    monkeypatch.setattr(t, "_write_batch", slow)
+    start = _time.perf_counter()
+    for i in range(20):
+        t.log("tool_run", player_id=f"P{i}", case_id="c")
+    assert _time.perf_counter() - start < 0.2  # players never wait for the database
+    assert len(t.events_df()) == 20  # and reading flushes everything first
