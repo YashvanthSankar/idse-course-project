@@ -140,10 +140,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cases/{case_id}/accuse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accuse */
+        post: operations["accuse_api_cases__case_id__accuse_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/debug/cases/{case_id}/truth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Debug Truth */
+        get: operations["debug_truth_api_debug_cases__case_id__truth_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** Accusation */
+        Accusation: {
+            /** Suspect Id */
+            suspect_id: string;
+            /** Evidence Ids */
+            evidence_ids: string[];
+        };
         /** Budget */
         Budget: {
             /** Budget Left */
@@ -183,6 +224,41 @@ export interface components {
             n_rows: number;
             /** Unlocked Tools */
             unlocked_tools: ("summary" | "groupby" | "zscore" | "iqr_box" | "duplicates" | "benford" | "timeseries" | "regression" | "isoforest")[];
+        };
+        /**
+         * CaseTruth
+         * @description Server-side only until the verdict.
+         */
+        CaseTruth: {
+            /** Fraudster Id */
+            fraudster_id: string | null;
+            /** Scheme */
+            scheme: ("big_invoice" | "duplicates" | "fabricated" | "weekend" | "inflated_ratio" | "under_limit") | null;
+            /** Fraud Txn Ids */
+            fraud_txn_ids: string[];
+            /** Catching Tools */
+            catching_tools: ("summary" | "groupby" | "zscore" | "iqr_box" | "duplicates" | "benford" | "timeseries" | "regression" | "isoforest")[];
+            /** Herrings */
+            herrings: ("ceo" | "diwali")[];
+            /** Explanation */
+            explanation: string;
+        };
+        /** EvidenceGrade */
+        EvidenceGrade: {
+            /** Result Id */
+            result_id: string;
+            /**
+             * Tool Id
+             * @enum {string}
+             */
+            tool_id: "summary" | "groupby" | "zscore" | "iqr_box" | "duplicates" | "benford" | "timeseries" | "regression" | "isoforest";
+            /**
+             * Grade
+             * @enum {string}
+             */
+            grade: "strong" | "supportive" | "weak" | "irrelevant";
+            /** Points */
+            points: number;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -308,6 +384,35 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** Verdict */
+        Verdict: {
+            /** Correct */
+            correct: boolean;
+            /** Score */
+            score: number;
+            /** Breakdown */
+            breakdown: {
+                [key: string]: number;
+            };
+            fraudster: components["schemas"]["Suspect"];
+            /**
+             * Scheme
+             * @enum {string}
+             */
+            scheme: "big_invoice" | "duplicates" | "fabricated" | "weekend" | "inflated_ratio" | "under_limit";
+            /** Explanation */
+            explanation: string;
+            /** Fraud Txn Ids */
+            fraud_txn_ids: string[];
+            /** Catching Tools */
+            catching_tools: ("summary" | "groupby" | "zscore" | "iqr_box" | "duplicates" | "benford" | "timeseries" | "regression" | "isoforest")[];
+            /** Evidence */
+            evidence: components["schemas"]["EvidenceGrade"][];
+            /** Reveal Figure */
+            reveal_figure?: {
+                [key: string]: unknown;
+            };
         };
     };
     responses: never;
@@ -552,6 +657,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Budget"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accuse_api_cases__case_id__accuse_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Accusation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Verdict"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    debug_truth_api_debug_cases__case_id__truth_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseTruth"];
                 };
             };
             /** @description Validation Error */

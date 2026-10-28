@@ -3,6 +3,7 @@
 import io
 import json
 import math
+import os
 import secrets
 import time
 from collections.abc import Callable
@@ -14,9 +15,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 
+from auditor.charts import reveal_figure
 from auditor.generator.cases import build_case, level_infos
-from auditor.models import CaseMeta, LevelInfo, ToolId, ToolResult, ToolSpec
+from auditor.models import (
+    Accusation,
+    CaseMeta,
+    CaseTruth,
+    LevelInfo,
+    ToolId,
+    ToolResult,
+    ToolSpec,
+    Verdict,
+)
+from auditor.scoring import score_accusation
 from auditor.store import CaseSession, SessionStore
+from auditor.telemetry import Telemetry
 from auditor.tools.registry import TOOLS, resolve_params, run_tool, tool_specs
 
 MAX_TABLE_ROWS = 200
@@ -61,13 +74,19 @@ def _meta(session: CaseSession) -> CaseMeta:
     return session.bundle.meta.model_copy(update={"budget_left": session.budget_left})
 
 
-def create_app(store: SessionStore | None = None,
+def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = None,
                clock: Callable[[], float] = time.monotonic) -> FastAPI:
     app = FastAPI(title="The Auditor — Python brain", version="1.0.0")
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"],
                        allow_headers=["*"])
     app.state.store = store or SessionStore()
     app.state.clock = clock
+    app.state.telemetry = telemetry or Telemetry()
+    app.state.on_verdict = []  # hooks: Class Mode listens here
+
+    def log(event, session: CaseSession, **kw):
+        app.state.telemetry.log(event, player_id=session.player_id, case_id=session.case_id,
+                                room_code=session.room_code, **kw)
 
     @app.exception_handler(KeyError)
     async def missing(_: Request, exc: KeyError):
@@ -87,6 +106,7 @@ def create_app(store: SessionStore | None = None,
         session = CaseSession(bundle=bundle, budget_left=bundle.meta.budget,
                               started_at=app.state.clock(), player_id=body.player_id)
         app.state.store.create(session)
+        log("case_started", session, payload={"level": body.level, "seed": seed})
         return _meta(session)
 
     @app.get("/api/cases/{case_id}", response_model=CaseMeta)
@@ -144,7 +164,10 @@ def create_app(store: SessionStore | None = None,
             )
             session.results[result.result_id] = result
             session.cache[key] = result.result_id
-            return result
+        log("tool_run", session, tool_id=tool_id,
+            payload={"cost": cost, "params": params, "implicates": result.implicates,
+                     "visual": TOOLS[tool_id].visual})
+        return result
 
     @app.post("/api/cases/{case_id}/hacker-charge", response_model=Budget)
     def hacker_charge(case_id: str):
@@ -153,7 +176,43 @@ def create_app(store: SessionStore | None = None,
             if session.budget_left < 1:
                 raise HTTPException(409, "Out of budget")
             session.budget_left -= 1
-            return Budget(budget_left=session.budget_left)
+        log("hacker_query", session, payload={"budget_left": session.budget_left})
+        return Budget(budget_left=session.budget_left)
+
+    @app.post("/api/cases/{case_id}/accuse", response_model=Verdict)
+    def accuse(case_id: str, body: Accusation):
+        session = session_for(case_id)
+        meta = session.bundle.meta
+        with session.lock:
+            if session.verdict is not None:
+                return session.verdict  # one shot, no take-backs
+            if len(set(body.evidence_ids)) != 2 or any(
+                    e not in session.results for e in body.evidence_ids):
+                raise HTTPException(422, "Attach two different pieces of pinned evidence")
+            if body.suspect_id not in {s.id for s in meta.suspects}:
+                raise HTTPException(422, "Unknown suspect")
+            truth = session.bundle.truth
+            elapsed = int(app.state.clock() - session.started_at)
+            verdict = score_accusation(truth, meta.suspects, body.suspect_id,
+                                       [session.results[e] for e in body.evidence_ids],
+                                       session.budget_left, elapsed)
+            names = {s.id: s.name for s in meta.suspects}
+            verdict.reveal_figure = reveal_figure(session.bundle.df, truth.fraudster_id,
+                                                  truth.fraud_txn_ids, names)
+            session.verdict = verdict
+        log("accused", session, payload={
+            "level": meta.level, "accused": body.suspect_id, "correct": verdict.correct,
+            "score": verdict.score, "budget_left": session.budget_left, "elapsed_s": elapsed,
+            "n_tools": len(session.results), "evidence": [g.grade for g in verdict.evidence]})
+        for hook in app.state.on_verdict:
+            hook(session, verdict)
+        return verdict
+
+    @app.get("/api/debug/cases/{case_id}/truth", response_model=CaseTruth)
+    def debug_truth(case_id: str):
+        if os.getenv("AUDITOR_DEBUG") != "1":
+            raise HTTPException(404, "Not Found")
+        return session_for(case_id).bundle.truth
 
     return app
 

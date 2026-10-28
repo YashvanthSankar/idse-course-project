@@ -2,6 +2,7 @@
 
 import json
 
+import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
 
@@ -81,3 +82,32 @@ def name_of(names: dict[str, str] | None, employee_id: str) -> str:
 
 
 register_noir_template()
+
+
+def reveal_figure(df: pd.DataFrame, fraudster_id: str, fraud_txn_ids: list[str],
+                  names: dict[str, str] | None = None) -> dict:
+    """The Reveal: every claim in the ledger, the fraudster's in amber, the crimes in red."""
+    dates = pd.to_datetime(df["date"]) + pd.to_timedelta(df["hour"], unit="h")
+    is_fraud = df["txn_id"].isin(fraud_txn_ids)
+    theirs = df["employee_id"] == fraudster_id
+    fig = go.Figure()
+    for mask, name, color, size, opacity in [
+        (~theirs, "everyone else", COLORS["muted"], 4, 0.25),
+        (theirs & ~is_fraud, f"{name_of(names, fraudster_id)} (honest claims)", COLORS["amber"],
+         6, 0.6),
+    ]:
+        fig.add_trace(go.Scattergl(x=dates[mask], y=df.loc[mask, "amount"], mode="markers",
+                                   name=name, marker={"color": color, "size": size,
+                                                      "opacity": opacity}, hoverinfo="skip"))
+    fraud = df[is_fraud]
+    fig.add_trace(go.Scatter(
+        x=dates[is_fraud], y=fraud["amount"], mode="markers", name="the fraud",
+        marker={"color": COLORS["red"], "size": 13, "symbol": "x",
+                "line": {"width": 1, "color": "#fff"}},
+        customdata=fraud[["txn_id", "vendor", "category"]].to_numpy(),
+        hovertemplate="%{customdata[0]} · %{customdata[1]}<br>%{customdata[2]} · ₹%{y:,.0f}"
+                      "<extra></extra>",
+    ))
+    fig.update_layout(title="How they did it", yaxis={"type": "log", "title": "₹ amount"},
+                      xaxis_title="date")
+    return fig_to_json(fig)

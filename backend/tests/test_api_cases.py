@@ -5,14 +5,15 @@ from fastapi.testclient import TestClient
 
 from auditor.api import create_app
 from auditor.store import SessionStore
+from auditor.telemetry import Telemetry
 
 TRUTH_MARKERS = ["fraudster_id", "fraud_txn_ids", "catching_tools", "is_fraud", "big_invoice",
                  "herrings", "explanation"]
 
 
 @pytest.fixture
-def client():
-    return TestClient(create_app(store=SessionStore()))
+def client(tmp_path):
+    return TestClient(create_app(store=SessionStore(), telemetry=Telemetry(str(tmp_path / "t.db"))))
 
 
 def new_case(client, level=1, seed=3):
@@ -139,9 +140,9 @@ def test_invalid_level_422(client):
     assert client.post("/api/cases", json={"level": 9}).status_code == 422
 
 
-def test_store_evicts_oldest():
+def test_store_evicts_oldest(tmp_path):
     store = SessionStore(max_size=2)
-    c = TestClient(create_app(store=store))
+    c = TestClient(create_app(store=store, telemetry=Telemetry(str(tmp_path / "e.db"))))
     ids = [new_case(c, seed=s)["case_id"] for s in range(3)]
     assert c.get(f"/api/cases/{ids[0]}").status_code == 404
     assert c.get(f"/api/cases/{ids[2]}").status_code == 200

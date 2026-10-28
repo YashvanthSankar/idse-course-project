@@ -105,3 +105,4 @@ class Verdict(BaseModel):
     fraud_txn_ids: list[str]
     catching_tools: list[ToolId]
     evidence: list[EvidenceGrade]
+    reveal_figure: dict = Field(default_factory=dict)
