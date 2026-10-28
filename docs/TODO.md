@@ -48,11 +48,11 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 
 ### M11 · Class Mode
 - [x] T21 · Rooms backend + WebSocket
-- [ ] T22 · Host projector + player phone pages
+- [x] T22 · Host projector + player phone pages
 
 ### M12 · Autopsy & Profiles
 - [x] T23 · Class Autopsy analytics + KMeans detective profiles (+ notebook 03)
-- [ ] T24 · Autopsy slide deck + detective trading card
+- [x] T24 · Autopsy slide deck + detective trading card
 
 ## 🟨 COULD
 
