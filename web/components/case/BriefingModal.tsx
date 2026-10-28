@@ -90,8 +90,8 @@ export function BriefingModal({ meta, onClose, onOpenFiles }: {
             </div>
           </section>
 
-          <div className="mt-7 flex flex-col-reverse items-center justify-center gap-3 sm:flex-row sm:gap-6">
-            <button onClick={onClose} className="font-type text-sm tracking-[0.25em] text-muted hover:text-paper">
+          <div className="sticky bottom-0 z-10 -mx-4 mt-5 flex flex-col-reverse items-center justify-center gap-3 bg-[linear-gradient(to_top,#000_55%,transparent)] px-4 pb-4 pt-8 sm:flex-row sm:gap-6">
+            <button onClick={onClose} className="min-h-11 font-pixel text-[10px] text-paper/70 hover:text-paper sm:text-xs">
               BACK TO THE DESK
             </button>
             <motion.button
@@ -101,7 +101,7 @@ export function BriefingModal({ meta, onClose, onOpenFiles }: {
               }}
               animate={typed && !reduced ? { scale: [1, 1.04, 1] } : undefined}
               transition={{ duration: 1.6, repeat: Infinity }}
-              className="rounded-sm border-2 border-amber bg-amber/10 px-8 py-3 font-type text-lg tracking-[0.3em] text-amber shadow-[0_0_25px_rgba(245,165,36,0.25)] hover:bg-amber hover:text-ink-950"
+              className="bg-[#ffd319] px-7 py-3.5 font-pixel text-xs text-[#05060d] shadow-[4px_4px_0_#ff2a6d] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none sm:text-sm"
             >
               OPEN THE FILES
             </motion.button>

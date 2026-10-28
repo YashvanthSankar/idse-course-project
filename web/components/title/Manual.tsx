@@ -33,7 +33,7 @@ export function Manual({ open, onClose }: { open: boolean; onClose: () => void }
               <span className="font-display text-3xl italic text-red">{i + 1}</span>
               <div>
                 <h3 className="font-type text-lg">{title}</h3>
-                <p className="text-sm opacity-80">{body}</p>
+                <p className="text-[15px] leading-relaxed opacity-85">{body}</p>
               </div>
             </li>
           ))}
@@ -44,7 +44,7 @@ export function Manual({ open, onClose }: { open: boolean; onClose: () => void }
             <div key={name} className="rounded border border-black/15 bg-black/5 p-2 text-sm">
               <span className="mr-2 font-mono font-bold">{icon}</span>
               <span className="font-semibold">{name}</span>
-              <div className="text-xs opacity-70">{what}</div>
+              <div className="text-[13px] opacity-75">{what}</div>
             </div>
           ))}
         </div>
