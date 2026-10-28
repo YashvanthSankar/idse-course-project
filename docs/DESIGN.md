@@ -33,7 +33,7 @@ Briefing → Investigate (Tool Board) → Pin Evidence (Corkboard) → Accuse (2
 - **Budget:** every tool costs points. Re-running the same tool with the same params is free (cached).
   Running a tool with `cost > budget_left` is refused. Accusing is always allowed, even at 0 budget.
 - **Evidence:** any tool result can be pinned. Hacker Mode notes **cannot** be pinned, because the server cannot verify them.
-- **Accusation:** choose 1 suspect and attach **exactly 2** distinct pinned evidence items. One accusation per case, and it is final.
+- **Accusation:** choose 1 suspect and attach **exactly 2** distinct evidence items. If more than 2 are tied to the suspect, the player picks which 2 to file. If the budget is spent, the player files every clue they have (0 or 1), so nobody can get stuck. One accusation per case, and it is final.
 - **Verdict:** a GUILTY or WRONG SUSPECT stamp, a score breakdown, then the Reveal (the fraud rows light up and the technique that catches them is explained).
 
 ### 2.1 Scoring (computed server-side)

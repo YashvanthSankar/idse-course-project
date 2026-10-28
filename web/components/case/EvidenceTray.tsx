@@ -18,8 +18,8 @@ export function EvidenceTray({ pinned, suspects, onUnpin, onSelect, onOpenBoard 
     <section aria-label="Evidence tray" className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between px-1">
         <h2 className="font-display text-xl italic text-paper">Evidence</h2>
-        <span className={cn("text-sm tabular-nums", ready ? "text-green" : "text-paper/55")}>
-          {Math.min(pinned.length, 2)} of 2{ready ? " ✓" : ""}
+        <span data-testid="evidence-count" className={cn("text-sm tabular-nums", ready ? "text-green" : "text-paper/55")}>
+          {pinned.length <= 2 ? `${pinned.length} of 2${ready ? " ✓" : ""}` : `${pinned.length} pinned · you'll file 2`}
         </span>
       </div>
       <ul data-testid="evidence-tray" className="flex flex-col gap-2">

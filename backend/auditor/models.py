@@ -85,7 +85,8 @@ class ToolResult(BaseModel):
 
 class Accusation(BaseModel):
     suspect_id: str
-    evidence_ids: list[str] = Field(min_length=2, max_length=2)
+    # Two clues normally; fewer only when the budget is gone (see the accuse route)
+    evidence_ids: list[str] = Field(default_factory=list, max_length=2)
 
 
 class EvidenceGrade(BaseModel):

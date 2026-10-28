@@ -268,7 +268,7 @@ export interface components {
             /** Suspect Id */
             suspect_id: string;
             /** Evidence Ids */
-            evidence_ids: string[];
+            evidence_ids?: string[];
         };
         /** Autopsy */
         Autopsy: {

@@ -252,9 +252,14 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
         with session.lock:
             if session.verdict is not None:
                 return session.verdict  # one shot, no take-backs
-            if len(set(body.evidence_ids)) != 2 or any(
-                    e not in session.results for e in body.evidence_ids):
-                raise HTTPException(422, "Attach two different pieces of pinned evidence")
+            # Two different clues — unless the budget is spent, then every clue you have
+            needed = 2 if session.budget_left > 0 else min(2, len(session.results))
+            ids = body.evidence_ids
+            if len(set(ids)) != len(ids) or any(e not in session.results for e in ids):
+                raise HTTPException(422, "Attach different pieces of evidence from this case")
+            if len(ids) != needed:
+                raise HTTPException(422, "Attach two different pieces of pinned evidence"
+                                    if needed == 2 else f"Attach all {needed} clue(s) you have")
             if body.suspect_id not in {s.id for s in meta.suspects}:
                 raise HTTPException(422, "Unknown suspect")
             truth = session.bundle.truth

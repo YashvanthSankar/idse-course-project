@@ -17,6 +17,7 @@ import { Portrait } from "@/components/case/Portrait";
 import { cn } from "@/lib/cn";
 import { hashString } from "@/lib/random";
 import { sfx } from "@/lib/sound";
+import { requiredClues } from "@/lib/accusation";
 import { useCaseStore } from "@/lib/store";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import type { Suspect, ToolResult } from "@/lib/types";
@@ -64,7 +65,7 @@ function SuspectSlot({ suspect, linked, size, armed, phone, onTap }: {
       </p>
       {linked > 2 && (
         <p className="rounded-sm bg-paper/90 px-2 py-1 text-center font-type text-[10px] text-[#8f1d27] shadow sm:text-xs">
-          pick your best two
+          {linked} clues · you&apos;ll pick 2
         </p>
       )}
     </div>
@@ -89,6 +90,10 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
 }) {
   const links = useCaseStore((s) => s.links);
   const verdict = useCaseStore((s) => s.verdict);
+  const budgetLeft = useCaseStore((s) => s.meta?.budget_left ?? 1);
+  const allResults = useCaseStore((s) => s.results.length);
+  // 2 clues normally; when the budget is spent, whatever you have (the server agrees)
+  const required = requiredClues(budgetLeft, allResults);
   const phone = useMediaQuery("(max-width: 639px)") ?? false;
   const surface = useRef<HTMLDivElement>(null);
   const [lines, setLines] = useState<Line[]>([]);
@@ -170,7 +175,7 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
   };
 
   const count = (sid: string) => results.filter((r) => links[r.result_id] === sid).length;
-  const readyList = suspects.filter((s) => count(s.id) === 2);
+  const readyList = suspects.filter((s) => count(s.id) >= required);
 
   const closedHere = verdict !== null && useCaseStore.getState().meta?.case_id === caseId;
 
@@ -311,11 +316,24 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
                         <span className="hidden font-display text-base normal-case italic tracking-normal opacity-90 sm:inline">
                           · {suspect.name}
                         </span>
+                        {count(suspect.id) > required && (
+                          <span className="font-sans text-xs normal-case tracking-normal opacity-85">
+                            pick {required} of {count(suspect.id)}
+                          </span>
+                        )}
                       </button>
                     ))}
                   </motion.div>
                 )}
               </AnimatePresence>
+              {required < 2 && !selected && (
+                <p
+                  data-testid="broke-notice"
+                  className="fixed left-1/2 top-4 z-40 max-w-[90vw] -translate-x-1/2 rounded-sm bg-ink-950/90 px-4 py-2 text-center text-sm text-amber shadow-xl"
+                >
+                  Budget spent — you can accuse with {required === 0 ? "no clues" : "the clue you have"}.
+                </p>
+              )}
               {selected && (
                 <p className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 rounded-sm bg-ink-950/90 px-4 py-2 font-type text-xs tracking-widest text-amber shadow-xl">
                   NOW TAP A SUSPECT
@@ -328,6 +346,7 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
             caseId={caseId}
             suspect={accusing}
             evidence={accusing ? results.filter((r) => links[r.result_id] === accusing.id) : []}
+            required={required}
             onCancel={() => setAccusing(null)}
             onAccused={() => {
               setAccusing(null);

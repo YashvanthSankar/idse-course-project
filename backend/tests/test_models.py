@@ -13,8 +13,8 @@ TRUTH_FIELDS = {
 }
 
 
-@pytest.mark.parametrize("ids", [["a"], ["a", "b", "c"]])
-def test_accusation_requires_exactly_two_evidence(ids):
+@pytest.mark.parametrize("ids", [["a", "b", "c"]])
+def test_accusation_allows_at_most_two_evidence(ids):
     with pytest.raises(ValidationError):
         Accusation(suspect_id="E1", evidence_ids=ids)
 
