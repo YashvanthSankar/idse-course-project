@@ -88,7 +88,7 @@ Columns of the player-visible table (truth is **never** included):
 | 2 | Déjà Vu | `duplicates`: ~8 invoices re-submitted (same vendor and amount, 1–3 days later, new invoice_id) | 8 | none | duplicates | duplicates |
 | 3 | Too Random To Be True | `fabricated`: every claim invented, with realistic size but a random leading digit (flat digits) | 10 | none | benford | benford |
 | 4 | Weekend Warrior | `weekend`: ~15 personal purchases on Sat/Sun | 10 | diwali | timeseries, groupby | timeseries |
-| 5 | The Margin Call | `inflated_ratio`: ~30 expenses inflated 1.8× vs. their deal revenue | 12 | none | regression | regression |
+| 5 | The Margin Call | `inflated_ratio`: every travel and dining claim padded 1.6–2.0× vs. its deal revenue | 12 | none | regression | regression |
 | 6 | Ghost Vendor | `under_limit`: ~12 txns of 45,000–49,999 (just under the 50k approval limit), 1–4 AM, to a vendor nobody else uses | 14 | ceo, diwali | isoforest, groupby | isoforest |
 | 7+ | Adaptive (endless) | chosen by the Adaptive Fraudster (§6) | 14 | random | per scheme | — |
 
@@ -109,7 +109,7 @@ Every tool is a pure function `analyze(df, **params) -> Analysis` plus a Plotly 
 | `benford` | Benford's Law | 3 | — | first-digit distribution per employee vs. `log10(1+1/d)`, chi-square | employees with n ≥ 50 and p < 1e-5 (measured: honest ≥ 6e-5, forgers ≤ 2e-6); n < 50 → reported `inconclusive`, never implicated |
 | `timeseries` | Timeline | 3 | `freq ∈ {D, W}` | spend over time with weekend shading; weekend share per employee | one-sided binomial test of their weekend count vs. the rest of the company's weekend rate, p < 0.001 |
 | `regression` | Margin Model | 4 | — | OLS `log(amount) ~ log(revenue)`; mean standardized residual per employee, one-sample t-test | employees with mean resid > 0 and p < 0.001 |
-| `isoforest` | Anomaly Hunter (ML) | 5 | — | IsolationForest on [log amount, hour, vendor frequency, closeness to 50k], `contamination=0.02`, `random_state=0` | employees with ≥ 3 flagged rows AND flagged share > 3 × average |
+| `isoforest` | Anomaly Hunter (ML) | 5 | — | IsolationForest on [size vs. own usual, hour, vendor popularity], `contamination=0.02`, `random_state=0` | employees with ≥ 6 flagged rows AND flagged share > 3 × the median share |
 
 **Fairness properties (tested over seeds 0–19 for every level 1–6):**
 - P1: each catching tool implicates the fraudster in ≥ 95% of seeds, with `len(implicates) ≤ 2`.

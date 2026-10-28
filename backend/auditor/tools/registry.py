@@ -6,11 +6,21 @@ import pandas as pd
 
 from auditor.charts import fig_to_json
 from auditor.models import ToolId, ToolSpec
-from auditor.tools import benford, duplicates, groupby, iqr_box, summary, timeseries, zscore
+from auditor.tools import (
+    benford,
+    duplicates,
+    groupby,
+    iqr_box,
+    isoforest,
+    regression,
+    summary,
+    timeseries,
+    zscore,
+)
 from auditor.tools.base import Analysis, Tool
 
 TOOLS: dict[ToolId, Tool] = {m.TOOL.id: m.TOOL for m in (summary, groupby, zscore, iqr_box, duplicates, benford,
-                                         timeseries)}
+                                         timeseries, regression, isoforest)}
 
 
 def resolve_params(tool_id: ToolId, params: dict) -> dict:

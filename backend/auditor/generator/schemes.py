@@ -154,8 +154,8 @@ def _weekend(df, fraudster_id, rng):
 def _inflated_ratio(df, fraudster_id, rng):
     mine = _mine(df, fraudster_id)
     pool = mine[mine["category"].isin(["client_meal", "hotel", "flight", "cab"])]
-    picks = rng.choice(pool.index, size=min(32, len(pool)), replace=False)
-    df.loc[picks, "amount"] = np.round(df.loc[picks, "amount"] * 1.8, 2)
+    picks = pool.index  # every travel and dining claim gets padded
+    df.loc[picks, "amount"] = np.round(df.loc[picks, "amount"] * rng.uniform(1.6, 2.0, len(picks)), 2)
     return df, df.loc[picks, "txn_id"].tolist()
 
 
