@@ -30,19 +30,24 @@ class TierSpec:
     hikes: dict[Band, float]  # yearly raise by contract result
     ceiling: float  # salary can't pass the next tier's base: move up to earn more
     plan: tuple[Difficulty, ...]  # the cases of one contract
+    exceptional: int = 88  # the contract average for Exceptional (calibrated by bots, §10)
+    slack: int = 0  # coins you may spend past the intended tools for free (a cross-check)
 
 
 FIVE: tuple[Difficulty, ...] = ("easy", "easy", "medium", "medium", "hard")
 TIER_SPECS: dict[Tier, TierSpec] = {
     "small": TierSpec(1000, 5, SMALL_TOOLS, 2, 6.0,
-                      {"bad": 0, "ok": 0.20, "good": 0.50, "exceptional": 1.00}, 15.0, FIVE),
+                      {"bad": 0, "ok": 0.20, "good": 0.50, "exceptional": 1.00}, 15.0, FIVE,
+                      slack=2),
     "mid": TierSpec(1500, 5, MID_TOOLS, 5, 15.0,
-                    {"bad": 0, "ok": 0.10, "good": 0.25, "exceptional": 0.50}, 40.0, FIVE),
+                    {"bad": 0, "ok": 0.10, "good": 0.25, "exceptional": 0.50}, 40.0, FIVE,
+                    slack=2),
     "large": TierSpec(2500, 5, ALL_TOOLS, 6, 40.0,
-                      {"bad": 0, "ok": 0.10, "good": 0.20, "exceptional": 0.30}, 150.0, FIVE),
+                      {"bad": 0, "ok": 0.10, "good": 0.20, "exceptional": 0.30}, 150.0, FIVE,
+                      exceptional=92, slack=1),
     "very_large": TierSpec(3500, 7, ALL_TOOLS, 6, 150.0,
                            {"bad": 0, "ok": 0.10, "good": 0.15, "exceptional": 0.25}, 500.0,
-                           ("easy", "easy", "medium", "hard", "very_hard")),
+                           ("easy", "easy", "medium", "hard", "very_hard"), exceptional=90),
     "final": TierSpec(5000, 10, ALL_TOOLS, 7, 500.0, {"bad": 0, "ok": 0, "good": 0,
                                                       "exceptional": 0}, 500.0,
                       ("very_hard", "very_hard", "very_hard")),

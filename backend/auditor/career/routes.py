@@ -11,7 +11,8 @@ from pydantic import BaseModel, Field
 from auditor.career.cases import CasePlan, build_career_case, intended_cost
 from auditor.career.catalog import CAMEOS, COMPANIES, TIER_NAMES, TIER_SPECS, Band, Tier
 from auditor.career.people import company_people
-from auditor.career.rating import CaseRating, contract_band, rate_case
+from auditor.career.proof import THEORIES, Theory
+from auditor.career.rating import MAX_EXHIBITS, CaseRating, Charge, contract_band, rate_case
 from auditor.career.rules import (
     Appraisal,
     Career,
@@ -25,17 +26,17 @@ from auditor.career.rules import (
     sign,
     worked_at,
 )
+from auditor.career.seniors import SeniorNotes, notes_for
 from auditor.career.storage import CareerStore, normalise_code
 from auditor.charts import reveal_figure
 from auditor.models import (
-    Accusation,
     CaseMeta,
     EvidenceGrade,
     SchemeId,
     Suspect,
     ToolId,
 )
-from auditor.results import tool_result
+from auditor.results import records, tool_result
 from auditor.scoring import grade_evidence, score_accusation
 from auditor.store import CaseSession, SessionStore
 
@@ -66,6 +67,7 @@ class ContractView(BaseModel):
     year: int
     practice: bool
     greetings: list[Greeting]
+    senior: SeniorNotes | None  # their notes on this company (nobody in the Final)
     cases: list[CaseSlot]
     average: float | None
     band_so_far: Band | None
@@ -85,6 +87,7 @@ class CareerView(BaseModel):
     contract: ContractView | None
     history: list[Appraisal]
     worked_at: list[CompanyCard]
+    theories: list[Theory]  # the kinds of fraud you can name, and the tools that prove each
 
 
 class CareerCreate(BaseModel):
@@ -104,8 +107,22 @@ class DebugJump(BaseModel):
     salary: float | None = None
 
 
+class Charged(BaseModel):
+    """One accusation: who, the trick you think they used, your clues and the rows that show it."""
+
+    suspect_id: str
+    theory: SchemeId
+    evidence_ids: list[str] = Field(min_length=1, max_length=2)
+    exhibits: list[str] = Field(min_length=1, max_length=MAX_EXHIBITS)  # txn ids
+
+
 class CareerAccusation(BaseModel):
-    accusations: list[Accusation] = Field(min_length=1, max_length=2)
+    accusations: list[Charged] = Field(min_length=1, max_length=2)
+
+
+class SuspectRows(BaseModel):
+    suspect_id: str
+    rows: list[dict]
 
 
 class CulpritReveal(BaseModel):
@@ -155,12 +172,12 @@ def card(company_id: str) -> CompanyCard:
                        cases=len(TIER_SPECS[c.tier].plan))
 
 
-def _so_far(ratings: list[float], cases) -> tuple[float, Band]:
+def _so_far(ratings: list[float], cases, tier: Tier) -> tuple[float, Band]:
     average = round(sum(ratings) / len(ratings), 1)
     done = [c for c in cases if c.rating is not None]
     hard = [c for c in done if c.difficulty in ("hard", "very_hard")]
     return average, contract_band(ratings, all(c.correct for c in done),
-                                  all(c.correct for c in hard))
+                                  all(c.correct for c in hard), TIER_SPECS[tier].exceptional)
 
 
 def view(career: Career) -> CareerView:
@@ -168,10 +185,11 @@ def view(career: Career) -> CareerView:
     if career.contract:
         k = career.contract
         ratings = [c.rating.total for c in k.cases if c.rating]
-        average, band = _so_far(ratings, k.cases) if ratings else (None, None)
+        tier = COMPANIES[k.company_id].tier
+        average, band = _so_far(ratings, k.cases, tier) if ratings else (None, None)
         contract = ContractView(
             company=card(k.company_id), year=k.year, practice=k.practice,
-            greetings=k.greetings,
+            greetings=k.greetings, senior=notes_for(k.company_id, tier),
             cases=[CaseSlot(index=c.index + 1, difficulty=c.difficulty,
                             rating=c.rating.total if c.rating else None, correct=c.correct,
                             case_id=c.case_id) for c in k.cases],
@@ -181,7 +199,7 @@ def view(career: Career) -> CareerView:
         tier_name=TIER_NAMES[career.tier], salary=career.salary, title=career.title,
         ending=career.ending, goal=next_goal(career),
         offers=[card(o) for o in career.offers], contract=contract, history=career.history,
-        worked_at=[card(c) for c in worked_at(career)])
+        worked_at=[card(c) for c in worked_at(career)], theories=THEORIES)
 
 
 def cutscene(career: Career) -> Cutscene | None:
@@ -309,9 +327,14 @@ def register_career(app, store: SessionStore, careers: CareerStore,
             results = list(session.results.values())
             filed = [(a.suspect_id, [session.results[e] for e in a.evidence_ids])
                      for a in accusations]
+            charges = [Charge(suspect=a.suspect_id, theory=a.theory, clues=clues,
+                              exhibits=a.exhibits)
+                       for a, (_, clues) in zip(accusations, filed, strict=True)]
             schemes = [c.scheme for c in culprits]
-            rating = rate_case(culprits, filed, results, meta.budget - session.budget_left,
-                               intended_cost(schemes, meta.unlocked_tools))
+            tier = COMPANIES[meta.career.company_id].tier
+            rating = rate_case(culprits, charges, meta.budget - session.budget_left,
+                               intended_cost(schemes, meta.unlocked_tools),
+                               TIER_SPECS[tier].slack)
 
             accused_ids = {a.suspect_id for a in accusations}
             first_target = next((a for a in accusations if a.suspect_id == truth.fraudster_id),
@@ -349,7 +372,7 @@ def register_career(app, store: SessionStore, careers: CareerStore,
             ratings = ([c.rating.total if c.rating else None for c in cases] if cases
                        else appraisal.ratings)
             done = [r for r in ratings if r is not None]
-            average, band = (_so_far(done, cases) if cases else
+            average, band = (_so_far(done, cases, tier) if cases else
                              (appraisal.average, appraisal.band))
             result = CareerVerdict(
                 correct=rating.caught == rating.culprits,
@@ -368,6 +391,18 @@ def register_career(app, store: SessionStore, careers: CareerStore,
             "budget_left": session.budget_left, "n_tools": len(results),
             "career": career.code, "evidence": [g.grade for g in grades]})
         return result
+
+    @router.get("/cases/{case_id}/suspects/{suspect_id}/rows", response_model=SuspectRows)
+    def suspect_rows(case_id: str, suspect_id: str):
+        """One suspect's transactions, biggest first: where you pick your exhibits."""
+        session = store.get(case_id)
+        if session.career_code is None:
+            raise HTTPException(409, "Not a career case")
+        if suspect_id not in {s.id for s in session.bundle.meta.suspects}:
+            raise HTTPException(404, "No such suspect")
+        df = session.bundle.df
+        mine = df[df["employee_id"] == suspect_id].sort_values("amount", ascending=False)
+        return SuspectRows(suspect_id=suspect_id, rows=records(mine))
 
     @router.post("/{code}/debug-jump", response_model=CareerView)
     def debug_jump(code: str, body: DebugJump):
@@ -389,9 +424,9 @@ def register_career(app, store: SessionStore, careers: CareerStore,
     app.include_router(router)
 
 
-def _check(accusations: list[Accusation], session: CaseSession, culprits: int) -> None:
-    """One accusation per fraudster, each with two clues — fewer only when the budget is spent
-    (then every clue you have, or up to two each when there are two fraudsters)."""
+def _check(accusations: list[Charged], session: CaseSession, culprits: int) -> None:
+    """One accusation per fraudster, each with a theory, one or two clues (the model checks the
+    counts) and exhibits: rows from the accused's own ledger."""
     if len(accusations) != culprits:
         raise HTTPException(422, f"Accuse {culprits} suspect{'s' if culprits > 1 else ''}")
     suspects = {s.id for s in session.bundle.meta.suspects}
@@ -401,11 +436,10 @@ def _check(accusations: list[Accusation], session: CaseSession, culprits: int) -
     ids = [e for a in accusations for e in a.evidence_ids]
     if len(set(ids)) != len(ids) or any(e not in session.results for e in ids):
         raise HTTPException(422, "Attach different pieces of evidence from this case")
-    if session.budget_left > 0:
-        if any(len(a.evidence_ids) != 2 for a in accusations):
-            raise HTTPException(422, "Attach two different pieces of pinned evidence to each "
-                                     "suspect")
-    elif culprits == 1 and len(ids) != min(2, len(session.results)):
-        raise HTTPException(422, "Attach every clue you have")
-    elif any(len(a.evidence_ids) > 2 for a in accusations):
-        raise HTTPException(422, "At most two clues per suspect")
+    df = session.bundle.df
+    owner = dict(zip(df["txn_id"], df["employee_id"], strict=True))
+    for a in accusations:
+        if len(set(a.exhibits)) != len(a.exhibits) or any(
+                owner.get(t) != a.suspect_id for t in a.exhibits):
+            raise HTTPException(422, "Exhibits must be different rows from the accused's own "
+                                     "transactions")

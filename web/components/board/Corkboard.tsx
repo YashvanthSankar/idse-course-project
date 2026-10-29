@@ -92,12 +92,12 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
   const verdict = useCaseStore((s) => s.verdict);
   const budgetLeft = useCaseStore((s) => s.meta?.budget_left ?? 1);
   const allResults = useCaseStore((s) => s.results.length);
-  // Career Mode's very hard cases have two fraudsters: accuse both, two clues each
-  const culprits = useCaseStore((s) => s.meta?.career?.culprits ?? 1);
-  // 2 clues normally; when the budget is spent, whatever you have (the server agrees)
-  const required = culprits > 1 && budgetLeft <= 0
-    ? Math.min(2, Math.floor(allResults / 2))
-    : requiredClues(budgetLeft, allResults);
+  // Career Mode's very hard cases have two fraudsters: accuse both
+  const career = useCaseStore((s) => s.meta?.career ?? null);
+  const culprits = career?.culprits ?? 1;
+  // Quick Case: 2 clues, or whatever you have when the budget is spent (the server agrees).
+  // Career Mode: one clue is enough to accuse — the case file asks for the theory and the rows.
+  const required = career ? 1 : requiredClues(budgetLeft, allResults);
   const phone = useMediaQuery("(max-width: 639px)") ?? false;
   const surface = useRef<HTMLDivElement>(null);
   const [lines, setLines] = useState<Line[]>([]);
@@ -364,7 +364,7 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
                         <span className="hidden font-display text-base normal-case italic tracking-normal opacity-90 sm:inline">
                           · {suspect.name}
                         </span>
-                        {count(suspect.id) > required && (
+                        {!career && count(suspect.id) > required && (
                           <span className="font-sans text-xs normal-case tracking-normal opacity-85">
                             pick {required} of {count(suspect.id)}
                           </span>
@@ -374,7 +374,7 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
                   </motion.div>
                 )}
               </AnimatePresence>
-              {required < 2 && !selected && (
+              {!career && required < 2 && !selected && (
                 <p
                   data-testid="broke-notice"
                   className="fixed left-1/2 top-4 z-40 max-w-[90vw] -translate-x-1/2 rounded-sm bg-ink-950/90 px-4 py-2 text-center text-sm text-amber shadow-xl"

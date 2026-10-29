@@ -4,7 +4,7 @@ the Final."""
 import pytest
 
 from auditor.career.catalog import COMPANIES, TIER_SPECS
-from auditor.career.rating import CaseRating, RatingPart, contract_band, rate_case
+from auditor.career.rating import CaseRating, Charge, contract_band, exhibit_points, rate_case
 from auditor.career.rules import (
     CareerError,
     appraise,
@@ -19,9 +19,7 @@ SCORES = {"exceptional": (95, True), "good": (78, True), "ok": (62, True),
 
 
 def rating(total: float, correct: bool, culprits: int = 1) -> CaseRating:
-    part = RatingPart(points=0, out_of=0, reason="")
-    return CaseRating(total=total, verdict=part, evidence=part, judgment=part, efficiency=part,
-                      caught=culprits if correct else 0, culprits=culprits)
+    return CaseRating(total=total, caught=culprits if correct else 0, culprits=culprits)
 
 
 def finish(career, band: str, caught_cameo: bool | None = None):
@@ -35,51 +33,90 @@ def finish(career, band: str, caught_cameo: bool | None = None):
     return appraisal
 
 
-def result(tool: str, implicates: list[str], cost: int) -> ToolResult:
-    return ToolResult(result_id=f"{tool}-{cost}", tool_id=tool, params={}, title=tool,
+def result(tool: str, implicates: list[str], cost: int, params: dict | None = None) -> ToolResult:
+    return ToolResult(result_id=f"{tool}-{cost}", tool_id=tool, params=params or {}, title=tool,
                       summary="", figure={}, table=None, code="", stats={},
                       implicates=implicates, cost_charged=cost, budget_left=0)
 
 
 # ── rating ────────────────────────────────────────────────────────────────────────
 
-def test_rating_straight_to_the_right_tool_is_exceptional():
-    culprit = Culprit(fraudster_id="E2", scheme="duplicates", fraud_txn_ids=[],
-                      catching_tools=["duplicates"], explanation="")
-    twins, summary = result("duplicates", ["E2"], 2), result("summary", [], 0)
-    r = rate_case([culprit], [("E2", [twins, summary])], [twins, summary], spent=2, intended=2)
-    assert (r.verdict.points, r.evidence.points, r.judgment.points, r.efficiency.points) == (
-        40, 15, 20, 15)
-    assert r.total == 90
+def charge(suspect: str, theory: str, clues: list[ToolResult], exhibits: list[str]) -> Charge:
+    return Charge(suspect=suspect, theory=theory, clues=clues, exhibits=exhibits)
 
 
-def test_rating_a_detour_costs_judgment_and_efficiency():
-    culprit = Culprit(fraudster_id="E2", scheme="big_invoice", fraud_txn_ids=[],
-                      catching_tools=["zscore", "iqr_box"], explanation="")
-    z, box = result("zscore", ["E2"], 2), result("iqr_box", ["E2"], 2)
-    r = rate_case([culprit], [("E2", [z, box])], [z, box], spent=4, intended=2)
-    assert r.total == 92.5  # both tools fit the fraud: confirming costs only efficiency
-    detour = result("benford", [], 2)
-    r = rate_case([culprit], [("E2", [z, detour])], [z, detour], spent=4, intended=2)
-    assert r.judgment.points == 10 and r.efficiency.points == 7.5
+def parts(r: CaseRating) -> dict[str, float]:
+    return {p.name: p.points for p in r.parts}
 
 
-def test_rating_wrong_suspect_keeps_only_tool_points():
-    culprit = Culprit(fraudster_id="E2", scheme="duplicates", fraud_txn_ids=[],
-                      catching_tools=["duplicates"], explanation="")
+TWINS = Culprit(fraudster_id="E2", scheme="duplicates", fraud_txn_ids=["T1", "T2", "T3", "T4"],
+                catching_tools=["duplicates"], explanation="")
+
+
+def test_rating_one_fitting_clue_and_the_right_rows_is_a_perfect_case():
     twins = result("duplicates", ["E2"], 2)
-    r = rate_case([culprit], [("E4", [twins])], [twins], spent=2, intended=2)
-    assert r.verdict.points == 0 and r.evidence.points == 0 and r.total == 35
+    r = rate_case([TWINS], [charge("E2", "duplicates", [twins], ["T1", "T2", "T3"])],
+                  spent=2, intended=2, slack=0)
+    assert parts(r) == {"Verdict": 35, "Theory": 10, "Proof": 10, "Exhibits": 25,
+                        "Spending": 20}
+    assert r.total == 100
+
+
+def test_rating_a_lone_clue_that_doesnt_fit_is_only_a_lead():
+    z = result("zscore", ["E2"], 2)
+    r = rate_case([TWINS], [charge("E2", "duplicates", [z], ["T1", "T2", "T3"])],
+                  spent=2, intended=2, slack=0)
+    assert parts(r)["Proof"] == 4
+
+
+def test_rating_two_different_tools_agreeing_prove_it():
+    z, box = result("zscore", ["E2"], 2), result("iqr_box", ["E2", "E4"], 2)
+    r = rate_case([TWINS], [charge("E2", "weekend", [z, box], ["T1"])],
+                  spent=4, intended=2, slack=2)
+    assert parts(r)["Proof"] == 10 and parts(r)["Theory"] == 0  # proven, wrong trick named
+    assert parts(r)["Spending"] == 20  # the cross-check is free at small firms
+
+
+def test_rating_settings_matter_for_fit():
+    by_vendor = result("groupby", ["E2"], 1, {"by": "vendor"})
+    by_category = result("groupby", ["E2"], 1, {"by": "category"})
+    limit = Culprit(fraudster_id="E2", scheme="under_limit", fraud_txn_ids=["T1"],
+                    catching_tools=["groupby"], explanation="")
+    proven = rate_case([limit], [charge("E2", "under_limit", [by_vendor], ["T1"])], 1, 1, 0)
+    lead = rate_case([limit], [charge("E2", "under_limit", [by_category], ["T1"])], 1, 1, 0)
+    assert parts(proven)["Proof"] == 10 and parts(lead)["Proof"] == 4
+
+
+def test_rating_exhibits_want_the_fraud_rows_and_only_those():
+    assert exhibit_points(["T1", "T2", "T3"], ["T1", "T2", "T3", "T4"]) == 25
+    assert exhibit_points(["T1", "T2", "T3", "H1", "H2"], ["T1", "T2", "T3"]) == 15
+    assert round(exhibit_points(["T1"], ["T1", "T2", "T3"]), 1) == 8.3
+    assert exhibit_points(["T9"], ["T9"]) == 25  # one monster invoice: one row is enough
+    assert exhibit_points(["H1"], ["T1"]) == 0
+
+
+def test_rating_spending_past_the_cross_check_costs_points():
+    twins = result("duplicates", ["E2"], 2)
+    r = rate_case([TWINS], [charge("E2", "duplicates", [twins], ["T1", "T2", "T3"])],
+                  spent=8, intended=2, slack=2)
+    assert parts(r)["Spending"] == 10
+
+
+def test_rating_wrong_suspect_keeps_only_spending():
+    twins = result("duplicates", ["E2"], 2)
+    r = rate_case([TWINS], [charge("E4", "duplicates", [twins], ["H1"])], 2, 2, 0)
+    assert r.total == 20 and r.caught == 0
 
 
 def test_rating_two_fraudsters_split_the_verdict():
-    a = Culprit(fraudster_id="E1", scheme="duplicates", fraud_txn_ids=[],
+    a = Culprit(fraudster_id="E1", scheme="duplicates", fraud_txn_ids=["T1"],
                 catching_tools=["duplicates"], explanation="")
-    b = Culprit(fraudster_id="E3", scheme="fabricated", fraud_txn_ids=[],
+    b = Culprit(fraudster_id="E3", scheme="fabricated", fraud_txn_ids=["T2"],
                 catching_tools=["benford"], explanation="")
     twins, ben = result("duplicates", ["E1"], 2), result("benford", ["E3"], 3)
-    r = rate_case([a, b], [("E1", [twins]), ("E5", [ben])], [twins, ben], spent=5, intended=5)
-    assert r.verdict.points == 20 and r.caught == 1
+    r = rate_case([a, b], [charge("E1", "duplicates", [twins], ["T1"]),
+                           charge("E5", "fabricated", [ben], ["H1"])], 5, 5, 0)
+    assert parts(r)["Verdict"] == 17.5 and r.caught == 1
 
 
 @pytest.mark.parametrize(("ratings", "correct", "hard", "band"), [
@@ -93,6 +130,12 @@ def test_rating_two_fraudsters_split_the_verdict():
 ])
 def test_contract_bands(ratings, correct, hard, band):
     assert contract_band(ratings, correct, hard) == band
+
+
+def test_large_firms_set_a_higher_bar():
+    assert contract_band([90] * 5, True, True, TIER_SPECS["large"].exceptional) == "good"
+    assert contract_band([92] * 5, True, True, TIER_SPECS["large"].exceptional) == "exceptional"
+    assert TIER_SPECS["very_large"].exceptional == 90
 
 
 # ── offers, promotion, salary ─────────────────────────────────────────────────────
@@ -197,6 +240,16 @@ def test_exceptional_at_two_large_then_both_very_large_reaches_the_final():
         sign(career, company)
         finish(career, "exceptional")
     assert "kaveri" in career.offers
+
+
+def test_three_good_years_at_one_large_firm_count_as_an_exceptional():
+    career = new_career("AAA-AAQ")
+    career.offers, career.tier = ["arabian"], "large"
+    for year in range(3):
+        sign(career, "arabian")
+        appraisal = finish(career, "good")
+        assert ("arabian" in career.large_exceptional) == (year == 2)
+    assert any("count as one exceptional" in e for e in appraisal.events)
 
 
 def test_practice_replays_earn_nothing():

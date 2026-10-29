@@ -1,4 +1,5 @@
 "use client";
+import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -6,7 +7,7 @@ import { Portrait } from "@/components/case/Portrait";
 import { Typewriter } from "@/components/fx/Typewriter";
 import { clueWarning, defaultPick } from "@/lib/accusation";
 import { useAccused } from "@/lib/accused";
-import { ApiError, accuse, careerAccuse } from "@/lib/api";
+import { ApiError, accuse, careerAccuse, getCareer } from "@/lib/api";
 import { browserStorage, loadProgress, recordResult, saveProgress } from "@/lib/progress";
 import { sfx } from "@/lib/sound";
 import { cn } from "@/lib/cn";
@@ -15,6 +16,7 @@ import { toolMeta } from "@/lib/toolMeta";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { useReducedEffects } from "@/lib/useReducedEffects";
 import type { Suspect, ToolResult } from "@/lib/types";
+import { CaseFile, MAX_CLUES, chargeReady, type Charge } from "./CaseFile";
 import { HoldToConfirm } from "./HoldToConfirm";
 
 const LINES = [
@@ -30,7 +32,8 @@ export function Spotlight({ caseId, accused, evidenceFor, required = 2, onCancel
   /** who stands in the light — empty when the room is closed */
   accused: Suspect[];
   evidenceFor: (suspectId: string) => ToolResult[];
-  /** how many clues must be filed per accused (2, or fewer when the budget is spent) */
+  /** how many clues must be filed per accused (2, or fewer when the budget is spent); Career
+   *  Mode files one or two, with a theory and exhibit rows (see CaseFile) */
   required?: number;
   onCancel: () => void;
   onAccused: () => void;
@@ -54,8 +57,25 @@ export function Spotlight({ caseId, accused, evidenceFor, required = 2, onCancel
     picked.key === pickKey && picked.ids[s.id] ? picked.ids[s.id] : defaultPick(evidenceFor(s.id), s.id, required);
   const choosingAny = accused.some((s) => evidenceFor(s.id).length > required);
   // Choosing clues adds a list: shrink the portrait so the hold button stays on screen
-  const compact = pair || (choosingAny && (short || phone));
-  const ready = accused.every((s) => chosenFor(s).length === required);
+  const compact = pair || career !== null || (choosingAny && (short || phone));
+
+  // Career Mode: a case file per accused — the trick, one or two clues, the rows
+  const theories = useQuery({
+    queryKey: ["career", career?.code ?? ""],
+    queryFn: () => getCareer(career!.code),
+    enabled: career !== null && open,
+  }).data?.theories ?? [];
+  const [charges, setCharges] = useState<{ key: string; by: Record<string, Charge> }>({ key: "", by: {} });
+  const chargeFor = (s: Suspect): Charge =>
+    (charges.key === pickKey && charges.by[s.id]) || {
+      theory: null,
+      clues: defaultPick(evidenceFor(s.id), s.id, Math.min(MAX_CLUES, evidenceFor(s.id).length)),
+      exhibits: [],
+    };
+  const setCharge = (s: Suspect, next: Charge) =>
+    setCharges({ key: pickKey, by: { ...Object.fromEntries(accused.map((a) => [a.id, chargeFor(a)])), [s.id]: next } });
+
+  const ready = career ? accused.every((s) => chargeReady(chargeFor(s))) : accused.every((s) => chosenFor(s).length === required);
   const toggle = (s: Suspect, id: string) => {
     sfx.play("tick");
     const current = chosenFor(s);
@@ -84,7 +104,10 @@ export function Spotlight({ caseId, accused, evidenceFor, required = 2, onCancel
     try {
       const store = useCaseStore.getState();
       if (career) {
-        const verdict = await careerAccuse(caseId, accused.map((s) => ({ suspect_id: s.id, evidence_ids: chosenFor(s) })));
+        const verdict = await careerAccuse(caseId, accused.map((s) => {
+          const c = chargeFor(s);
+          return { suspect_id: s.id, theory: c.theory!, evidence_ids: c.clues, exhibits: c.exhibits };
+        }));
         store.setCareerVerdict(verdict);
       } else {
         const verdict = await accuse(caseId, accused[0].id, chosenFor(accused[0]));
@@ -108,6 +131,12 @@ export function Spotlight({ caseId, accused, evidenceFor, required = 2, onCancel
 
   const exhibits = (s: Suspect) => {
     const evidence = evidenceFor(s.id);
+    if (career) {
+      return (
+        <CaseFile caseId={caseId} suspect={s} evidence={evidence} theories={theories}
+          charge={chargeFor(s)} onChange={(next) => setCharge(s, next)} disabled={pending} />
+      );
+    }
     const choosing = evidence.length > required;
     const chosen = chosenFor(s);
     return (

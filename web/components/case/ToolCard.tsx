@@ -2,8 +2,9 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/cn";
 import { sfx } from "@/lib/sound";
+import { ROLE_LABEL, ROLE_STYLE, TOOL_KIT, roleOf } from "@/lib/proof";
 import { PARAM_LABELS, toolMeta } from "@/lib/toolMeta";
-import type { ToolSpec } from "@/lib/types";
+import type { ToolId, ToolSpec } from "@/lib/types";
 
 function Coins({ n, affordable }: { n: number; affordable: boolean }) {
   return (
@@ -22,8 +23,10 @@ function Coins({ n, affordable }: { n: number; affordable: boolean }) {
 }
 
 /** One tool on the shelf: a compact row; when selected it opens its settings and Run button. */
-export function ToolCard({ spec, hotkey, selected, params, onSelect, onParam, onRun, busy, affordable, lockedLabel }: {
+export function ToolCard({ spec, hotkey, selected, params, onSelect, onParam, onRun, busy, affordable, lockedLabel, roles = false }: {
   spec: ToolSpec;
+  /** Career Mode: say whether this tool (at this setting) can prove a case or only screens. */
+  roles?: boolean;
   /** Where the tool unlocks, when that isn't "Case N" (Career Mode: bigger companies). */
   lockedLabel?: string;
   hotkey: number;
@@ -99,6 +102,7 @@ export function ToolCard({ spec, hotkey, selected, params, onSelect, onParam, on
                 {meta.blurb}
                 <span className="mt-0.5 block font-mono text-xs text-cyan/70">{meta.lib}</span>
               </p>
+              {roles && <RoleLine tool={spec.id} setting={params.by ?? params.scope ?? choices[0]?.[1][0]} />}
               {choices.map(([name, values]) => (
                 <div key={name} role="radiogroup" aria-label={name} className="flex flex-wrap gap-1.5">
                   {values.map((v) => (
@@ -143,5 +147,17 @@ export function ToolCard({ spec, hotkey, selected, params, onSelect, onParam, on
         )}
       </AnimatePresence>
     </li>
+  );
+}
+
+
+function RoleLine({ tool, setting }: { tool: ToolId; setting?: string }) {
+  const role = roleOf(tool, setting);
+  const what = TOOL_KIT.find((t) => t.tool === tool)?.what;
+  return (
+    <p className="text-xs leading-snug text-paper/70" data-testid="tool-role">
+      <span className={cn("mr-2 rounded-sm border px-1.5 py-px text-[10px]", ROLE_STYLE[role])}>{ROLE_LABEL[role]}</span>
+      {what}
+    </p>
   );
 }

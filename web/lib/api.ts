@@ -1,4 +1,4 @@
-import type { CaseState, Autopsy, CareerVerdict, CareerView, CaseMeta, Cutscene, LevelInfo, Profile, RoomCreated, ToolId, ToolResult, ToolSpec, Verdict } from "./types";
+import type { CaseState, Autopsy, CareerCharge, CareerVerdict, CareerView, CaseMeta, Cutscene, LevelInfo, Profile, RoomCreated, ToolId, ToolResult, ToolSpec, Verdict } from "./types";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -29,7 +29,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 const post = <T>(path: string, body?: unknown) =>
   request<T>(path, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
 
-export type Rows = { rows: Record<string, string | number>[]; total: number };
+export type LedgerRow = Record<string, string | number>;
+export type Rows = { rows: LedgerRow[]; total: number };
 
 export const createCase = (level: number, seed?: number, playerId?: string) =>
   post<CaseMeta>("/api/cases", { level, seed, player_id: playerId });
@@ -85,6 +86,9 @@ export const signContract = (code: string, companyId: string, practice = false) 
 export const retireCareer = (code: string) => post<CareerView>(`/api/career/${encodeURIComponent(code)}/retire`);
 /** The contract's current case (created on first call). */
 export const openCareerCase = (code: string) => post<CaseMeta>(`/api/career/${encodeURIComponent(code)}/case`);
-export const careerAccuse = (caseId: string, accusations: { suspect_id: string; evidence_ids: string[] }[]) =>
+export const careerAccuse = (caseId: string, accusations: CareerCharge[]) =>
   post<CareerVerdict>(`/api/career/cases/${caseId}/accuse`, { accusations });
+/** One suspect's transactions, biggest first: where exhibits are picked. */
+export const suspectRows = (caseId: string, suspectId: string) =>
+  request<{ suspect_id: string; rows: LedgerRow[] }>(`/api/career/cases/${caseId}/suspects/${suspectId}/rows`);
 export const getEnding = (code: string) => request<Cutscene>(`/api/career/${encodeURIComponent(code)}/ending`);

@@ -107,3 +107,12 @@ export function markAppraisalSeen(code: string, index: number, kv: KV | null = s
     // storage blocked: the appraisal may show again, which is harmless
   }
 }
+
+/** The tools each tier unlocks (auditor/career/catalog.py). */
+export const TIER_TOOLS: Record<string, string[]> = {
+  small: ["summary", "groupby", "zscore", "iqr_box", "duplicates"],
+  mid: ["summary", "groupby", "zscore", "iqr_box", "duplicates", "benford", "timeseries", "regression"],
+  large: ["summary", "groupby", "zscore", "iqr_box", "duplicates", "benford", "timeseries", "regression", "isoforest"],
+  very_large: ["summary", "groupby", "zscore", "iqr_box", "duplicates", "benford", "timeseries", "regression", "isoforest"],
+  final: ["summary", "groupby", "zscore", "iqr_box", "duplicates", "benford", "timeseries", "regression", "isoforest"],
+};

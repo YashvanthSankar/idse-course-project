@@ -381,6 +381,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/career/cases/{case_id}/suspects/{suspect_id}/rows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Suspect Rows
+         * @description One suspect's transactions, biggest first: where you pick your exhibits.
+         */
+        get: operations["suspect_rows_api_career_cases__case_id__suspects__suspect_id__rows_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/career/{code}/debug-jump": {
         parameters: {
             query?: never;
@@ -487,7 +507,7 @@ export interface components {
         /** CareerAccusation */
         CareerAccusation: {
             /** Accusations */
-            accusations: components["schemas"]["Accusation"][];
+            accusations: components["schemas"]["Charged"][];
         };
         /**
          * CareerCaseInfo
@@ -562,6 +582,8 @@ export interface components {
             history: components["schemas"]["Appraisal"][];
             /** Worked At */
             worked_at: components["schemas"]["CompanyCard"][];
+            /** Theories */
+            theories: components["schemas"]["Theory"][];
         };
         /** CaseCreate */
         CaseCreate: {
@@ -603,10 +625,11 @@ export interface components {
         CaseRating: {
             /** Total */
             total: number;
-            verdict: components["schemas"]["RatingPart"];
-            evidence: components["schemas"]["RatingPart"];
-            judgment: components["schemas"]["RatingPart"];
-            efficiency: components["schemas"]["RatingPart"];
+            /**
+             * Parts
+             * @default []
+             */
+            parts: components["schemas"]["RatingPart"][];
             /** Caught */
             caught: number;
             /** Culprits */
@@ -655,6 +678,23 @@ export interface components {
             explanation: string;
             second?: components["schemas"]["Culprit"] | null;
         };
+        /**
+         * Charged
+         * @description One accusation: who, the trick you think they used, your clues and the rows that show it.
+         */
+        Charged: {
+            /** Suspect Id */
+            suspect_id: string;
+            /**
+             * Theory
+             * @enum {string}
+             */
+            theory: "big_invoice" | "duplicates" | "fabricated" | "weekend" | "inflated_ratio" | "under_limit";
+            /** Evidence Ids */
+            evidence_ids: string[];
+            /** Exhibits */
+            exhibits: string[];
+        };
         /** CompanyCard */
         CompanyCard: {
             /** Id */
@@ -690,6 +730,7 @@ export interface components {
             practice: boolean;
             /** Greetings */
             greetings: components["schemas"]["Greeting"][];
+            senior: components["schemas"]["SeniorNotes"] | null;
             /** Cases */
             cases: components["schemas"]["CaseSlot"][];
             /** Average */
@@ -859,6 +900,8 @@ export interface components {
         };
         /** RatingPart */
         RatingPart: {
+            /** Name */
+            name: string;
             /** Points */
             points: number;
             /** Out Of */
@@ -881,6 +924,23 @@ export interface components {
             }[];
             /** Total */
             total: number;
+        };
+        /** SeniorNotes */
+        SeniorNotes: {
+            /** Name */
+            name: string;
+            /** Role */
+            role: string;
+            /** Portrait */
+            portrait: string;
+            /** Hello */
+            hello: string;
+            /** Notes */
+            notes: string[];
+            /** Kit */
+            kit: boolean;
+            /** Proof Rule */
+            proof_rule: boolean;
         };
         /** Sign */
         Sign: {
@@ -913,6 +973,37 @@ export interface components {
             bio: string;
             /** Portrait */
             portrait: string;
+        };
+        /** SuspectRows */
+        SuspectRows: {
+            /** Suspect Id */
+            suspect_id: string;
+            /** Rows */
+            rows: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** Theory */
+        Theory: {
+            /**
+             * Id
+             * @enum {string}
+             */
+            id: "big_invoice" | "duplicates" | "fabricated" | "weekend" | "inflated_ratio" | "under_limit";
+            /** Name */
+            name: string;
+            /** Fits */
+            fits: components["schemas"]["ToolFit"][];
+        };
+        /** ToolFit */
+        ToolFit: {
+            /**
+             * Tool
+             * @enum {string}
+             */
+            tool: "summary" | "groupby" | "zscore" | "iqr_box" | "duplicates" | "benford" | "timeseries" | "regression" | "isoforest";
+            /** Setting */
+            setting?: string | null;
         };
         /** ToolResult */
         ToolResult: {
@@ -1725,6 +1816,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CareerVerdict"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    suspect_rows_api_career_cases__case_id__suspects__suspect_id__rows_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+                suspect_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuspectRows"];
                 };
             };
             /** @description Validation Error */

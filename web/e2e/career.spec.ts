@@ -4,7 +4,7 @@ import { runTool } from "./fixtures/tools";
 // Runs against the REAL Python backend (AUDITOR_DEBUG=1) on :8000.
 const API = process.env.API_URL ?? "http://localhost:8000";
 const INTENDED: Record<string, [string, Record<string, string>]> = {
-  big_invoice: ["zscore", {}],
+  big_invoice: ["iqr_box", {}],
   duplicates: ["duplicates", {}],
   fabricated: ["benford", {}],
   weekend: ["timeseries", {}],
@@ -12,7 +12,25 @@ const INTENDED: Record<string, [string, Record<string, string>]> = {
   under_limit: ["isoforest", {}],
 };
 
-type Truth = { fraudster_id: string; scheme: string; second: { fraudster_id: string; scheme: string } | null };
+type Culprit = { fraudster_id: string; scheme: string; fraud_txn_ids: string[] };
+type Truth = Culprit & { second: Culprit | null };
+
+const THEORY_NAMES: Record<string, string> = {
+  big_invoice: "One monster invoice", duplicates: "Billed twice", fabricated: "Made-up receipts",
+  weekend: "Weekend payments", inflated_ratio: "Costs too big for the deal", under_limit: "Just under the approval limit",
+};
+
+/** Fill one accused's case file in the spotlight: the trick, then the fraud rows from their ledger. */
+async function fileCharge(page: Page, index: number, culprit: Culprit) {
+  const file = page.getByTestId("case-file").nth(index);
+  await file.getByRole("radio", { name: THEORY_NAMES[culprit.scheme] }).click();
+  await expect(file.getByTestId("proof-meter")).toContainText("PROVEN");
+  await file.getByTestId("pick-rows").click();
+  const picker = page.getByTestId("rows-picker");
+  await expect(picker.getByTestId("ledger-row").first()).toBeVisible({ timeout: 15_000 });
+  for (const id of culprit.fraud_txn_ids.slice(0, 3)) await picker.locator(`[data-txn="${id}"]`).click();
+  await picker.getByTestId("rows-done").click();
+}
 
 async function drag(page: Page, from: Locator, to: Locator) {
   const a = (await from.boundingBox())!;
@@ -37,25 +55,20 @@ async function hold(page: Page) {
 async function playViaApi(request: APIRequestContext, code: string, opts: { missCameo?: boolean } = {}) {
   const meta = await (await request.post(`${API}/api/career/${code}/case`)).json();
   const truth: Truth = await (await request.get(`${API}/api/debug/cases/${meta.case_id}/truth`)).json();
-  const state = await (await request.get(`${API}/api/cases/${meta.case_id}/state`)).json();
   const culprits = [truth, ...(truth.second ? [truth.second] : [])];
-  const spare = [state.results[0].result_id];
   const accusations = [];
   for (const c of culprits) {
     let [tool, params] = INTENDED[c.scheme];
     if (!meta.unlocked_tools.includes(tool)) [tool, params] = ["groupby", { by: "vendor" }];
     const r = await (await request.post(`${API}/api/cases/${meta.case_id}/tools/${tool}`, { data: { params } })).json();
-    accusations.push({ suspect_id: c.fraudster_id, evidence_ids: [r.result_id] });
+    accusations.push({ suspect_id: c.fraudster_id, theory: c.scheme, evidence_ids: [r.result_id], exhibits: c.fraud_txn_ids.slice(0, 3) });
   }
-  if (culprits.length === 2) {
-    const extra = await (await request.post(`${API}/api/cases/${meta.case_id}/tools/groupby`, { data: { params: { by: "category" } } })).json();
-    spare.push(extra.result_id);
-  }
-  accusations.forEach((a, i) => a.evidence_ids.push(spare[i]));
   if (opts.missCameo) {
     const accused = new Set(accusations.map((a) => a.suspect_id));
     const innocent = meta.suspects.map((s: { id: string }) => s.id).filter((id: string) => !accused.has(id));
     accusations[0].suspect_id = innocent[0]; // the cameo is culprit #1 in the Final's last case
+    const rows = await (await request.get(`${API}/api/career/cases/${meta.case_id}/suspects/${innocent[0]}/rows`)).json();
+    accusations[0].exhibits = [rows.rows[0].txn_id];
   }
   const res = await request.post(`${API}/api/career/cases/${meta.case_id}/accuse`, { data: { accusations } });
   expect(res.ok()).toBeTruthy();
@@ -85,6 +98,10 @@ test("prologue → offers → first company → solve case 1 in the browser → 
   await expect(page.getByTestId("greetings")).toBeVisible();
   await expect(page.getByTestId("greetings")).toContainText("Imran Sheikh");
   await page.getByRole("button", { name: "GET TO WORK ▶" }).click();
+  // day one: the senior hands over their notes
+  await expect(page.getByTestId("senior-notes")).toContainText("Sharada Apte");
+  await expect(page.getByTestId("senior-notes")).toContainText("WHAT PROVES A CASE");
+  await page.getByRole("button", { name: "GOT IT" }).click();
   await page.getByTestId("open-case").click();
   await expect(page.getByText("Lakshmi Sweets & Caterers — Case 1 of 5 · Easy")).toBeVisible();
   await page.getByRole("button", { name: "OPEN THE FILES" }).click();
@@ -93,29 +110,37 @@ test("prologue → offers → first company → solve case 1 in the browser → 
   await expect(page.getByText("Case 1 of 5", { exact: true })).toBeVisible();
   const caseId = page.url().split("/case/")[1];
   const truth: Truth = await (await request.get(`${API}/api/debug/cases/${caseId}/truth`)).json();
-  for (const tool of ["Z-Score Scan", "Box & Whisker"]) {
-    await runTool(page, tool);
-    await expect(page.getByTestId("result-view")).toBeVisible({ timeout: 15_000 });
-    await page.getByRole("button", { name: "📌 Pin as evidence" }).click();
-  }
+  await expect(page.getByTestId("case-notes")).toBeVisible(); // the notes stay one tap away
+  // one test that fits the trick is enough
+  await runTool(page, "Box & Whisker");
+  await expect(page.getByTestId("result-view")).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("button", { name: "📌 Pin as evidence" }).click();
   await page.keyboard.press("b");
   await expect(page.getByTestId("corkboard")).toBeVisible();
   await page.waitForTimeout(600);
   const suspect = page.locator(`[data-testid=board-suspect][data-suspect=${truth.fraudster_id}]`);
-  for (const i of [0, 1]) await drag(page, page.getByTestId("board-evidence").nth(i), suspect);
+  await drag(page, page.getByTestId("board-evidence").nth(0), suspect);
   await page.getByRole("button", { name: "MAKE THE ACCUSATION" }).click();
   await expect(page.getByTestId("spotlight")).toBeVisible();
+  await fileCharge(page, 0, truth);
   await hold(page);
 
   await expect(page).toHaveURL(new RegExp(`/case/${caseId}/verdict`), { timeout: 15_000 });
   await expect(page.getByTestId("rating-total")).toBeVisible({ timeout: 15_000 });
-  expect(Number((await page.getByTestId("rating-total").innerText()).split("/")[0])).toBeGreaterThanOrEqual(85);
+  expect(Number((await page.getByTestId("rating-total").innerText()).split("/")[0])).toBeGreaterThanOrEqual(95);
+  await expect(page.getByTestId("case-rating")).toContainText("Exhibits");
   await expect(page.getByTestId("contract-progress")).toContainText("Case 1 of 5");
   await expect(page.getByTestId("next-case")).toBeVisible({ timeout: 10_000 });
 
   // NEXT CASE opens case 2's briefing directly
   await page.getByTestId("next-case").click();
   await expect(page.getByText("Lakshmi Sweets & Caterers — Case 2 of 5 · Easy")).toBeVisible();
+  // ...and opening its files lands on case 2's own desk, not the one just closed
+  await page.getByRole("button", { name: "OPEN THE FILES" }).click();
+  await expect(page).not.toHaveURL(new RegExp(`/case/${caseId}`), { timeout: 10_000 });
+  await page.waitForTimeout(2500); // long enough for a stray restore of case 1 to show up
+  await expect(page).not.toHaveURL(new RegExp(`/case/${caseId}`));
+  await expect(page.getByText("Case 2 of 5")).toBeVisible();
 
   // The rest of the contract, played fast through the API → the appraisal on the hub
   for (let i = 0; i < 4; i++) await playViaApi(request, code);
@@ -141,17 +166,14 @@ test("a very hard case: two fraudsters, the pair picker and two stacked clue gro
   await page.addInitScript((c) => localStorage.setItem("auditor.career.v1", c), code);
   await page.goto(`/case/${meta.case_id}`);
   await expect(page.getByText("Case 5 of 5 · two fraudsters")).toBeVisible();
-  // pin the free summary and three more results, two to each fraudster
+  // one test that fits each fraud
   const tools: Record<string, string> = { duplicates: "Twin Finder", fabricated: "Benford's Law", weekend: "Timeline",
-    inflated_ratio: "Margin Model", under_limit: "Anomaly Hunter", big_invoice: "Z-Score Scan" };
-  for (const scheme of [truth.scheme, truth.second!.scheme, "_extra"]) {
-    await runTool(page, tools[scheme] ?? "Pattern Matrix");
+    inflated_ratio: "Margin Model", under_limit: "Anomaly Hunter", big_invoice: "Box & Whisker" };
+  for (const scheme of [truth.scheme, truth.second!.scheme]) {
+    await runTool(page, tools[scheme]);
     await expect(page.getByTestId("result-view")).toBeVisible({ timeout: 20_000 });
     await page.getByRole("button", { name: "📌 Pin as evidence" }).click();
   }
-  // the free Case Summary is the fourth clue
-  await page.getByRole("tab", { name: /Case Summary/ }).click();
-  await page.getByRole("button", { name: "📌 Pin as evidence" }).click();
   await page.keyboard.press("b");
   await expect(page.getByTestId("corkboard")).toBeVisible();
   await page.waitForTimeout(600);
@@ -163,12 +185,10 @@ test("a very hard case: two fraudsters, the pair picker and two stacked clue gro
     await who.click();
   };
   await tie(0, a);
-  await tie(1, b);
-  await tie(2, a);
   await expect(page.getByTestId("pair-picker")).toBeVisible();
-  // only one suspect has two clues so far: the accusation stays locked
+  // only one suspect has a clue so far: the accusation stays locked
   await expect(page.getByRole("button", { name: "MAKE THE ACCUSATION" })).toBeDisabled();
-  await tie(3, b);
+  await tie(1, b);
   const picker = page.getByTestId("pair-picker");
   for (const id of [truth.fraudster_id, truth.second!.fraudster_id]) {
     const name = meta.suspects.find((s: { id: string }) => s.id === id).name;
@@ -176,6 +196,10 @@ test("a very hard case: two fraudsters, the pair picker and two stacked clue gro
   }
   await page.getByRole("button", { name: "MAKE THE ACCUSATION" }).click();
   await expect(page.getByTestId("accused-pair")).toBeVisible();
+  // the spotlight lists the accused in lineup order
+  const order = meta.suspects.map((s: { id: string }) => s.id);
+  const inLineup = [truth, truth.second!].sort((x, y) => order.indexOf(x.fraudster_id) - order.indexOf(y.fraudster_id));
+  for (const [i, c] of inLineup.entries()) await fileCharge(page, i, c);
   await hold(page);
   await expect(page).toHaveURL(new RegExp(`/case/${meta.case_id}/verdict`), { timeout: 15_000 });
   await expect(page.getByTestId("case-rating")).toContainText("You caught 2 of the 2 fraudsters", { timeout: 15_000 });

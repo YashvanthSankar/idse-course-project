@@ -29,7 +29,7 @@ from auditor.tools.registry import TOOLS
 # The method each fraud teaches — the yardstick for efficiency (CAREER.md §3.1). When the
 # first choice isn't unlocked yet, the next one is.
 INTENDED: dict[SchemeId, list[ToolId]] = {
-    "big_invoice": ["zscore"],
+    "big_invoice": ["iqr_box"],
     "duplicates": ["duplicates"],
     "fabricated": ["benford"],
     "weekend": ["timeseries"],

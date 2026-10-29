@@ -10,8 +10,7 @@ from auditor.store import SessionStore
 from auditor.telemetry import Telemetry
 
 PARAMS = {("under_limit", "groupby"): {"by": "vendor"}}
-SECRETS = ["fraudster_id", "final_culprit", "seed", "schemes", "forced_cameo", "big_invoice",
-           "fraud_txn_ids"]
+SECRETS = ["fraudster_id", "final_culprit", "seed", "schemes", "forced_cameo", "fraud_txn_ids"]
 
 
 @pytest.fixture
@@ -25,26 +24,27 @@ def client(app):
     return TestClient(app)
 
 
+def rows_of(client, case_id: str, suspect: str) -> list[str]:
+    res = client.get(f"/api/career/cases/{case_id}/suspects/{suspect}/rows")
+    assert res.status_code == 200, res.text
+    return [r["txn_id"] for r in res.json()["rows"]]
+
+
 def play_case(app, client, code: str, catch: bool = True, skip_cameo: bool = False) -> dict:
-    """Open the current case, run each fraud's intended tool and accuse with two clues each."""
+    """Open the current case, run each fraud's intended tool, name the trick and pin the fraud
+    rows: one fitting clue proves it."""
     meta = client.post(f"/api/career/{code}/case").json()
     session = app.state.store.get(meta["case_id"])
     culprits = session.bundle.truth.culprits()
-    summary = next(iter(session.results))
-    accusations, spare = [], [summary]
+    accusations = []
     for culprit in culprits:
         tool = next(t for t in INTENDED[culprit.scheme] if t in meta["unlocked_tools"])
         params = PARAMS.get((culprit.scheme, tool), {})
         res = client.post(f"/api/cases/{meta['case_id']}/tools/{tool}", json={"params": params})
         assert res.status_code == 200, res.text
-        accusations.append({"suspect_id": culprit.fraudster_id,
-                            "evidence_ids": [res.json()["result_id"]]})
-    if len(culprits) == 2:  # four clues needed: buy one cheap extra look
-        extra = client.post(f"/api/cases/{meta['case_id']}/tools/groupby",
-                            json={"params": {"by": "category"}}).json()
-        spare.append(extra["result_id"])
-    for accusation, clue in zip(accusations, spare):
-        accusation["evidence_ids"].append(clue)
+        accusations.append({"suspect_id": culprit.fraudster_id, "theory": culprit.scheme,
+                            "evidence_ids": [res.json()["result_id"]],
+                            "exhibits": culprit.fraud_txn_ids[:3]})
     innocent = [s["id"] for s in meta["suspects"]
                 if s["id"] not in {c.fraudster_id for c in culprits}]
     if not catch:
@@ -54,6 +54,9 @@ def play_case(app, client, code: str, catch: bool = True, skip_cameo: bool = Fal
             if session.lineup_cameos.get(a["suspect_id"]):
                 a["suspect_id"] = next(i for i in innocent
                                        if i not in {x["suspect_id"] for x in accusations})
+    for a in accusations:  # the rows you pin must be the accused's own
+        if a["suspect_id"] not in {c.fraudster_id for c in culprits}:
+            a["exhibits"] = rows_of(client, meta["case_id"], a["suspect_id"])[:1]
     res = client.post(f"/api/career/cases/{meta['case_id']}/accuse",
                       json={"accusations": accusations})
     assert res.status_code == 200, res.text
@@ -76,7 +79,9 @@ def test_a_first_contract_end_to_end(app, client):
 
     verdicts = [play_case(app, client, code) for _ in range(5)]
     assert all(v["correct"] for v in verdicts)
-    assert verdicts[0]["rating"]["total"] >= 88
+    assert verdicts[0]["rating"]["total"] == 100  # the right tool, the trick, the rows
+    assert [p["name"] for p in verdicts[0]["rating"]["parts"]] == [
+        "Verdict", "Theory", "Proof", "Exhibits", "Spending"]
     assert verdicts[0]["progress"]["index"] == 1 and verdicts[0]["appraisal"] is None
     appraisal = verdicts[-1]["appraisal"]
     assert appraisal["band"] in ("exceptional", "good")
@@ -95,7 +100,8 @@ def test_one_shot_and_quick_accuse_refuses_career_cases(app, client):
     assert quick.status_code == 409
     first = play_case(app, client, code)
     again = client.post(f"/api/career/cases/{meta['case_id']}/accuse",
-                        json={"accusations": [{"suspect_id": "E1", "evidence_ids": []}]})
+                        json={"accusations": [{"suspect_id": "E1", "theory": "weekend",
+                                               "evidence_ids": ["x"], "exhibits": ["T00001"]}]})
     assert again.json()["rating"] == first["rating"]
 
 
@@ -105,20 +111,42 @@ def test_accusations_are_checked(app, client):
     meta = client.post(f"/api/career/{code}/case").json()
     url = f"/api/career/cases/{meta['case_id']}/accuse"
     summary = client.get(f"/api/cases/{meta['case_id']}/state").json()["results"][0]["result_id"]
-    two = {"accusations": [{"suspect_id": "E1", "evidence_ids": [summary]},
-                           {"suspect_id": "E2", "evidence_ids": []}]}
-    assert client.post(url, json=two).status_code == 422  # one fraudster, one accusation
-    one_clue = {"accusations": [{"suspect_id": "E1", "evidence_ids": [summary]}]}
-    assert client.post(url, json=one_clue).status_code == 422  # two clues while you have coins
+    mine, theirs = rows_of(client, meta["case_id"], "E1"), rows_of(client, meta["case_id"], "E2")
+
+    def charge(suspect="E1", clues=(summary,), exhibits=None):
+        return {"suspect_id": suspect, "theory": "duplicates", "evidence_ids": list(clues),
+                "exhibits": mine[:1] if exhibits is None else exhibits}
+
+    def status(*charges):
+        return client.post(url, json={"accusations": list(charges)}).status_code
+
+    assert status(charge(), charge("E2", exhibits=theirs[:1])) == 422  # one fraudster here
+    assert status(charge(clues=())) == 422  # at least one clue
+    assert status(charge(exhibits=[])) == 422  # at least one row
+    assert status(charge(exhibits=theirs[:1])) == 422  # someone else's row
+    assert status(charge(exhibits=[mine[0], mine[0]])) == 422  # the same row twice
+    assert status(charge(exhibits=mine[:6])) == 422  # five at most
+    assert status(charge()) == 200  # one clue and one row will do (it just won't score well)
 
 
 def test_views_never_leak_the_truth(app, client):
     code = client.post("/api/career").json()["code"]
     client.post(f"/api/career/{code}/sign", json={"company_id": "lakshmi"})
-    meta = client.post(f"/api/career/{code}/case").text
+    meta = client.post(f"/api/career/{code}/case").json()
     view = client.get(f"/api/career/{code}").text
+    rows = client.get(f"/api/career/cases/{meta['case_id']}/suspects/E1/rows").text
     for secret in SECRETS:
-        assert secret not in view and secret not in meta
+        assert secret not in view and secret not in str(meta) and secret not in rows
+    # the theories are public; which one this case is about is not
+    assert "big_invoice" in view and "big_invoice" not in str(meta)
+
+
+def test_the_senior_hands_over_notes_that_fade(client):
+    code = client.post("/api/career").json()["code"]
+    small = client.post(f"/api/career/{code}/sign", json={"company_id": "konkan"}).json()
+    notes = small["contract"]["senior"]
+    assert notes["name"] == "Ganesh Parab" and notes["kit"] and notes["proof_rule"]
+    assert any("Twin Finder" in line for line in notes["notes"])
 
 
 def test_unknown_codes_and_bad_moves(client):

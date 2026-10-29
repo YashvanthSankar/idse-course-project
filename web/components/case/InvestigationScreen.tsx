@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Corkboard } from "@/components/board/Corkboard";
 import { LampLight } from "@/components/fx/LampLight";
 import { SettingsPanel } from "@/components/settings/SettingsPanel";
-import { ApiError, getCaseState, listTools, runTool } from "@/lib/api";
+import { ApiError, getCareer, getCaseState, listTools, runTool } from "@/lib/api";
 import { loadCaseMemory, restoreSnapshot, saveCaseMemory } from "@/lib/caseMemory";
 import { cn } from "@/lib/cn";
 import { useSettings } from "@/lib/settings";
@@ -25,6 +25,7 @@ import { SuspectRail } from "./SuspectRail";
 import { ToolKit } from "./ToolKit";
 import { HackerConsole } from "@/components/hacker/HackerConsole";
 import { BackButton } from "@/components/ui/BackButton";
+import { NotesModal } from "@/components/career/CareerParts";
 
 type Tab = "suspects" | "tools" | "result" | "evidence";
 const TABS: { id: Tab; label: string; icon: string }[] = [
@@ -89,6 +90,13 @@ export function InvestigationScreen({
   const career = meta?.career ?? null;
   const home = career ? "/career" : "/office";
   const lockedText = career ? "isn't available at this tier yet — bigger companies unlock it." : null;
+  // Career Mode: the senior's notes on this company stay one tap away
+  const contract = useQuery({
+    queryKey: ["career", career?.code ?? ""],
+    queryFn: () => getCareer(career!.code),
+    enabled: career !== null,
+  }).data?.contract ?? null;
+  const [notesOpen, setNotesOpen] = useState(false);
   const tools = useQuery({
     queryKey: ["tools", meta?.level],
     queryFn: () => listTools(meta!.level),
@@ -299,6 +307,7 @@ export function InvestigationScreen({
           busy={run.isPending}
           budgetLeft={meta.budget_left}
           lockedLabel={career ? "bigger firms" : undefined}
+          roles={career !== null}
         />
         <button
           onClick={() => setHackerOpen(true)}
@@ -329,6 +338,19 @@ export function InvestigationScreen({
             {meta.title}
           </h1>
         </div>
+        {contract?.senior && (
+          <button
+            onClick={() => {
+              sfx.play("rustle");
+              setNotesOpen(true);
+            }}
+            data-testid="case-notes"
+            className="min-h-11 rounded-sm border border-amber/50 px-3 text-xs text-amber hover:bg-amber/10"
+          >
+            📒 Notes from {contract.senior.name.split(" ")[0]}
+          </button>
+        )}
+        <NotesModal open={notesOpen} notes={contract?.senior ?? null} company={contract?.company ?? null} onClose={() => setNotesOpen(false)} />
         <div className="hidden flex-1 justify-center lg:flex">
           <StepGuide results={store.results.length} pinned={store.pinned.length} />
         </div>

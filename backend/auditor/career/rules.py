@@ -24,6 +24,7 @@ from auditor.career.rating import CaseRating, contract_band
 from auditor.models import HerringId, SchemeId
 
 CHIEF_AUDITOR = "Chief Auditor"
+LARGE_NEAR_MISS = 3  # Good contracts at one large firm that count as an Exceptional
 
 
 class CaseRecord(BaseModel):
@@ -76,6 +77,7 @@ class Appraisal(BaseModel):
 class CompanyRecord(BaseModel):
     contracts: int = 0
     bad_streak: int = 0
+    goods: int = 0  # Good contracts at a large firm: three count as one Exceptional
     banned: bool = False
 
 
@@ -242,7 +244,7 @@ def appraise(career: Career) -> Appraisal:
     ratings = [c.rating.total for c in contract.cases]
     hardest = [c for c in contract.cases if c.difficulty in ("hard", "very_hard")]
     band = contract_band(ratings, all(c.correct for c in contract.cases),
-                         all(c.correct for c in hardest))
+                         all(c.correct for c in hardest), TIER_SPECS[company.tier].exceptional)
     before = career.salary
     events: list[str] = []
     new: list[str] = []
@@ -310,8 +312,13 @@ def _apply_rules(career: Career, company_id: str, band: Band, rng: np.random.Gen
             events.append("One more good contract at another mid-size firm opens the large "
                           "companies.")
     elif tier == "large":
-        if band == "exceptional" and company_id not in career.large_exceptional:
+        record.goods += band == "good"
+        if company_id not in career.large_exceptional and (
+                band == "exceptional" or record.goods >= LARGE_NEAR_MISS):
             career.large_exceptional.append(company_id)
+            if band == "good":
+                events.append(f"{LARGE_NEAR_MISS} good years at {company.name} count as one "
+                              "exceptional.")
         if len(career.large_exceptional) >= 2:
             _offer(career, "very_large", 2, rng)
             events.append("Exceptional twice over. The very large companies want you.")
@@ -405,7 +412,8 @@ def next_goal(career: Career) -> str:
                 f"({len(career.mid_good)}/2).")
     if tier == "large":
         return ("Exceptional at two of the three large companies opens the very large ones "
-                f"({len(career.large_exceptional)}/2).")
+                f"({len(career.large_exceptional)}/2). Three Good years at one company count "
+                "as one Exceptional.")
     if tier == "very_large":
         return ("Exceptional at both very large companies opens the Final "
                 f"({len(career.vl_exceptional)}/2).")

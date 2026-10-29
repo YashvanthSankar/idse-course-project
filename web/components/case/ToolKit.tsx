@@ -3,8 +3,9 @@ import { SHELVES } from "@/lib/toolMeta";
 import type { ToolSpec } from "@/lib/types";
 import { ToolCard } from "./ToolCard";
 
-export function ToolKit({ specs, params, selected, onSelect, onParam, onRun, busy, budgetLeft, lockedLabel }: {
+export function ToolKit({ specs, params, selected, onSelect, onParam, onRun, busy, budgetLeft, lockedLabel, roles }: {
   specs: ToolSpec[];
+  roles?: boolean;
   lockedLabel?: string;
   params: Record<string, Record<string, string>>;
   selected: string | null;
@@ -32,6 +33,7 @@ export function ToolKit({ specs, params, selected, onSelect, onParam, onRun, bus
               return (
                 <ToolCard
                   lockedLabel={lockedLabel}
+                  roles={roles}
                   key={id}
                   spec={spec}
                   hotkey={hotkey}

@@ -3,10 +3,12 @@ import { motion } from "framer-motion";
 import { Portrait } from "@/components/case/Portrait";
 import { Typewriter } from "@/components/fx/Typewriter";
 import { Modal } from "@/components/ui/Modal";
-import { BAND_LABEL, BAND_STYLE, formatSalary } from "@/lib/career";
+import { BAND_LABEL, BAND_STYLE, TIER_TOOLS, formatSalary } from "@/lib/career";
 import { cn } from "@/lib/cn";
+import { ROLE_LABEL, TOOL_KIT } from "@/lib/proof";
 import { sfx } from "@/lib/sound";
-import type { Appraisal, CompanyCard, Greeting } from "@/lib/types";
+import { toolMeta } from "@/lib/toolMeta";
+import type { Appraisal, CompanyCard, Greeting, SeniorNotes } from "@/lib/types";
 
 const TIER_STYLE: Record<string, string> = {
   small: "border-paper/40 text-paper/70",
@@ -102,6 +104,73 @@ export function GreetingsModal({ open, greetings, company, onClose }: {
           </button>
         </div>
       </div>
+    </Modal>
+  );
+}
+
+/** A senior at the company hands over their notes (CAREER.md §7.7): how honest money moves here,
+ *  what fooled the last auditor — and, at small and mid firms, what each tool can prove. */
+export function NotesModal({ open, notes, company, onClose }: {
+  open: boolean;
+  notes: SeniorNotes | null;
+  company: CompanyCard | null;
+  onClose: () => void;
+}) {
+  const kit = TOOL_KIT.filter((t) => company && TIER_TOOLS[company.tier]?.includes(t.tool));
+  return (
+    <Modal open={open && notes !== null} onClose={onClose} label="Notes from your senior" className="max-w-2xl">
+      {notes && company && (
+        <div className="tex-paper rounded-[2px] p-6 text-ink-950 shadow-2xl sm:p-9" data-testid="senior-notes">
+          <div className="flex items-start gap-4 border-b-2 border-double border-black/30 pb-3">
+            <div className="w-[72px] shrink-0">
+              <Portrait suspect={{ name: notes.name, role: notes.role, portrait: notes.portrait }} size={72} caption={false} />
+            </div>
+            <div className="min-w-0">
+              <p className="font-type text-[11px] tracking-[0.35em] opacity-60">NOTES ON {company.name.toUpperCase()}</p>
+              <h2 className="font-display text-2xl font-bold italic leading-tight">{notes.name}</h2>
+              <p className="font-type text-[12px] opacity-70">{notes.role}</p>
+              <p className="mt-1 font-type text-[14px] italic">“{notes.hello}”</p>
+            </div>
+          </div>
+          <ul className="mt-4 space-y-3 font-type text-[15px] leading-relaxed">
+            {notes.notes.map((line) => (
+              <li key={line}>— {line}</li>
+            ))}
+          </ul>
+          {notes.kit && (
+            <section className="mt-5">
+              <h3 className="font-type text-[11px] tracking-[0.35em] opacity-60">YOUR KIT THIS YEAR</h3>
+              <ul className="mt-2 space-y-1.5 text-[13px]">
+                {kit.map((t) => (
+                  <li key={t.tool} className="flex items-baseline gap-2">
+                    <span className="w-5 shrink-0 text-center font-mono font-bold">{toolMeta(t.tool).icon}</span>
+                    <span className="w-32 shrink-0 font-semibold">{t.name}</span>
+                    <span className={cn("shrink-0 rounded-sm border px-1.5 text-[10px] mix-blend-multiply", t.role === "proves" ? "border-[#1f6b3a] text-[#1f6b3a]" : "border-[#9a6a00] text-[#9a6a00]")}>
+                      {ROLE_LABEL[t.role]}
+                    </span>
+                    <span className="opacity-80">{t.what}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+          {notes.proof_rule && (
+            <section className="mt-5 rounded-sm border border-black/20 bg-black/5 p-3 text-[13px]">
+              <h3 className="font-type text-[11px] tracking-[0.35em] opacity-60">WHAT PROVES A CASE</h3>
+              <ol className="mt-1 list-decimal space-y-0.5 pl-5">
+                <li>Name the trick you think they used.</li>
+                <li>Attach a clue from a tool that PROVES that trick, or two different tools that agree.</li>
+                <li>Pin the rows from their ledger that show it. Honest rows count against you.</li>
+              </ol>
+            </section>
+          )}
+          <div className="mt-7 flex justify-end">
+            <button onClick={onClose} className="min-h-11 bg-[#8f1d27] px-6 py-2 font-type tracking-[0.2em] text-paper hover:bg-[#a3121f]">
+              GOT IT
+            </button>
+          </div>
+        </div>
+      )}
     </Modal>
   );
 }

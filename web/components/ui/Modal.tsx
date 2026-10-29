@@ -22,7 +22,7 @@ export function Modal({ open, onClose, children, className, label }: {
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-[2px]"
+          className="fixed inset-0 z-[100] flex overflow-y-auto bg-black/75 p-4 backdrop-blur-[2px]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -32,7 +32,7 @@ export function Modal({ open, onClose, children, className, label }: {
             role="dialog"
             aria-modal
             aria-label={label}
-            className={cn("relative max-h-[92dvh] w-full overflow-y-auto", className)}
+            className={cn("relative m-auto w-full", className)}
             initial={{ y: 40, scale: 0.96, opacity: 0 }}
             animate={{ y: 0, scale: 1, opacity: 1 }}
             exit={{ y: 20, opacity: 0 }}

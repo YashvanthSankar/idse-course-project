@@ -21,7 +21,7 @@ import { useCaseStore } from "@/lib/store";
 import { TOOL_META } from "@/lib/toolMeta";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { useReducedEffects } from "@/lib/useReducedEffects";
-import type { CaseMeta, CaseRating } from "@/lib/types";
+import type { CaseMeta } from "@/lib/types";
 import { RevealReplay } from "./RevealReplay";
 import { VerdictStamp } from "./VerdictStamp";
 
@@ -30,12 +30,6 @@ const TOOL_NAMES: Record<string, string> = {
   duplicates: "Twin Finder", benford: "Benford's Law", timeseries: "Timeline", regression: "Margin Model",
   isoforest: "Anomaly Hunter",
 };
-const PARTS: { key: keyof Pick<CaseRating, "verdict" | "evidence" | "judgment" | "efficiency">; label: string }[] = [
-  { key: "verdict", label: "Verdict" },
-  { key: "evidence", label: "Evidence" },
-  { key: "judgment", label: "Tool judgment" },
-  { key: "efficiency", label: "Efficiency" },
-];
 
 type Phase = "stamp" | "rating" | "reveal";
 
@@ -52,12 +46,13 @@ export function CareerVerdictScreen({ caseId }: { caseId: string }) {
   const [briefing, setBriefing] = useState<CaseMeta | null>(null);
   const [ending, setEnding] = useState(false);
   const revealRef = useRef<HTMLDivElement>(null);
+  const leaving = useRef(false); // opening the next case clears the store: don't restore this one over it
   const code = meta?.career?.code ?? "";
 
   // A reload loses the in-memory verdict: ask the server. Still open? Back to the files.
   const restored = useQuery({ queryKey: ["case-state", caseId], queryFn: () => getCaseState(caseId), enabled: !valid });
   useEffect(() => {
-    if (valid || (!restored.data && !restored.isError)) return;
+    if (valid || leaving.current || (!restored.data && !restored.isError)) return;
     if (restored.data?.career_verdict) {
       useCaseStore.getState().hydrate(restoreSnapshot(restored.data, loadCaseMemory(caseId)));
     } else {
@@ -167,12 +162,11 @@ export function CareerVerdictScreen({ caseId }: { caseId: string }) {
                 </p>
               </div>
               <ul className="mt-4 space-y-3">
-                {PARTS.map(({ key, label }) => {
-                  const part = rating[key];
+                {rating.parts.map((part) => {
                   return (
-                    <li key={key}>
+                    <li key={part.name}>
                       <div className="flex items-baseline justify-between text-sm">
-                        <span className="text-paper">{label}</span>
+                        <span className="text-paper">{part.name}</span>
                         <span className="tabular-nums text-paper/80">{part.points} / {part.out_of}</span>
                       </div>
                       <div className="mt-1 h-2 overflow-hidden rounded-full bg-ink-800">
@@ -297,6 +291,7 @@ export function CareerVerdictScreen({ caseId }: { caseId: string }) {
         closeLabel="BACK TO YOUR CAREER"
         onClose={() => router.push("/career")}
         onOpenFiles={(m) => {
+          leaving.current = true;
           useCaseStore.getState().reset();
           router.push(`/case/${m.case_id}`);
         }}

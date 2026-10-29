@@ -22,7 +22,7 @@ import { loadPlayer } from "@/lib/player";
 import { sfx } from "@/lib/sound";
 import { useCaseStore } from "@/lib/store";
 import type { Appraisal, CareerView, CaseMeta } from "@/lib/types";
-import { AppraisalModal, GreetingsModal, History, OfferLetter, TierChip } from "./CareerParts";
+import { AppraisalModal, GreetingsModal, History, NotesModal, OfferLetter, TierChip } from "./CareerParts";
 import { Cutscene } from "./Cutscene";
 import { Prologue } from "./Prologue";
 
@@ -77,6 +77,8 @@ function Hub({ code, onLeave, onSwitch }: { code: string; onLeave: () => void; o
   const career = useQuery({ queryKey: ["career", code], queryFn: () => getCareer(code), retry: 1 });
   const [briefing, setBriefing] = useState<CaseMeta | null>(null);
   const [greetingsFor, setGreetingsFor] = useState<string | null>(null);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [dayOne, setDayOne] = useState(false); // just signed: the greetings, then the notes
   const [appraisal, setAppraisal] = useState<Appraisal | null>(null);
   const [ending, setEnding] = useState(false);
   const [confirmRetire, setConfirmRetire] = useState(false);
@@ -88,7 +90,9 @@ function Hub({ code, onLeave, onSwitch }: { code: string; onLeave: () => void; o
     mutationFn: ({ id, practice }: { id: string; practice: boolean }) => signContract(code, id, practice),
     onSuccess: (next) => {
       update(next);
+      setDayOne(true);
       if (next.contract && next.contract.greetings.length > 0) setGreetingsFor(`${next.code}:${next.history.length}`);
+      else if (next.contract?.senior) setNotesOpen(true);
     },
   });
   const open = useMutation({
@@ -195,11 +199,18 @@ function Hub({ code, onLeave, onSwitch }: { code: string; onLeave: () => void; o
                   <h2 className="font-display text-3xl italic text-paper">{contract.company.name}</h2>
                   <p className="text-sm text-muted">{contract.company.city} · {contract.company.culture_note}</p>
                 </div>
-                {contract.greetings.length > 0 && (
-                  <button onClick={() => setGreetingsFor(`${view.code}:${view.history.length}`)} className="min-h-11 text-sm text-cyan underline-offset-4 hover:underline">
-                    Familiar faces ({contract.greetings.length})
-                  </button>
-                )}
+                <div className="flex flex-wrap gap-x-5">
+                  {contract.senior && (
+                    <button onClick={() => setNotesOpen(true)} data-testid="open-notes" className="min-h-11 text-sm text-amber underline-offset-4 hover:underline">
+                      📒 Notes from {contract.senior.name.split(" ")[0]}
+                    </button>
+                  )}
+                  {contract.greetings.length > 0 && (
+                    <button onClick={() => setGreetingsFor(`${view.code}:${view.history.length}`)} className="min-h-11 text-sm text-cyan underline-offset-4 hover:underline">
+                      Familiar faces ({contract.greetings.length})
+                    </button>
+                  )}
+                </div>
               </div>
               <ol className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                 {contract.cases.map((c) => (
@@ -311,8 +322,13 @@ function Hub({ code, onLeave, onSwitch }: { code: string; onLeave: () => void; o
         open={greetingsOpen}
         greetings={contract?.greetings ?? []}
         company={contract?.company.name ?? ""}
-        onClose={() => setGreetingsFor(null)}
+        onClose={() => {
+          setGreetingsFor(null);
+          if (dayOne && contract?.senior) setNotesOpen(true); // then the senior hands over their notes
+          setDayOne(false);
+        }}
       />
+      <NotesModal open={notesOpen} notes={contract?.senior ?? null} company={contract?.company ?? null} onClose={() => setNotesOpen(false)} />
       <AppraisalModal appraisal={appraisal} onClose={() => setAppraisal(null)} />
       <BriefingModal
         meta={briefing}
