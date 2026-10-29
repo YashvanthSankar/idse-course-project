@@ -149,4 +149,4 @@ cd web && pnpm test && pnpm exec playwright test
 ---
 
 ## 📚 Docs
-[IDEA](docs/IDEA.md) · [DESIGN](docs/DESIGN.md) · [CAREER](docs/CAREER.md) · [PLAN](docs/PLAN.md) · [TODO](docs/TODO.md) · [DEMO script](docs/DEMO.md)
+[IDEA](docs/IDEA.md) · [DESIGN](docs/DESIGN.md) · [CAREER](docs/CAREER.md) · [CAREER HANDOVER](docs/CAREER_HANDOVER.md) · [PLAN](docs/PLAN.md) · [TODO](docs/TODO.md) · [DEMO script](docs/DEMO.md)
