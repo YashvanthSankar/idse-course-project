@@ -7,3 +7,6 @@ scripts
 .ruff_cache
 Dockerfile
 fly.toml
+.agents
+.claude
+skills-lock.json
