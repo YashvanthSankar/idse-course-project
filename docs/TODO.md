@@ -84,4 +84,5 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 - [x] T36 · All 3 career e2e tests passing; full backend suite (350) passing; old saved careers still load
 - [ ] T37 · CAREER.md §3.1 / §3.2 rewritten for the new rating, new §7.7 Seniors; CAREER_HANDOVER.md updated
 - [ ] T38 · Calibrate the new bars and slack with the bots (target Exceptional ~80% at Small/Mid, ~30–40% at Large and above)
-- [ ] T39 · Commit the branch and merge to main
+- [x] T39 · Commit the branch and merge to main
+- [ ] T40 · Deploy the backend (VPS) and the frontend (Vercel) together: the career accusation request changed (theory + exhibits), so one without the other breaks accusations
