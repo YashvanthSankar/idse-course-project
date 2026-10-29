@@ -28,7 +28,7 @@ async function fileCharge(page: Page, index: number, culprit: Culprit) {
   await file.getByTestId("pick-rows").click();
   const picker = page.getByTestId("rows-picker");
   await expect(picker.getByTestId("ledger-row").first()).toBeVisible({ timeout: 15_000 });
-  for (const id of culprit.fraud_txn_ids.slice(0, 3)) await picker.locator(`[data-txn="${id}"]`).click();
+  for (const id of culprit.fraud_txn_ids.slice(0, 3)) await picker.locator(`[data-txn="${id}"] td`).first().click();
   await picker.getByTestId("rows-done").click();
 }
 
@@ -44,6 +44,7 @@ async function drag(page: Page, from: Locator, to: Locator) {
 
 async function hold(page: Page) {
   const button = page.getByTestId("hold-to-accuse");
+  await button.scrollIntoViewIfNeeded(); // the case files make the spotlight taller than the screen
   const box = (await button.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();

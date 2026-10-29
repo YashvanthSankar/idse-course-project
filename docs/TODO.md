@@ -79,9 +79,9 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 - [x] T31 · Accuse with a theory (the trick), 1–2 clues and 1–5 exhibit rows from the accused's ledger; a clue from a tool that fits the theory proves it, anything else is a lead unless a second tool agrees
 - [x] T32 · Exceptional bar per tier (88 small/mid · 92 large · 90 very large), free cross-check slack (2 · 2 · 1), three Good years at one large firm count as one Exceptional, Box & Whisker is the intended tool for big invoices
 - [x] T33 · Seniors hand over notes on day one (shorter as you climb, none in the Final); Case File and ledger row picker in the spotlight; verdict screen, Manual and tool cards updated
-- [ ] T34 · Bug: can't move from case 1 to case 2 in a contract
-- [ ] T35 · Bug: some fraud rows (e.g. T00942) are missing from the fraudster's ledger in the row picker, so they can't be pinned as exhibits
-- [ ] T36 · All 3 career e2e tests passing; full backend suite run
+- [x] T34 · Bug: can't move from case 1 to case 2 in a contract (main reloads case 1 over case 2 from the verdict screen; fixed on the branch, e2e checks it)
+- [x] T35 · Bug: tapping a row in the ledger picker filtered by the value under your finger instead of pinning it, hiding the other fraud rows; the row now pins wherever you tap and only the 🔍 filters
+- [x] T36 · All 3 career e2e tests passing; full backend suite (350) passing; old saved careers still load
 - [ ] T37 · CAREER.md §3.1 / §3.2 rewritten for the new rating, new §7.7 Seniors; CAREER_HANDOVER.md updated
 - [ ] T38 · Calibrate the new bars and slack with the bots (target Exceptional ~80% at Small/Mid, ~30–40% at Large and above)
 - [ ] T39 · Commit the branch and merge to main

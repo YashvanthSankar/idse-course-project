@@ -205,7 +205,7 @@ function RowsPicker({ caseId, suspect, picked, onChange, onClose }: {
             <p className="font-type text-[11px] tracking-[0.35em] text-paper/60">PIN UP TO {MAX_EXHIBITS} ROWS</p>
             <h3 className="font-display text-2xl italic text-paper">{suspect.name}&apos;s ledger</h3>
             <p className="text-xs text-paper/60">Pin the rows that show the trick, and only those. An honest row costs you; 3 fraud rows is a full mark.</p>
-            <p className="text-xs text-cyan/80">Tip: click any value (a vendor, an amount, a date) to show only rows that share it, then pin them together.</p>
+            <p className="text-xs text-cyan/80">Tip: tap the 🔍 beside any value (a vendor, an amount, a date) to show only rows that share it, then pin them together.</p>
           </div>
           <div className="flex items-center gap-2 text-xs">
             <span className="text-paper/60">Sort</span>
@@ -254,13 +254,14 @@ function RowsPicker({ caseId, suspect, picked, onChange, onClose }: {
                       <td className="px-2 py-1.5 text-center text-amber">{on ? "☑" : "☐"}</td>
                       {COLUMNS.map((c) => (
                         <td key={c} className={cn("px-2 py-1.5", (c === "amount" || c === "revenue") && "text-right tabular-nums")}>
-                          {c === "invoice_id" ? (
-                            String(r[c] ?? "")
-                          ) : (
-                            <button type="button" title={`Show every row with this ${c}`}
+                          {c === "amount" || c === "revenue" ? Number(r[c]).toLocaleString("en-IN") : shown(r, c)}
+                          {/* the row pins wherever you tap it; only the 🔍 filters */}
+                          {c !== "invoice_id" && (
+                            <button type="button" title={`Show every row with this ${c}`} aria-label={`Show every row with this ${c}`}
+                              data-testid="filter-value"
                               onClick={(e) => { e.stopPropagation(); sfx.play("tick"); setFilter({ col: c, value: shown(r, c) }); }}
-                              className="underline decoration-dotted decoration-paper/30 underline-offset-2 hover:text-cyan">
-                              {c === "amount" || c === "revenue" ? Number(r[c]).toLocaleString("en-IN") : shown(r, c)}
+                              className="ml-1 px-0.5 text-[10px] opacity-40 hover:opacity-100">
+                              🔍
                             </button>
                           )}
                         </td>
