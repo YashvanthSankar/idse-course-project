@@ -4,6 +4,8 @@
 
 ### ▶ Play it: **[otlr.vercel.app](https://otlr.vercel.app)**
 
+The game runs on Vercel; the Python brain runs on a small always-on VPS (FastAPI under systemd, Caddy for HTTPS) with telemetry in Neon Postgres.
+
 A noir detective web game where you catch corporate fraudsters with **real Python data analysis**.
 Built for **IDSE (Introduction to Data Science for Engineers)**.
 

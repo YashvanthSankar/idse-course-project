@@ -64,7 +64,7 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 
 ### M14 · Ship & Demo
 - [x] T27a · 200-player load test, Dockerfile + Fly.io config, README, demo script
-- [x] T27b · Deployed on Vercel: game at otlr.vercel.app, API at olr-api.vercel.app
+- [x] T27b · Live: game at otlr.vercel.app (Vercel), Python backend on the yash-micro VPS (systemd + Caddy HTTPS, Neon Postgres telemetry)
 
 ## 🧠 BRAIN MODE
 
