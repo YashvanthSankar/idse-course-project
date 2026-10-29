@@ -32,6 +32,7 @@ class TierSpec:
     plan: tuple[Difficulty, ...]  # the cases of one contract
     exceptional: int = 88  # the contract average for Exceptional (calibrated by bots, §10)
     slack: int = 0  # coins you may spend past the intended tools for free (a cross-check)
+    hard_spare: int | None = None  # spare coins on the hard case, when tighter than the usual 2
 
 
 FIVE: tuple[Difficulty, ...] = ("easy", "easy", "medium", "medium", "hard")
@@ -44,7 +45,7 @@ TIER_SPECS: dict[Tier, TierSpec] = {
                     slack=2),
     "large": TierSpec(2500, 5, ALL_TOOLS, 6, 40.0,
                       {"bad": 0, "ok": 0.10, "good": 0.20, "exceptional": 0.30}, 150.0, FIVE,
-                      exceptional=92, slack=1),
+                      exceptional=92, slack=1, hard_spare=1),
     "very_large": TierSpec(3500, 7, ALL_TOOLS, 6, 150.0,
                            {"bad": 0, "ok": 0.10, "good": 0.15, "exceptional": 0.25}, 500.0,
                            ("easy", "easy", "medium", "hard", "very_hard"), exceptional=90),

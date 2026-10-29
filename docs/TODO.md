@@ -83,6 +83,7 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 - [x] T35 · Bug: tapping a row in the ledger picker filtered by the value under your finger instead of pinning it, hiding the other fraud rows; the row now pins wherever you tap and only the 🔍 filters
 - [x] T36 · All 3 career e2e tests passing; full backend suite (350) passing; old saved careers still load
 - [ ] T37 · CAREER.md §3.1 / §3.2 rewritten for the new rating, new §7.7 Seniors; CAREER_HANDOVER.md updated
-- [ ] T38 · Calibrate the new bars and slack with the bots (target Exceptional ~80% at Small/Mid, ~30–40% at Large and above)
+- [x] T38 · Calibrate with bots (`backend/scripts/calibrate_career.py`). A sharp bot reaches Exceptional 100% small · 87% mid · 40% large · ~20% very large. The bar barely matters: solving the hard case decides it, so Large hard cases now get 1 spare coin instead of 2 (was 70%)
 - [x] T39 · Commit the branch and merge to main
 - [ ] T40 · Deploy the backend (VPS) and the frontend (Vercel) together: the career accusation request changed (theory + exhibits), so one without the other breaks accusations
+- [ ] T41 · Very large comes out at ~20% Exceptional (target 30–40%): the two-fraudster case is solved too rarely. Decide whether to loosen it (more spare coins on very hard) or keep it

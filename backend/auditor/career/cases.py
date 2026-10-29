@@ -212,7 +212,10 @@ def build_career_case(plan: CasePlan, people: list[Person], code: str, case_id: 
                        fraud_txn_ids=second[0][2], catching_tools=catchers(second[0][0]),
                        explanation=SCHEME_EXPLANATIONS[second[0][0]]) if second else None,
     )
-    budget = intended_cost(list(plan.schemes), unlocked) + SPARE_COINS[plan.difficulty]
+    spare = SPARE_COINS[plan.difficulty]
+    if plan.difficulty == "hard" and spec.hard_spare is not None:
+        spare = spec.hard_spare  # one wrong guess and the right tool is out of reach (§10)
+    budget = intended_cost(list(plan.schemes), unlocked) + spare
     meta = _meta(plan, company, head, suspects, df, code, case_id, total, budget)
     return CaseBundle(meta=meta, df=df, truth=truth), lineup
 
