@@ -24,6 +24,18 @@ class Suspect(BaseModel):
     portrait: str
 
 
+class CareerCaseInfo(BaseModel):
+    """Where a Career Mode case sits in the player's contract."""
+
+    code: str
+    company_id: str
+    company: str
+    index: int  # 1-based
+    total: int
+    difficulty: Literal["easy", "medium", "hard", "very_hard"]
+    culprits: int  # how many fraudsters to accuse (2 in very hard cases)
+
+
 class CaseMeta(BaseModel):
     """Everything the player may see about a case. Never carries the truth."""
 
@@ -37,6 +49,17 @@ class CaseMeta(BaseModel):
     columns: list[str]
     n_rows: int
     unlocked_tools: list[ToolId]
+    career: CareerCaseInfo | None = None
+
+
+class Culprit(BaseModel):
+    """A second fraudster, working separately (Career Mode's very hard cases)."""
+
+    fraudster_id: str
+    scheme: SchemeId
+    fraud_txn_ids: list[str]
+    catching_tools: list[ToolId]
+    explanation: str
 
 
 class CaseTruth(BaseModel):
@@ -48,6 +71,13 @@ class CaseTruth(BaseModel):
     catching_tools: list[ToolId]
     herrings: list[HerringId]
     explanation: str
+    second: Culprit | None = None
+
+    def culprits(self) -> list[Culprit]:
+        first = Culprit(fraudster_id=self.fraudster_id, scheme=self.scheme,
+                        fraud_txn_ids=self.fraud_txn_ids, catching_tools=self.catching_tools,
+                        explanation=self.explanation)
+        return [first] + ([self.second] if self.second else [])
 
 
 class LevelInfo(BaseModel):

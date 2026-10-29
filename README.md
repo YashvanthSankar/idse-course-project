@@ -50,6 +50,17 @@ catches the fraudster at least 19 times out of 20, and that honest companies are
 
 ---
 
+## 💼 Career Mode: from a sweet shop to the Kaveri Inquiry
+
+Start with offer letters from three small businesses and climb: **3 small → 5 mid → 3 large → 2 very large →
+the Final**. Each contract is a year at one company: five cases, easy to hard, with the same staff and a
+company "culture" that shapes its honest data. Every case gets a **0–100 rating** (verdict, evidence, tool
+judgment, efficiency); the year's average decides your appraisal, your raise (₹6 LPA → ₹5 Cr) and your next
+offers. Very large firms hide **two fraudsters** in one ledger. Three old colleagues follow you from your first
+job, always innocent — until the Final. Full design: [docs/CAREER.md](docs/CAREER.md).
+
+---
+
 ## 🎓 Class Mode: the class becomes the dataset
 
 The professor puts a QR code on the projector. **The whole class joins from their phones**, races on the
@@ -140,4 +151,4 @@ cd web && pnpm test && pnpm exec playwright test
 ---
 
 ## 📚 Docs
-[IDEA](docs/IDEA.md) · [DESIGN](docs/DESIGN.md) · [PLAN](docs/PLAN.md) · [TODO](docs/TODO.md) · [DEMO script](docs/DEMO.md)
+[IDEA](docs/IDEA.md) · [DESIGN](docs/DESIGN.md) · [CAREER](docs/CAREER.md) · [CAREER HANDOVER](docs/CAREER_HANDOVER.md) · [PLAN](docs/PLAN.md) · [TODO](docs/TODO.md) · [DEMO script](docs/DEMO.md)

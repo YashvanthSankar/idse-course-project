@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { VerdictScreen } from "@/components/verdict/VerdictScreen";
+import { VerdictRouter } from "@/components/verdict/VerdictRouter";
 
 // Not async: params are awaited inside the Suspense boundary so the shell still prerenders.
 export default function VerdictPage({ params }: PageProps<"/case/[caseId]/verdict">) {
@@ -12,7 +12,7 @@ export default function VerdictPage({ params }: PageProps<"/case/[caseId]/verdic
       }
     >
       {params.then(({ caseId }) => (
-        <VerdictScreen caseId={caseId} />
+        <VerdictRouter caseId={caseId} />
       ))}
     </Suspense>
   );

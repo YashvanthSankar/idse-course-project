@@ -22,8 +22,10 @@ function Coins({ n, affordable }: { n: number; affordable: boolean }) {
 }
 
 /** One tool on the shelf: a compact row; when selected it opens its settings and Run button. */
-export function ToolCard({ spec, hotkey, selected, params, onSelect, onParam, onRun, busy, affordable }: {
+export function ToolCard({ spec, hotkey, selected, params, onSelect, onParam, onRun, busy, affordable, lockedLabel }: {
   spec: ToolSpec;
+  /** Where the tool unlocks, when that isn't "Case N" (Career Mode: bigger companies). */
+  lockedLabel?: string;
   hotkey: number;
   selected: boolean;
   params: Record<string, string>;
@@ -58,7 +60,7 @@ export function ToolCard({ spec, hotkey, selected, params, onSelect, onParam, on
           onSelect();
         }}
         aria-expanded={locked ? undefined : selected}
-        aria-label={locked ? `${spec.name} (locked until case ${spec.unlock_level})` : spec.name}
+        aria-label={locked ? `${spec.name} (locked until ${lockedLabel ?? `case ${spec.unlock_level}`})` : spec.name}
         className={cn(
           "flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left",
           locked ? "cursor-not-allowed opacity-45" : "hover:bg-white/[0.04]",
@@ -74,7 +76,7 @@ export function ToolCard({ spec, hotkey, selected, params, onSelect, onParam, on
         </span>
         <span className="min-w-0 flex-1 truncate text-[15px] text-paper">{spec.name}</span>
         {locked ? (
-          <span className="shrink-0 text-xs text-paper/50">Case {spec.unlock_level}</span>
+          <span className="shrink-0 text-xs text-paper/50">{lockedLabel ?? `Case ${spec.unlock_level}`}</span>
         ) : (
           <>
             <Coins n={spec.cost} affordable={affordable} />

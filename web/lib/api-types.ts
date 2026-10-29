@@ -259,6 +259,145 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/career": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create */
+        post: operations["create_api_career_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get */
+        get: operations["get_api_career__code__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/{code}/ending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ending */
+        get: operations["ending_api_career__code__ending_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/{code}/sign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign Contract */
+        post: operations["sign_contract_api_career__code__sign_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/{code}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retire */
+        post: operations["retire_api_career__code__retire_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/{code}/case": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open Case
+         * @description The contract's current case — created on first call, rebuilt if the server forgot.
+         */
+        post: operations["open_case_api_career__code__case_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/cases/{case_id}/accuse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accuse */
+        post: operations["accuse_api_career_cases__case_id__accuse_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/career/{code}/debug-jump": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Debug Jump */
+        post: operations["debug_jump_api_career__code__debug_jump_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/debug/cases/{case_id}/truth": {
         parameters: {
             query?: never;
@@ -287,6 +426,39 @@ export interface components {
             /** Evidence Ids */
             evidence_ids?: string[];
         };
+        /** Appraisal */
+        Appraisal: {
+            /** Company Id */
+            company_id: string;
+            /** Company */
+            company: string;
+            /**
+             * Tier
+             * @enum {string}
+             */
+            tier: "small" | "mid" | "large" | "very_large" | "final";
+            /** Year */
+            year: number;
+            /** Practice */
+            practice: boolean;
+            /** Ratings */
+            ratings: number[];
+            /** Average */
+            average: number;
+            /**
+             * Band
+             * @enum {string}
+             */
+            band: "exceptional" | "good" | "ok" | "bad";
+            /** Salary Before */
+            salary_before: number;
+            /** Salary After */
+            salary_after: number;
+            /** Events */
+            events: string[];
+            /** New Offers */
+            new_offers: string[];
+        };
         /** Autopsy */
         Autopsy: {
             /** Slides */
@@ -311,6 +483,85 @@ export interface components {
         Budget: {
             /** Budget Left */
             budget_left: number;
+        };
+        /** CareerAccusation */
+        CareerAccusation: {
+            /** Accusations */
+            accusations: components["schemas"]["Accusation"][];
+        };
+        /**
+         * CareerCaseInfo
+         * @description Where a Career Mode case sits in the player's contract.
+         */
+        CareerCaseInfo: {
+            /** Code */
+            code: string;
+            /** Company Id */
+            company_id: string;
+            /** Company */
+            company: string;
+            /** Index */
+            index: number;
+            /** Total */
+            total: number;
+            /**
+             * Difficulty
+             * @enum {string}
+             */
+            difficulty: "easy" | "medium" | "hard" | "very_hard";
+            /** Culprits */
+            culprits: number;
+        };
+        /** CareerCreate */
+        CareerCreate: {
+            /** Player Id */
+            player_id?: string | null;
+        };
+        /** CareerVerdict */
+        CareerVerdict: {
+            /** Correct */
+            correct: boolean;
+            /** Accused */
+            accused: string[];
+            /** Culprits */
+            culprits: components["schemas"]["CulpritReveal"][];
+            /** Evidence */
+            evidence: components["schemas"]["EvidenceGrade"][];
+            rating: components["schemas"]["CaseRating"];
+            progress: components["schemas"]["Progress"];
+            appraisal: components["schemas"]["Appraisal"] | null;
+            cutscene: components["schemas"]["Cutscene"] | null;
+        };
+        /** CareerView */
+        CareerView: {
+            /** Code */
+            code: string;
+            /** Status */
+            status: string;
+            /** Year */
+            year: number;
+            /**
+             * Tier
+             * @enum {string}
+             */
+            tier: "small" | "mid" | "large" | "very_large" | "final";
+            /** Tier Name */
+            tier_name: string;
+            /** Salary */
+            salary: number;
+            /** Title */
+            title: string | null;
+            /** Ending */
+            ending: string | null;
+            /** Goal */
+            goal: string;
+            /** Offers */
+            offers: components["schemas"]["CompanyCard"][];
+            contract: components["schemas"]["ContractView"] | null;
+            /** History */
+            history: components["schemas"]["Appraisal"][];
+            /** Worked At */
+            worked_at: components["schemas"]["CompanyCard"][];
         };
         /** CaseCreate */
         CaseCreate: {
@@ -346,6 +597,33 @@ export interface components {
             n_rows: number;
             /** Unlocked Tools */
             unlocked_tools: ("summary" | "groupby" | "zscore" | "iqr_box" | "duplicates" | "benford" | "timeseries" | "regression" | "isoforest")[];
+            career?: components["schemas"]["CareerCaseInfo"] | null;
+        };
+        /** CaseRating */
+        CaseRating: {
+            /** Total */
+            total: number;
+            verdict: components["schemas"]["RatingPart"];
+            evidence: components["schemas"]["RatingPart"];
+            judgment: components["schemas"]["RatingPart"];
+            efficiency: components["schemas"]["RatingPart"];
+            /** Caught */
+            caught: number;
+            /** Culprits */
+            culprits: number;
+        };
+        /** CaseSlot */
+        CaseSlot: {
+            /** Index */
+            index: number;
+            /** Difficulty */
+            difficulty: string;
+            /** Rating */
+            rating: number | null;
+            /** Correct */
+            correct: boolean | null;
+            /** Case Id */
+            case_id: string | null;
         };
         /**
          * CaseState
@@ -356,6 +634,7 @@ export interface components {
             /** Results */
             results: components["schemas"]["ToolResult"][];
             verdict: components["schemas"]["Verdict"] | null;
+            career_verdict?: components["schemas"]["CareerVerdict"] | null;
         };
         /**
          * CaseTruth
@@ -374,6 +653,122 @@ export interface components {
             herrings: ("ceo" | "diwali")[];
             /** Explanation */
             explanation: string;
+            second?: components["schemas"]["Culprit"] | null;
+        };
+        /** CompanyCard */
+        CompanyCard: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** City */
+            city: string;
+            /** Industry */
+            industry: string;
+            /**
+             * Tier
+             * @enum {string}
+             */
+            tier: "small" | "mid" | "large" | "very_large" | "final";
+            /** Tier Name */
+            tier_name: string;
+            /** Letter */
+            letter: string;
+            /** Culture Note */
+            culture_note: string;
+            /** Base Salary */
+            base_salary: number;
+            /** Cases */
+            cases: number;
+        };
+        /** ContractView */
+        ContractView: {
+            company: components["schemas"]["CompanyCard"];
+            /** Year */
+            year: number;
+            /** Practice */
+            practice: boolean;
+            /** Greetings */
+            greetings: components["schemas"]["Greeting"][];
+            /** Cases */
+            cases: components["schemas"]["CaseSlot"][];
+            /** Average */
+            average: number | null;
+            /** Band So Far */
+            band_so_far: ("exceptional" | "good" | "ok" | "bad") | null;
+        };
+        /**
+         * Culprit
+         * @description A second fraudster, working separately (Career Mode's very hard cases).
+         */
+        Culprit: {
+            /** Fraudster Id */
+            fraudster_id: string;
+            /**
+             * Scheme
+             * @enum {string}
+             */
+            scheme: "big_invoice" | "duplicates" | "fabricated" | "weekend" | "inflated_ratio" | "under_limit";
+            /** Fraud Txn Ids */
+            fraud_txn_ids: string[];
+            /** Catching Tools */
+            catching_tools: ("summary" | "groupby" | "zscore" | "iqr_box" | "duplicates" | "benford" | "timeseries" | "regression" | "isoforest")[];
+            /** Explanation */
+            explanation: string;
+        };
+        /** CulpritReveal */
+        CulpritReveal: {
+            fraudster: components["schemas"]["Suspect"];
+            /**
+             * Scheme
+             * @enum {string}
+             */
+            scheme: "big_invoice" | "duplicates" | "fabricated" | "weekend" | "inflated_ratio" | "under_limit";
+            /** Explanation */
+            explanation: string;
+            /** Fraud Txn Ids */
+            fraud_txn_ids: string[];
+            /** Catching Tools */
+            catching_tools: ("summary" | "groupby" | "zscore" | "iqr_box" | "duplicates" | "benford" | "timeseries" | "regression" | "isoforest")[];
+            /** Reveal Figure */
+            reveal_figure: {
+                [key: string]: unknown;
+            };
+            /** Caught */
+            caught: boolean;
+        };
+        /** Cutscene */
+        Cutscene: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "caught" | "escaped";
+            /** Name */
+            name: string;
+            /** Portrait */
+            portrait: string;
+            /** Speech */
+            speech: string;
+            /** Closing */
+            closing: string;
+            /** Stops */
+            stops: components["schemas"]["TrailStop"][];
+        };
+        /**
+         * DebugJump
+         * @description Testing and demos only (AUDITOR_DEBUG=1): put a career anywhere on the ladder.
+         */
+        DebugJump: {
+            /** Offers */
+            offers: string[];
+            /**
+             * Tier
+             * @enum {string}
+             */
+            tier: "small" | "mid" | "large" | "very_large" | "final";
+            /** Salary */
+            salary?: number | null;
         };
         /** EvidenceGrade */
         EvidenceGrade: {
@@ -391,6 +786,21 @@ export interface components {
             grade: "strong" | "supportive" | "weak" | "irrelevant";
             /** Points */
             points: number;
+        };
+        /** Greeting */
+        Greeting: {
+            /** Cameo */
+            cameo: string;
+            /** Name */
+            name: string;
+            /** Portrait */
+            portrait: string;
+            /** Role */
+            role: string;
+            /** Line */
+            line: string;
+            /** Last Company */
+            last_company: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -429,6 +839,33 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** Progress */
+        Progress: {
+            /** Company */
+            company: string;
+            /** Index */
+            index: number;
+            /** Total */
+            total: number;
+            /** Ratings */
+            ratings: (number | null)[];
+            /** Average */
+            average: number;
+            /**
+             * Band So Far
+             * @enum {string}
+             */
+            band_so_far: "exceptional" | "good" | "ok" | "bad";
+        };
+        /** RatingPart */
+        RatingPart: {
+            /** Points */
+            points: number;
+            /** Out Of */
+            out_of: number;
+            /** Reason */
+            reason: string;
+        };
         /** RoomCreated */
         RoomCreated: {
             /** Code */
@@ -444,6 +881,16 @@ export interface components {
             }[];
             /** Total */
             total: number;
+        };
+        /** Sign */
+        Sign: {
+            /** Company Id */
+            company_id: string;
+            /**
+             * Practice
+             * @default false
+             */
+            practice: boolean;
         };
         /** Statement */
         Statement: {
@@ -536,6 +983,24 @@ export interface components {
              * @default true
              */
             unlocked: boolean;
+        };
+        /**
+         * TrailStop
+         * @description One company where you worked alongside an old colleague (for the Final's cutscene).
+         */
+        TrailStop: {
+            /** Company Id */
+            company_id: string;
+            /** Company */
+            company: string;
+            /** Year */
+            year: number;
+            /** Role */
+            role: string;
+            /** Line */
+            line: string;
+            /** Lineups */
+            lineups: number;
         };
         /** ValidationError */
         ValidationError: {
@@ -1033,6 +1498,268 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Profile"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_api_career_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CareerCreate"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareerView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_api_career__code__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareerView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ending_api_career__code__ending_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cutscene"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sign_contract_api_career__code__sign_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Sign"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareerView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retire_api_career__code__retire_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareerView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_case_api_career__code__case_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseMeta"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accuse_api_career_cases__case_id__accuse_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CareerAccusation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareerVerdict"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    debug_jump_api_career__code__debug_jump_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DebugJump"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CareerView"];
                 };
             };
             /** @description Validation Error */

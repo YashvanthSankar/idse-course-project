@@ -6,18 +6,21 @@ import { Modal } from "@/components/ui/Modal";
 import { sfx } from "@/lib/sound";
 import type { CaseMeta } from "@/lib/types";
 import { useReducedEffects } from "@/lib/useReducedEffects";
+import { DIFFICULTY_LABEL } from "@/lib/career";
 import { Portrait } from "./Portrait";
 
 /** The Chief's memo plus the suspect line-up, shown before a case opens. */
-export function BriefingModal({ meta, onClose, onOpenFiles }: {
+export function BriefingModal({ meta, onClose, onOpenFiles, closeLabel = "BACK TO THE DESK" }: {
   meta: CaseMeta | null;
   onClose: () => void;
   onOpenFiles: (meta: CaseMeta) => void;
+  closeLabel?: string;
 }) {
   const reduced = useReducedEffects();
   const [typedFor, setTypedFor] = useState<string | null>(null);
   const typed = reduced || (meta !== null && typedFor === meta.case_id);
-  const caseNo = meta ? String(meta.level).padStart(2, "0") : "";
+  const career = meta?.career ?? null;
+  const caseNo = career ? `${career.index} of ${career.total}` : meta ? String(meta.level).padStart(2, "0") : "";
 
   return (
     <Modal open={meta !== null} onClose={onClose} label="Case briefing" className="max-w-5xl">
@@ -47,7 +50,7 @@ export function BriefingModal({ meta, onClose, onOpenFiles }: {
               <dd>R. Desai, Chief Auditor</dd>
               <dt className="opacity-60">RE:</dt>
               <dd className="font-bold">
-                Case No. {caseNo} — {meta.title}
+                {career ? `${career.company} — Case ${caseNo} · ${DIFFICULTY_LABEL[career.difficulty]}` : `Case No. ${caseNo} — ${meta.title}`}
               </dd>
             </dl>
             <p className="mt-4 min-h-24 whitespace-pre-line font-type text-[15px] leading-relaxed sm:text-base">
@@ -57,8 +60,15 @@ export function BriefingModal({ meta, onClose, onOpenFiles }: {
               Ledger: {meta.n_rows.toLocaleString("en-IN")} transactions · Investigation budget:{" "}
               <span className="font-bold">{meta.budget} coins</span>
             </p>
+            {career && career.culprits > 1 && (
+              <p data-testid="two-culprits" className="mt-2 font-type text-[13px] font-bold text-[#8f1d27]">
+                Two fraudsters in this ledger. Accuse both — with two clues each.
+              </p>
+            )}
             <p className="mt-1 font-type text-[13px] opacity-75">
-              Not enough to run every tool. Think before you spend — each coin you save is worth 40 points. No clock: take your time.
+              {career
+                ? "A free Case Summary is already on file. Not enough coins to run every tool — your rating rewards the right tool, not every tool. No clock: take your time."
+                : "Not enough to run every tool. Think before you spend — each coin you save is worth 40 points. No clock: take your time."}
             </p>
             <p className="mt-2 text-right font-display text-xl italic">— R.D.</p>
           </motion.article>
@@ -92,7 +102,7 @@ export function BriefingModal({ meta, onClose, onOpenFiles }: {
 
           <div className="sticky bottom-0 z-10 -mx-4 mt-5 flex flex-col-reverse items-center justify-center gap-3 bg-[linear-gradient(to_top,#000_55%,transparent)] px-4 pb-4 pt-8 sm:flex-row sm:gap-6">
             <button onClick={onClose} className="min-h-11 font-pixel text-[10px] text-paper/70 hover:text-paper sm:text-xs">
-              BACK TO THE DESK
+              {closeLabel}
             </button>
             <motion.button
               onClick={() => {

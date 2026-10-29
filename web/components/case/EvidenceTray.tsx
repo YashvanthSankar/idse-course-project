@@ -5,21 +5,23 @@ import { sfx } from "@/lib/sound";
 import { toolMeta } from "@/lib/toolMeta";
 import type { Suspect, ToolResult } from "@/lib/types";
 
-export function EvidenceTray({ pinned, suspects, onUnpin, onSelect, onOpenBoard }: {
+export function EvidenceTray({ pinned, suspects, onUnpin, onSelect, onOpenBoard, files = 2 }: {
   pinned: ToolResult[];
+  /** clues filed with the accusation: 2, or 4 when there are two fraudsters */
+  files?: number;
   suspects: Suspect[];
   onUnpin: (id: string) => void;
   onSelect: (id: string) => void;
   onOpenBoard?: () => void;
 }) {
   const nameOf = (id: string) => suspects.find((s) => s.id === id)?.name.split(" ")[0] ?? id;
-  const ready = pinned.length >= 2;
+  const ready = pinned.length >= files;
   return (
     <section aria-label="Evidence tray" className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between px-1">
         <h2 className="font-display text-xl italic text-paper">Evidence</h2>
         <span data-testid="evidence-count" className={cn("text-sm tabular-nums", ready ? "text-green" : "text-paper/55")}>
-          {pinned.length <= 2 ? `${pinned.length} of 2${ready ? " ✓" : ""}` : `${pinned.length} pinned · you'll file 2`}
+          {pinned.length <= files ? `${pinned.length} of ${files}${ready ? " ✓" : ""}` : `${pinned.length} pinned · you'll file ${files}`}
         </span>
       </div>
       <ul data-testid="evidence-tray" className="flex flex-col gap-2">

@@ -2,8 +2,6 @@
 
 import asyncio
 import io
-import json
-import math
 import os
 import secrets
 import time
@@ -12,7 +10,6 @@ from collections.abc import Callable
 from uuid import uuid4
 
 import numpy as np
-import pandas as pd
 from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,6 +18,8 @@ from pydantic import BaseModel, Field
 
 from auditor.adapt import pick_scheme
 from auditor.autopsy import build_autopsy
+from auditor.career.routes import CareerVerdict, register_career
+from auditor.career.storage import CareerStore
 from auditor.charts import reveal_figure
 from auditor.generator.cases import build_case, level_infos
 from auditor.interrogation import statements
@@ -37,13 +36,13 @@ from auditor.models import (
 )
 from auditor.profiles import profile_for
 from auditor.report import render_report
+from auditor.results import records as _records
+from auditor.results import tool_result
 from auditor.rooms import GRACE_SECONDS, RoomManager
 from auditor.scoring import score_accusation
 from auditor.store import CaseSession, SessionStore
 from auditor.telemetry import Telemetry
-from auditor.tools.registry import TOOLS, resolve_params, run_tool, tool_specs
-
-MAX_TABLE_ROWS = 200
+from auditor.tools.registry import TOOLS, resolve_params, tool_specs
 
 
 class CaseCreate(BaseModel):
@@ -76,6 +75,7 @@ class CaseState(BaseModel):
     meta: CaseMeta
     results: list[ToolResult]
     verdict: Verdict | None
+    career_verdict: CareerVerdict | None = None
 
 
 class RoomCreated(BaseModel):
@@ -94,28 +94,13 @@ class Autopsy(BaseModel):
     slides: list[AutopsySlide]
 
 
-def _records(df: pd.DataFrame) -> list[dict]:
-    """DataFrame -> JSON-safe records (dates as ISO strings, NaN as null)."""
-    return json.loads(df.to_json(orient="records", date_format="iso", date_unit="s"))
-
-
-def _clean_stats(stats: dict) -> dict[str, float | str]:
-    out: dict[str, float | str] = {}
-    for key, value in stats.items():
-        if isinstance(value, str):
-            out[key] = value
-        else:
-            number = float(value)
-            out[key] = number if math.isfinite(number) else str(number)
-    return out
-
-
 def _meta(session: CaseSession) -> CaseMeta:
     return session.bundle.meta.model_copy(update={"budget_left": session.budget_left})
 
 
 def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = None,
-               clock: Callable[[], float] = time.monotonic, rate_limit: int = 240) -> FastAPI:
+               clock: Callable[[], float] = time.monotonic, rate_limit: int = 240,
+               careers: CareerStore | None = None) -> FastAPI:
     app = FastAPI(title="Outlier — Python brain", version="1.0.0")
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"],
                        allow_headers=["*"])
@@ -181,7 +166,7 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
     def case_state(case_id: str):
         session = session_for(case_id)
         return CaseState(meta=_meta(session), results=list(session.results.values()),
-                         verdict=session.verdict)
+                         verdict=session.verdict, career_verdict=session.career_verdict)
 
     @app.get("/api/cases/{case_id}/interrogate/{suspect_id}", response_model=Statement)
     def interrogate(case_id: str, suspect_id: str):
@@ -229,16 +214,9 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
                 raise HTTPException(409, "Out of budget")
 
             names = {s.id: s.name for s in meta.suspects}
-            analysis, figure, code = run_tool(tool_id, session.bundle.df, params, names)
+            result = tool_result(tool_id, session.bundle.df, params, names, cost,
+                                 session.budget_left - cost)
             session.budget_left -= cost
-            result = ToolResult(
-                result_id=uuid4().hex[:10], tool_id=tool_id, params=params,
-                title=analysis.title, summary=analysis.summary, figure=figure,
-                table=None if analysis.table is None else _records(
-                    analysis.table.head(MAX_TABLE_ROWS)),
-                code=code, stats=_clean_stats(analysis.stats), implicates=analysis.implicates,
-                cost_charged=cost, budget_left=session.budget_left,
-            )
             session.results[result.result_id] = result
             session.cache[key] = result.result_id
         log("tool_run", session, tool_id=tool_id,
@@ -262,6 +240,8 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
     def accuse(case_id: str, body: Accusation):
         session = session_for(case_id)
         meta = session.bundle.meta
+        if session.career_code is not None:
+            raise HTTPException(409, "Career cases are accused through /api/career")
         with session.lock:
             if session.verdict is not None:
                 return session.verdict  # one shot, no take-backs
@@ -384,6 +364,12 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
         name = next((r.players[player_id].name for r in app.state.rooms.rooms.values()
                      if player_id in r.players), "Detective")
         return profile_for(player_id, events, name=name)
+
+    if careers is None and os.getenv("AUDITOR_CAREER", "1") != "0":
+        careers = CareerStore(app.state.telemetry.url)  # same database as telemetry
+    app.state.careers = careers
+    if careers is not None:
+        register_career(app, app.state.store, careers, log)
 
     @app.get("/api/debug/cases/{case_id}/truth", response_model=CaseTruth)
     def debug_truth(case_id: str):
