@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Rain } from "@/components/fx/Rain";
 import { SettingsPanel } from "@/components/settings/SettingsPanel";
-import { progressSummary } from "@/lib/progress";
+import { progressSummary, totalScore } from "@/lib/progress";
+import { rankFor } from "@/lib/rank";
 import { sfx } from "@/lib/sound";
 import { useProgress } from "@/lib/useProgress";
 import { Manual } from "./Manual";
@@ -30,7 +31,9 @@ const pad = (n: number) => String(n).padStart(6, "0");
 export function TitleScreen() {
   const router = useRouter();
   const pointerX = useMotionValue(0);
-  const summary = progressSummary(useProgress());
+  const progress = useProgress();
+  const summary = progressSummary(progress);
+  const rank = rankFor(totalScore(progress));
   const [awake, setAwake] = useState(false);
   const [focus, setFocus] = useState(0);
   const [panel, setPanel] = useState<"manual" | "settings" | null>(null);
@@ -101,8 +104,8 @@ export function TitleScreen() {
           <p className="text-paper">{pad(Math.max(summary.best, 1880))}</p>
         </div>
         <div className="text-right">
-          <p className="text-[#ff2a6d]">CASES</p>
-          <p className="text-paper">{summary.closed}/7</p>
+          <p className="text-[#ff2a6d]">RANK</p>
+          <p className="text-paper">{rank.title.toUpperCase()} · {summary.closed}/7</p>
         </div>
       </header>
 

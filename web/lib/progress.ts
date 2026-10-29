@@ -48,3 +48,6 @@ export function progressSummary(p: Progress): { closed: number; best: number } {
   const scores = Object.values(p.best);
   return { closed: scores.length, best: scores.length ? Math.max(...scores) : 0 };
 }
+
+/** The total of every best score: what a detective's rank is built on. */
+export const totalScore = (p: Progress) => Object.values(p.best).reduce((a, b) => a + b, 0);

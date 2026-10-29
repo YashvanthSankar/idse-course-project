@@ -73,3 +73,6 @@ export async function roomExists(code: string): Promise<boolean> {
     throw err;
   }
 }
+
+export const interrogate = (caseId: string, suspectId: string) =>
+  request<{ suspect_id: string; statement: string }>(`/api/cases/${caseId}/interrogate/${suspectId}`);

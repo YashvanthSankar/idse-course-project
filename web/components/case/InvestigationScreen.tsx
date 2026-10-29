@@ -238,6 +238,7 @@ export function InvestigationScreen({
   const panels = {
     suspects: (
       <SuspectRail
+        caseId={caseId}
         suspects={meta.suspects}
         flagged={flagged}
         flaggedBy={active ? active.title.split(" · ")[0] : undefined}

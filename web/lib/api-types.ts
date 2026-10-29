@@ -72,6 +72,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cases/{case_id}/interrogate/{suspect_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Interrogate */
+        get: operations["interrogate_api_cases__case_id__interrogate__suspect_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/cases/{case_id}/rows": {
         parameters: {
             query?: never;
@@ -428,6 +445,13 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Statement */
+        Statement: {
+            /** Suspect Id */
+            suspect_id: string;
+            /** Statement */
+            statement: string;
+        };
         /** Suspect */
         Suspect: {
             /** Id */
@@ -666,6 +690,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CaseState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    interrogate_api_cases__case_id__interrogate__suspect_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+                suspect_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Statement"];
                 };
             };
             /** @description Validation Error */

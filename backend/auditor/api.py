@@ -23,6 +23,7 @@ from auditor.adapt import pick_scheme
 from auditor.autopsy import build_autopsy
 from auditor.charts import reveal_figure
 from auditor.generator.cases import build_case, level_infos
+from auditor.interrogation import statements
 from auditor.models import (
     Accusation,
     CaseMeta,
@@ -62,6 +63,11 @@ class Rows(BaseModel):
 
 class Budget(BaseModel):
     budget_left: int
+
+
+class Statement(BaseModel):
+    suspect_id: str
+    statement: str
 
 
 class CaseState(BaseModel):
@@ -176,6 +182,13 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
         session = session_for(case_id)
         return CaseState(meta=_meta(session), results=list(session.results.values()),
                          verdict=session.verdict)
+
+    @app.get("/api/cases/{case_id}/interrogate/{suspect_id}", response_model=Statement)
+    def interrogate(case_id: str, suspect_id: str):
+        lines = statements(session_for(case_id).bundle)
+        if suspect_id not in lines:
+            raise HTTPException(404, "No such suspect")
+        return Statement(suspect_id=suspect_id, statement=lines[suspect_id])
 
     @app.get("/api/cases/{case_id}/rows", response_model=Rows)
     def rows(case_id: str, offset: int = Query(0, ge=0), limit: int = Query(200, ge=1, le=2000)):
