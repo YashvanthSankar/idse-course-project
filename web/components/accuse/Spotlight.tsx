@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -46,6 +46,7 @@ export function Spotlight({ caseId, accused, evidenceFor, required = 2, onCancel
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const open = accused.length > 0;
+  const queryClient = useQueryClient();
   const trap = useFocusTrap<HTMLDivElement>(open);
   const pair = accused.length > 1;
   const career = useCaseStore((s) => s.meta?.career ?? null);
@@ -136,6 +137,9 @@ export function Spotlight({ caseId, accused, evidenceFor, required = 2, onCancel
         saveProgress(storage, recordResult(loadProgress(storage), level, verdict.correct, verdict.score));
       }
       useAccused.getState().set(caseId, accused[0].id);
+      // The cached case state is from before the accusation ("still open"): drop it, or the
+      // verdict page can read it, think the case is open and bounce back (or wait forever).
+      queryClient.removeQueries({ queryKey: ["case-state", caseId] });
       sfx.stop("heartbeat");
       onAccused();
       router.push(`/case/${caseId}/verdict`);

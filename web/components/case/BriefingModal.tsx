@@ -1,6 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Typewriter } from "@/components/fx/Typewriter";
 import { Modal } from "@/components/ui/Modal";
 import { sfx } from "@/lib/sound";
@@ -17,6 +18,13 @@ export function BriefingModal({ meta, onClose, onOpenFiles, closeLabel = "BACK T
   closeLabel?: string;
 }) {
   const reduced = useReducedEffects();
+  const router = useRouter();
+  // Load the case page while the player reads the briefing, so OPEN THE FILES opens it at once
+  // instead of waiting on a server round trip after the click.
+  const caseId = meta?.case_id;
+  useEffect(() => {
+    if (caseId) router.prefetch(`/case/${caseId}`);
+  }, [router, caseId]);
   const [typedFor, setTypedFor] = useState<string | null>(null);
   const typed = reduced || (meta !== null && typedFor === meta.case_id);
   const career = meta?.career ?? null;

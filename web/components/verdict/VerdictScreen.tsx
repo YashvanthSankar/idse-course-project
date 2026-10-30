@@ -63,13 +63,13 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
     enabled: !valid,
   });
   useEffect(() => {
-    if (valid || !restored.data && !restored.isError) return;
+    if (valid || (!restored.isFetchedAfterMount && !restored.isError) || (!restored.data && !restored.isError)) return;
     if (restored.data?.verdict) {
       useCaseStore.getState().hydrate(restoreSnapshot(restored.data, loadCaseMemory(caseId)));
     } else {
       router.replace(`/case/${caseId}`);
     }
-  }, [valid, restored.data, restored.isError, caseId, router]);
+  }, [valid, restored.data, restored.isError, restored.isFetchedAfterMount, caseId, router]);
 
   useEffect(() => {
     sfx.stop("heartbeat");

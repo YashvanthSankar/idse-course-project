@@ -61,6 +61,11 @@ export function InvestigationScreen({
 }) {
   const router = useRouter();
   const store = useCaseStore();
+  // Fetch the verdict page while the player investigates, so after the hold it opens at once
+  // even on a crowded classroom Wi-Fi (otherwise it downloads only after the accusation).
+  useEffect(() => {
+    router.prefetch(`/case/${caseId}/verdict`);
+  }, [router, caseId]);
   const storeHasCase = store.meta?.case_id === caseId;
   // Not in memory (reload, locked phone, shared link): restore everything from the server.
   const fetched = useQuery({

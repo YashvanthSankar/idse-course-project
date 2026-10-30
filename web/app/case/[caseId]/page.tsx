@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import { InvestigationScreen } from "@/components/case/InvestigationScreen";
+import { CaseFromUrl } from "@/components/routes/FromUrl";
 
-// Not async: params are awaited inside the Suspense boundary so the shell still prerenders.
-export default function CasePage({ params }: PageProps<"/case/[caseId]">) {
+// The id comes from the URL in the browser (FromUrl): no server round trip before it shows.
+export default function CasePage() {
   return (
     <Suspense
       fallback={
@@ -11,9 +11,7 @@ export default function CasePage({ params }: PageProps<"/case/[caseId]">) {
         </div>
       }
     >
-      {params.then(({ caseId }) => (
-        <InvestigationScreen caseId={caseId} />
-      ))}
+      <CaseFromUrl />
     </Suspense>
   );
 }

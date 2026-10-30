@@ -1,12 +1,10 @@
 import { Suspense } from "react";
-import { PlayScreen } from "@/components/play/PlayScreen";
+import { PlayFromUrl } from "@/components/routes/FromUrl";
 
-export default function PlayPage({ params }: PageProps<"/play/[code]">) {
+export default function PlayPage() {
   return (
     <Suspense fallback={<div className="min-h-dvh bg-ink-950" />}>
-      {params.then(({ code }) => (
-        <PlayScreen code={code.toUpperCase()} />
-      ))}
+      <PlayFromUrl />
     </Suspense>
   );
 }

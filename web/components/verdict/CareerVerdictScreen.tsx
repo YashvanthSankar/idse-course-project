@@ -52,13 +52,13 @@ export function CareerVerdictScreen({ caseId }: { caseId: string }) {
   // A reload loses the in-memory verdict: ask the server. Still open? Back to the files.
   const restored = useQuery({ queryKey: ["case-state", caseId], queryFn: () => getCaseState(caseId), enabled: !valid });
   useEffect(() => {
-    if (valid || leaving.current || (!restored.data && !restored.isError)) return;
+    if (valid || leaving.current || (!restored.isFetchedAfterMount && !restored.isError) || (!restored.data && !restored.isError)) return;
     if (restored.data?.career_verdict) {
       useCaseStore.getState().hydrate(restoreSnapshot(restored.data, loadCaseMemory(caseId)));
     } else {
       router.replace(restored.data ? `/case/${caseId}` : "/career");
     }
-  }, [valid, restored.data, restored.isError, caseId, router]);
+  }, [valid, restored.data, restored.isError, restored.isFetchedAfterMount, caseId, router]);
 
   const career = useQuery({ queryKey: ["career", code], queryFn: () => getCareer(code), enabled: Boolean(code && verdict?.appraisal) });
   const next = useMutation({

@@ -1,8 +1,8 @@
 import { Suspense } from "react";
-import { VerdictRouter } from "@/components/verdict/VerdictRouter";
+import { VerdictFromUrl } from "@/components/routes/FromUrl";
 
-// Not async: params are awaited inside the Suspense boundary so the shell still prerenders.
-export default function VerdictPage({ params }: PageProps<"/case/[caseId]/verdict">) {
+// The id comes from the URL in the browser (FromUrl): no server round trip before it shows.
+export default function VerdictPage() {
   return (
     <Suspense
       fallback={
@@ -11,9 +11,7 @@ export default function VerdictPage({ params }: PageProps<"/case/[caseId]/verdic
         </div>
       }
     >
-      {params.then(({ caseId }) => (
-        <VerdictRouter caseId={caseId} />
-      ))}
+      <VerdictFromUrl />
     </Suspense>
   );
 }

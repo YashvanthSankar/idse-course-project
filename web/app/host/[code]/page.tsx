@@ -1,12 +1,10 @@
 import { Suspense } from "react";
-import { HostScreen } from "@/components/host/HostScreen";
+import { HostFromUrl } from "@/components/routes/FromUrl";
 
-export default function HostRoomPage({ params }: PageProps<"/host/[code]">) {
+export default function HostRoomPage() {
   return (
     <Suspense fallback={<div className="min-h-dvh bg-ink-950" />}>
-      {params.then(({ code }) => (
-        <HostScreen code={code.toUpperCase()} />
-      ))}
+      <HostFromUrl />
     </Suspense>
   );
 }

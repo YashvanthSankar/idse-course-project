@@ -1,12 +1,10 @@
 import { Suspense } from "react";
-import { AutopsyDeck } from "@/components/autopsy/AutopsyDeck";
+import { AutopsyFromUrl } from "@/components/routes/FromUrl";
 
-export default function AutopsyPage({ params }: PageProps<"/host/[code]/autopsy">) {
+export default function AutopsyPage() {
   return (
     <Suspense fallback={<div className="min-h-dvh bg-ink-950" />}>
-      {params.then(({ code }) => (
-        <AutopsyDeck code={code.toUpperCase()} />
-      ))}
+      <AutopsyFromUrl />
     </Suspense>
   );
 }
