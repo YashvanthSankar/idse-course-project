@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ApiError, csvUrl, hackerCharge } from "@/lib/api";
 import { PythonSandbox, type RunResult } from "@/lib/pythonSandbox";
 import { sfx } from "@/lib/sound";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 const EXAMPLES = [
   "df.head()",
@@ -21,6 +22,8 @@ export function HackerConsole({ caseId, open, onClose, onBudget }: {
   onClose: () => void;
   onBudget: (budgetLeft: number) => void;
 }) {
+  const trap = useFocusTrap<HTMLElement>(open);
+
   const sandbox = useRef<PythonSandbox | null>(null);
   const [state, setState] = useState<"booting" | "ready" | "failed">("booting");
   const [code, setCode] = useState(EXAMPLES[1]);
@@ -70,6 +73,8 @@ export function HackerConsole({ caseId, open, onClose, onBudget }: {
     <AnimatePresence>
       {open && (
         <motion.section
+          ref={trap}
+          tabIndex={-1}
           role="dialog"
           aria-label="Hacker mode"
           initial={{ y: "100%" }}
@@ -142,7 +147,9 @@ export function HackerConsole({ caseId, open, onClose, onBudget }: {
                 <ol className="space-y-5">
                   {history.map((entry, i) => (
                     <li key={history.length - i}>
-                      <p className="mb-1 font-mono text-xs text-paper/50">&gt;&gt;&gt; {entry.code}</p>
+                      <pre className="mb-1 overflow-x-auto whitespace-pre font-mono text-xs text-paper/50">
+                        {entry.code.split("\n").map((line, n) => `${n ? "..." : ">>>"} ${line}`).join("\n")}
+                      </pre>
                       <Output result={entry.result} />
                     </li>
                   ))}
@@ -162,7 +169,8 @@ function Output({ result }: { result: RunResult }) {
   }
   return (
     <div className="space-y-2">
-      {result.stdout && <pre className="whitespace-pre-wrap font-mono text-sm text-paper/80">{result.stdout}</pre>}
+      {/* DataFrames are tables: keep their columns lined up and scroll sideways on phones */}
+      {result.stdout && <pre className="overflow-x-auto whitespace-pre font-mono text-sm text-paper/80">{result.stdout}</pre>}
       {result.text && (
         <pre className="overflow-x-auto rounded bg-black/50 p-3 font-mono text-[13px] leading-snug text-paper">{result.text}</pre>
       )}

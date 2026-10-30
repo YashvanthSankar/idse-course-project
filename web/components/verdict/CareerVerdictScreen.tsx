@@ -188,7 +188,7 @@ export function CareerVerdictScreen({ caseId }: { caseId: string }) {
                   <span className="font-bold text-paper">{progress.average}</span>
                 </p>
                 <span className={cn("rounded-sm border px-2 py-0.5 text-xs", BAND_STYLE[progress.band_so_far])}>
-                  {finished ? "" : "so far: "}{BAND_LABEL[progress.band_so_far]}
+                  {finished ? "" : "on track for: "}{BAND_LABEL[progress.band_so_far]}
                 </span>
                 <div className="flex w-full gap-1.5">
                   {progress.ratings.map((r, i) => (

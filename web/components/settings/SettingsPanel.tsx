@@ -69,11 +69,10 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                   type="button"
                   aria-label={`Volume ${(i + 1) * 10}%`}
                   onClick={() => setLevel(i + 1 === level ? i : i + 1)}
-                  className={cn(
-                    "h-6 w-3 sm:w-3.5",
-                    i < level ? (muted ? "bg-paper/30" : "bg-[#3dd68c]") : "bg-[#1a2238]",
-                  )}
-                />
+                  className="flex h-10 items-center" // a tall hit area around a small block
+                >
+                  <span className={cn("block h-6 w-3 sm:w-3.5", i < level ? (muted ? "bg-paper/30" : "bg-[#3dd68c]") : "bg-[#1a2238]")} />
+                </button>
               ))}
               <PixelButton label="Volume up" onClick={() => setLevel(level + 1)}>+</PixelButton>
             </div>
@@ -141,7 +140,7 @@ function Toggle({ active, onHover, label, note, checked, onChange }: {
         aria-label={label}
         onClick={onChange}
         className={cn(
-          "shrink-0 px-2 py-1.5 font-pixel text-[11px] transition-colors sm:text-xs",
+          "min-h-10 shrink-0 px-2.5 font-pixel text-[11px] transition-colors sm:text-xs",
           checked ? "bg-[#3dd68c] text-[#05060d]" : "bg-[#1a2238] text-paper/60 hover:text-paper",
         )}
       >
@@ -157,7 +156,7 @@ function PixelButton({ label, onClick, children }: { label: string; onClick: () 
       type="button"
       aria-label={label}
       onClick={onClick}
-      className="grid h-7 w-7 place-items-center font-pixel text-xs text-paper/80 hover:text-[#ffd319]"
+      className="grid h-10 w-10 place-items-center font-pixel text-sm text-paper/80 hover:text-[#ffd319]"
     >
       {children}
     </button>

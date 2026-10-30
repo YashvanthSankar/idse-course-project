@@ -19,9 +19,9 @@ export function EvidenceTray({ pinned, suspects, onUnpin, onSelect, onOpenBoard,
   const ready = pinned.length >= files;
   return (
     <section aria-label="Evidence tray" className="flex flex-col gap-3">
-      <div className="flex items-baseline justify-between px-1">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 px-1">
         <h2 className="font-display text-xl italic text-paper">Evidence</h2>
-        <span data-testid="evidence-count" className={cn("text-sm tabular-nums", ready ? "text-green" : "text-paper/55")}>
+        <span data-testid="evidence-count" className={cn("whitespace-nowrap text-sm tabular-nums", ready ? "text-green" : "text-paper/55")}>
           {pinned.length <= files ? `${pinned.length} of ${files}${ready ? " ✓" : ""}` : `${pinned.length} pinned · you'll file ${files}`}
         </span>
       </div>
@@ -53,7 +53,7 @@ export function EvidenceTray({ pinned, suspects, onUnpin, onSelect, onOpenBoard,
                   onUnpin(r.result_id);
                 }}
                 aria-label={`Unpin ${r.title}`}
-                className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full text-base opacity-50 hover:bg-black/10 hover:opacity-100"
+                className="absolute right-0.5 top-0.5 flex h-8 w-8 items-center justify-center rounded-full text-base opacity-50 hover:bg-black/10 hover:opacity-100"
               >
                 ×
               </button>

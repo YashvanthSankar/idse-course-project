@@ -165,7 +165,7 @@ function Hub({ code, onLeave, onSwitch }: { code: string; onLeave: () => void; o
 
   return (
     <div className="relative flex min-h-dvh flex-col overflow-x-hidden bg-ink-950">
-      <TopBar />
+      <TopBar rank={false} />
       <main className="tex-desk relative flex-1 px-4 pb-20 pt-6 sm:px-8">
         <div className="relative mx-auto max-w-5xl">
           {/* who you are now */}
@@ -219,6 +219,17 @@ function Hub({ code, onLeave, onSwitch }: { code: string; onLeave: () => void; o
                   )}
                 </div>
               </div>
+              {next && (
+                // phones: the main action above the five case cards, not a long scroll below them
+                <button
+                  onClick={() => open.mutate()}
+                  disabled={open.isPending}
+                  data-testid="open-case-top"
+                  className="mt-4 min-h-11 w-full bg-[#ffd319] px-7 py-3 font-pixel text-xs text-[#05060d] shadow-[4px_4px_0_#ff2a6d] disabled:opacity-60 sm:hidden"
+                >
+                  {open.isPending ? "PULLING THE FILE…" : `${next.case_id ? "CONTINUE" : "OPEN"} CASE ${next.index} ▶`}
+                </button>
+              )}
               <ol className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                 {contract.cases.map((c) => (
                   <li
@@ -258,7 +269,7 @@ function Hub({ code, onLeave, onSwitch }: { code: string; onLeave: () => void; o
                     onClick={() => open.mutate()}
                     disabled={open.isPending}
                     data-testid="open-case"
-                    className="min-h-11 bg-[#ffd319] px-7 py-3 font-pixel text-xs text-[#05060d] shadow-[4px_4px_0_#ff2a6d] disabled:opacity-60"
+                    className="hidden min-h-11 bg-[#ffd319] sm:inline-block px-7 py-3 font-pixel text-xs text-[#05060d] shadow-[4px_4px_0_#ff2a6d] disabled:opacity-60"
                   >
                     {open.isPending ? "PULLING THE FILE…" : `${next.case_id ? "CONTINUE" : "OPEN"} CASE ${next.index} ▶`}
                   </button>

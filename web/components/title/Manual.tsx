@@ -42,8 +42,12 @@ const CAREER_POINTS = [
 export function Manual({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Modal open={open} onClose={onClose} label="Detective's Manual" className="max-w-2xl">
-      <div className="tex-paper rounded-sm p-6 shadow-2xl sm:p-10">
-        <p className="font-type text-xs tracking-[0.3em] opacity-60">CONFIDENTIAL · FOR NEW RECRUITS</p>
+      <div className="tex-paper relative rounded-sm p-6 shadow-2xl sm:p-10">
+        {/* phones have no Esc and no backdrop to tap: a close button you can see from the top */}
+        <button onClick={onClose} aria-label="Close the manual" className="absolute right-2 top-2 flex size-11 items-center justify-center text-2xl opacity-60 hover:opacity-100">
+          ✕
+        </button>
+        <p className="pr-10 font-type text-xs tracking-[0.3em] opacity-60">CONFIDENTIAL · FOR NEW RECRUITS</p>
         <h2 className="mb-6 mt-1 font-display text-4xl italic">The Detective&apos;s Manual</h2>
         <ol className="space-y-4">
           {STEPS.map(([title, body], i) => (
@@ -110,7 +114,7 @@ export function Manual({ open, onClose }: { open: boolean; onClose: () => void }
           Remember, rookie: an outlier is a question, not an answer. The CEO spends big. Diwali bonuses are
           large. Neither is a crime.
         </p>
-        <button onClick={onClose} className="mt-6 font-type tracking-widest text-red underline">
+        <button onClick={onClose} className="mt-6 min-h-11 font-type tracking-widest text-red underline">
           CLOSE THE MANUAL
         </button>
       </div>

@@ -53,6 +53,9 @@ def chart(a: Analysis, names: dict[str, str] | None = None) -> go.Figure:
     if not a.plot_data["pairs"]:
         fig.add_annotation(text="No twins found", showarrow=False,
                            font={"size": 16, "color": COLORS["muted"]})
+        # no points to plot: hide the empty grid instead of axes running from -1 to 6
+        fig.update_xaxes(visible=False)
+        fig.update_yaxes(visible=False)
     return fig
 
 

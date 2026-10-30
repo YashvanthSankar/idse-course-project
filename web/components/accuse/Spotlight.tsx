@@ -18,6 +18,7 @@ import { useReducedEffects } from "@/lib/useReducedEffects";
 import type { Suspect, ToolResult } from "@/lib/types";
 import { CaseFile, MAX_CLUES, chargeReady, type Charge } from "./CaseFile";
 import { HoldToConfirm } from "./HoldToConfirm";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 const LINES = [
   "You've got nothing on me, auditor.",
@@ -45,6 +46,7 @@ export function Spotlight({ caseId, accused, evidenceFor, required = 2, onCancel
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const open = accused.length > 0;
+  const trap = useFocusTrap<HTMLDivElement>(open);
   const pair = accused.length > 1;
   const career = useCaseStore((s) => s.meta?.career ?? null);
   const suspects = useCaseStore((s) => s.meta?.suspects ?? []);
@@ -217,6 +219,8 @@ export function Spotlight({ caseId, accused, evidenceFor, required = 2, onCancel
     <AnimatePresence>
       {open && (
         <motion.div
+          ref={trap}
+          tabIndex={-1}
           role="dialog"
           aria-modal
           aria-label={`Accuse ${accused.map((s) => s.name).join(" and ")}`}

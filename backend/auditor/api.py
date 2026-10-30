@@ -13,7 +13,7 @@ import numpy as np
 from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, Field
 
 from auditor.adapt import pick_scheme
@@ -92,6 +92,14 @@ class AutopsySlide(BaseModel):
 
 class Autopsy(BaseModel):
     slides: list[AutopsySlide]
+
+
+EXPIRED_REPORT = """<!doctype html><meta charset="utf-8"><meta name="viewport"
+content="width=device-width,initial-scale=1"><title>Case report</title><body style="margin:0;
+min-height:100vh;display:grid;place-items:center;background:#07080b;color:#efe6d2;
+font:18px/1.5 ui-monospace,monospace;text-align:center;padding:24px"><div><p style="font-size:28px">
+This case file has been archived.</p><p style="opacity:.7">Reports stay available for a while
+after a case closes. Play the case again to get a new one.</p></div></body>"""
 
 
 def _meta(session: CaseSession) -> CaseMeta:
@@ -273,8 +281,14 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
         return verdict
 
     @app.get("/api/cases/{case_id}/report.pdf")
-    def report(case_id: str):
-        session = session_for(case_id)
+    def report(case_id: str, request: Request):
+        try:
+            session = session_for(case_id)
+        except KeyError:
+            if "text/html" not in request.headers.get("accept", ""):
+                raise
+            # a browser opened the link after the case expired: a page, not raw JSON
+            return HTMLResponse(EXPIRED_REPORT, status_code=404)
         if session.verdict is None:
             raise HTTPException(409, "Close the case first")
         return Response(render_report(session), media_type="application/pdf",

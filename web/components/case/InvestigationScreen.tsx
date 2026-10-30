@@ -193,7 +193,18 @@ export function InvestigationScreen({
         return;
       }
       setSelectedTool(spec.id);
-      if (!run.isPending) run.mutate({ spec, p: paramsFor(spec) });
+      const p = paramsFor(spec);
+      // Re-running a result you already have is free; anything new needs the coins for it.
+      const same = (r: ToolResult) =>
+        r.tool_id === spec.id && Object.entries(p).every(([k, v]) => String((r.params as Record<string, unknown>)[k] ?? v) === v);
+      const st = useCaseStore.getState();
+      if (spec.cost > (st.meta?.budget_left ?? 0) && !st.results.some(same)) {
+        setErrorTick((n) => n + 1);
+        sfx.play("wrong");
+        showToast("Out of budget — re-run an earlier tool for free, or make your accusation.");
+        return;
+      }
+      if (!run.isPending) run.mutate({ spec, p });
     },
     [run, paramsFor, showToast, lockedText],
   );

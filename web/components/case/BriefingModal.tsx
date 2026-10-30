@@ -110,7 +110,7 @@ export function BriefingModal({ meta, onClose, onOpenFiles, closeLabel = "BACK T
                 onOpenFiles(meta);
               }}
               animate={typed && !reduced ? { scale: [1, 1.04, 1] } : undefined}
-              transition={{ duration: 1.6, repeat: Infinity }}
+              transition={{ duration: 1.6, repeat: 2 }} // a nudge, not a button that never sits still
               className="bg-[#ffd319] px-7 py-3.5 font-pixel text-xs text-[#05060d] shadow-[4px_4px_0_#ff2a6d] hover:-translate-y-0.5 active:translate-y-0.5 active:shadow-none sm:text-sm"
             >
               OPEN THE FILES

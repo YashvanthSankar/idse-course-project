@@ -9,7 +9,8 @@ import { useSettings } from "@/lib/settings";
 import { useProgress } from "@/lib/useProgress";
 import { sfx } from "@/lib/sound";
 
-export function TopBar() {
+/** `rank`: Quick Case's detective rank (Career has its own title and salary instead). */
+export function TopBar({ rank: showRank = true }: { rank?: boolean } = {}) {
   const muted = useSettings((s) => s.muted);
   const update = useSettings((s) => s.update);
   const [settings, setSettings] = useState(false);
@@ -30,7 +31,7 @@ export function TopBar() {
       </Link>
       </div>
       <div className="flex items-center gap-3">
-        <div data-testid="rank" className="hidden min-w-40 sm:block" title={rank.next ? `${rank.toNext.toLocaleString("en-IN")} points to ${rank.next}` : "Top rank"}>
+        {showRank && <div data-testid="rank" className="hidden min-w-40 sm:block" title={rank.next ? `${rank.toNext.toLocaleString("en-IN")} points to ${rank.next}` : "Top rank"}>
           <p className="flex justify-between gap-3 font-pixel text-[9px]">
             <span className="text-[#ffd319]">{rank.title.toUpperCase()}</span>
             <span className="text-paper/50">{total.toLocaleString("en-IN")} PTS</span>
@@ -41,7 +42,7 @@ export function TopBar() {
           <p className="mt-0.5 font-terminal text-[15px] leading-none text-paper/50">
             {rank.next ? `${rank.toNext.toLocaleString("en-IN")} to ${rank.next}` : "Top of the bureau"}
           </p>
-        </div>
+        </div>}
         <div className="flex items-center gap-2">
         <button
           onClick={() => {
@@ -49,14 +50,14 @@ export function TopBar() {
             if (muted) sfx.play("tick");
           }}
           aria-label={muted ? "Unmute sound" : "Mute sound"}
-          className="rounded border border-line px-2.5 py-1 font-mono text-xs text-muted hover:border-amber hover:text-amber"
+          className="flex min-h-9 min-w-9 items-center justify-center rounded border border-line px-2.5 font-mono text-xs text-muted hover:border-amber hover:text-amber"
         >
           {muted ? "♪ OFF" : "♪ ON"}
         </button>
         <button
           onClick={() => setSettings(true)}
           aria-label="Settings"
-          className="rounded border border-line px-2.5 py-1 font-mono text-xs text-muted hover:border-amber hover:text-amber"
+          className="flex min-h-9 min-w-9 items-center justify-center rounded border border-line px-2.5 font-mono text-xs text-muted hover:border-amber hover:text-amber"
         >
           ⚙
         </button>

@@ -8,6 +8,7 @@ import { formatSalary } from "@/lib/career";
 import { sfx } from "@/lib/sound";
 import { useReducedEffects } from "@/lib/useReducedEffects";
 import type { Cutscene as Scene } from "@/lib/types";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 /** The end of the story (CAREER.md §7.5): an old colleague, replayed company by company from
  *  this career's real history — then the confession, or the escape. */
@@ -18,6 +19,7 @@ export function Cutscene({ scene, salary, title, onDone }: {
   onDone: () => void;
 }) {
   const reduced = useReducedEffects();
+  const trap = useFocusTrap<HTMLDivElement>(scene !== null);
   const [step, setStep] = useState(0);
   const caught = scene?.kind === "caught";
   // 0: the reveal · 1..n: one card per company you shared · n+1: what they say · n+2: the end
@@ -54,7 +56,7 @@ export function Cutscene({ scene, salary, title, onDone }: {
   const stop = step >= 1 && step <= stops.length ? stops[step - 1] : null;
 
   return (
-    <div role="dialog" aria-modal aria-label={caught ? "The confession" : "The escape"} data-testid="cutscene"
+    <div ref={trap} tabIndex={-1} role="dialog" aria-modal aria-label={caught ? "The confession" : "The escape"} data-testid="cutscene"
       className="fixed inset-0 z-[160] flex flex-col overflow-y-auto bg-black text-paper">
       <Rain density={caught ? 90 : 200} />
       <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,transparent_0,transparent_160px,rgba(0,0,0,0.9)_420px)]" />

@@ -142,13 +142,13 @@ export function NotesModal({ open, notes, company, onClose }: {
               <h3 className="font-type text-[11px] tracking-[0.35em] opacity-60">YOUR KIT THIS YEAR</h3>
               <ul className="mt-2 space-y-1.5 text-[13px]">
                 {kit.map((t) => (
-                  <li key={t.tool} className="flex items-baseline gap-2">
+                  <li key={t.tool} className="flex flex-wrap items-baseline gap-x-2">
                     <span className="w-5 shrink-0 text-center font-mono font-bold">{toolMeta(t.tool).icon}</span>
-                    <span className="w-32 shrink-0 font-semibold">{t.name}</span>
+                    <span className="shrink-0 font-semibold sm:w-32">{t.name}</span>
                     <span className={cn("shrink-0 rounded-sm border px-1.5 text-[10px] mix-blend-multiply", t.role === "proves" ? "border-[#1f6b3a] text-[#1f6b3a]" : "border-[#9a6a00] text-[#9a6a00]")}>
                       {ROLE_LABEL[t.role]}
                     </span>
-                    <span className="opacity-80">{t.what}</span>
+                    <span className="basis-full pl-7 opacity-80 sm:flex-1 sm:basis-auto sm:pl-0">{t.what}</span>
                   </li>
                 ))}
               </ul>

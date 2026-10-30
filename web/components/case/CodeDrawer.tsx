@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { formatStat, statName } from "@/lib/format";
 import { sfx } from "@/lib/sound";
 import type { Suspect, ToolResult } from "@/lib/types";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 function useHighlighted(code: string | null) {
   const [html, setHtml] = useState<{ code: string; html: string } | null>(null);
@@ -33,6 +34,7 @@ export function CodeDrawer({
   const names = Object.fromEntries(suspects.map((s) => [s.id, s.name]));
   const html = useHighlighted(result?.code ?? null);
   const [copied, setCopied] = useState(false);
+  const trap = useFocusTrap<HTMLElement>(result !== null);
 
   useEffect(() => {
     if (!result) return;
@@ -53,6 +55,8 @@ export function CodeDrawer({
             onClick={onClose}
           />
           <motion.aside
+            ref={trap}
+            tabIndex={-1}
             role="dialog"
             aria-label="Under the hood"
             data-testid="code-drawer"

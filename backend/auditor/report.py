@@ -63,7 +63,8 @@ def _case_file(session: CaseSession):
     fig.text(0.055, 0.62, "SCORE BREAKDOWN", color=CYAN, size=11, weight="bold")
     for i, (name, points) in enumerate(verdict.breakdown.items()):
         y = 0.58 - i * 0.042
-        fig.text(0.055, y, name.replace("_", " ").title(), color=PAPER, size=10)
+        fig.text(0.055, y, BREAKDOWN_LABELS.get(name, name.replace("_", " ").title()),
+                 color=PAPER, size=10)
         fig.text(0.37, y, f"{points:+,}", color=AMBER, size=10, ha="right")
         fig.add_artist(plt.Line2D([0.055, 0.38], [y - 0.012, y - 0.012],
                                   color=LINE, transform=fig.transFigure))
@@ -83,6 +84,11 @@ def _case_file(session: CaseSession):
     return fig
 
 
+# The same words the verdict screen uses
+BREAKDOWN_LABELS = {"base": "Caught the right suspect", "evidence": "Evidence on the board",
+                    "budget_bonus": "Coins left over"}
+
+
 def _ledger(session: CaseSession, names: dict[str, str]):
     df = session.bundle.df.copy()
     truth = session.bundle.truth
@@ -92,7 +98,7 @@ def _ledger(session: CaseSession, names: dict[str, str]):
     dates = pd.to_datetime(df["date"]) + pd.to_timedelta(df["hour"], unit="h")
     theirs = df["employee_id"].eq(truth.fraudster_id)
     fraud = df["txn_id"].isin(truth.fraud_txn_ids)
-    ax = _axes(fig, [0.09, 0.37, 0.85, 0.38])
+    ax = _axes(fig, [0.09, 0.42, 0.85, 0.33])  # room below for the slanted date labels
     ax.scatter(dates[~theirs], df.loc[~theirs, "amount"], s=7, color=MUTED,
                alpha=0.35, label="Other claims")
     ax.scatter(dates[theirs], df.loc[theirs, "amount"], s=14, color=AMBER,
@@ -104,7 +110,7 @@ def _ledger(session: CaseSession, names: dict[str, str]):
     ax.legend(facecolor=BG, edgecolor=LINE, labelcolor=PAPER, fontsize=8, loc="upper left")
     fig.autofmt_xdate()
 
-    ax2 = _axes(fig, [0.09, 0.11, 0.85, 0.18])
+    ax2 = _axes(fig, [0.09, 0.09, 0.85, 0.17])
     df["employee_name"] = df["employee_id"].map(names)
     order = [names[s.id] for s in session.bundle.meta.suspects]
     sns.boxplot(data=df, x="employee_name", y="amount", order=order, ax=ax2,

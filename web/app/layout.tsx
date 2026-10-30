@@ -10,7 +10,8 @@ const playfair = Playfair_Display({ variable: "--font-playfair", subsets: ["lati
 const specialElite = Special_Elite({ variable: "--font-special-elite", subsets: ["latin"], weight: "400" });
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const arcade = Press_Start_2P({ variable: "--font-arcade", subsets: ["latin"], weight: "400" });
-const crt = VT323({ variable: "--font-crt", subsets: ["latin"], weight: "400" });
+// latin-ext holds ₹: preload it, or headings re-measure (and jump) when the first rupee appears
+const crt = VT323({ variable: "--font-crt", subsets: ["latin", "latin-ext"], weight: "400" });
 const bebas = Bebas_Neue({ variable: "--font-bebas", subsets: ["latin"], weight: "400" });
 const jetbrains = JetBrains_Mono({ variable: "--font-jetbrains", subsets: ["latin"] });
 

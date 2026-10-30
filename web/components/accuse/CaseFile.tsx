@@ -7,6 +7,7 @@ import { fits, proofOf, roleOf, ROLE_LABEL, ROLE_STYLE, settingOf } from "@/lib/
 import { sfx } from "@/lib/sound";
 import { toolMeta } from "@/lib/toolMeta";
 import type { SchemeId, Suspect, Theory, ToolResult } from "@/lib/types";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 export const MAX_CLUES = 2;
 export const MAX_EXHIBITS = 5;
@@ -197,6 +198,7 @@ function RowsPicker({ caseId, suspect, picked, onChange, onClose }: {
   onClose: () => void;
 }) {
   const rows = useQuery({ queryKey: ["suspect-rows", caseId, suspect.id], queryFn: () => suspectRows(caseId, suspect.id) });
+  const trap = useFocusTrap<HTMLDivElement>(true);
   const [full, setFull] = useState(false); // a 6th row was tapped: say why nothing happened
   // Escape closes only the ledger, not the spotlight underneath (it listens on window too)
   useEffect(() => {
@@ -229,7 +231,7 @@ function RowsPicker({ caseId, suspect, picked, onChange, onClose }: {
   };
 
   return (
-    <div role="dialog" aria-modal aria-label={`${suspect.name}'s ledger`} data-testid="rows-picker"
+    <div ref={trap} tabIndex={-1} role="dialog" aria-modal aria-label={`${suspect.name}'s ledger`} data-testid="rows-picker"
       className="fixed inset-0 z-[150] flex items-end justify-center bg-black/80 p-0 sm:items-center sm:p-6">
       <div className="flex max-h-[92dvh] w-full max-w-4xl flex-col rounded-t-md border border-line bg-ink-950 sm:rounded-md">
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">

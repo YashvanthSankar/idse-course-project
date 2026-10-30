@@ -90,7 +90,7 @@ export function TitleScreen() {
   return (
     <main className="relative flex min-h-dvh flex-col overflow-hidden bg-[#05060d] font-terminal text-paper">
       {/* ── the night: a pixel moon, the city, the rain ─────────────────── */}
-      <svg aria-hidden viewBox="0 0 12 12" className="pixel absolute right-[7%] top-[16%] h-12 w-12 sm:right-[5%] sm:top-[9%] opacity-90 sm:h-20 sm:w-20" shapeRendering="crispEdges">
+      <svg aria-hidden viewBox="0 0 12 12" className="pixel absolute right-[4%] top-[9%] h-9 w-9 opacity-80 sm:right-[5%] sm:top-[9%] sm:h-20 sm:w-20 sm:opacity-90" shapeRendering="crispEdges">
         <path fill="#f3ead2" d="M4 0h4v1h2v1h1v2h1v4h-1v2h-1v1H8v1H4v-1H2v-1H1V8H0V4h1V2h1V1h2z" />
         <path fill="#d9cdb0" d="M3 3h2v2H3zM7 6h2v2H7zM4 8h1v1H4z" />
       </svg>
@@ -115,25 +115,25 @@ export function TitleScreen() {
       </header>
 
       {/* ── the marquee ──────────────────────────────────────────────────── */}
-      <section className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 pb-6 pt-8 text-center">
+      <section className="relative z-10 flex flex-1 flex-col items-center justify-center px-4 pb-6 pt-8 text-center short:pb-2 short:pt-2">
         <p className="font-pixel text-[10px] tracking-[0.2em] text-[#4cc9f0] sm:text-sm">A DATA DETECTIVE GAME</p>
         <motion.h1
           aria-label="Outlier"
           initial={{ scale: 0.6, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 140, damping: 14 }}
-          className="mt-5 font-pixel leading-none"
-          style={{ fontSize: "clamp(2.4rem, 10.5vw, 9.5rem)", letterSpacing: "0.02em" }}
+          className="mt-5 font-pixel leading-none short:mt-3"
+          style={{ fontSize: "clamp(2.4rem, min(10.5vw, 17vh), 9.5rem)", letterSpacing: "0.02em" }}
         >
           <span aria-hidden className="arcade-logo animate-hop">O</span>
           <span aria-hidden className="arcade-logo">UTLIER</span>
         </motion.h1>
-        <p className="mt-7 max-w-[30ch] text-balance text-[1.6rem] leading-tight text-paper/90 sm:max-w-none sm:text-[2.1rem]">
+        <p className="mt-7 max-w-[30ch] text-balance text-[1.6rem] leading-tight text-paper/90 sm:max-w-none sm:text-[2.1rem] short:mt-4">
           Every number tells a story. Some of them lie.
         </p>
 
         {/* the menu */}
-        <nav aria-label="Main menu" className="mt-9 flex flex-col items-start gap-1">
+        <nav aria-label="Main menu" className="mt-9 flex flex-col items-start gap-1 short:mt-5 short:gap-0">
           {MENU.map((item, i) => (
             <button
               key={item.id}
@@ -152,7 +152,7 @@ export function TitleScreen() {
             </button>
           ))}
         </nav>
-        <p className="mt-5 h-8 text-2xl text-[#4cc9f0] sm:text-[1.7rem]" aria-live="polite">{MENU[focus].hint}</p>
+        <p className="mt-5 h-8 text-2xl text-[#4cc9f0] sm:text-[1.7rem] short:mt-2" aria-live="polite">{MENU[focus].hint}</p>
       </section>
 
       {/* ── attract mode: the ledger ticker, one claim doesn't belong ────── */}
@@ -177,7 +177,7 @@ export function TitleScreen() {
             }}
             aria-label="Options"
             title="Options: sound, effects and unlocking cases"
-            className="flex h-11 w-11 items-center justify-center rounded border-2 border-[#1a2238] text-xl text-paper/70 hover:border-[#ffd319] hover:text-[#ffd319]"
+            className="flex h-11 w-11 items-center justify-center rounded border-2 border-paper/30 text-xl text-paper/85 hover:border-[#ffd319] hover:text-[#ffd319]"
           >
             ⚙
           </button>

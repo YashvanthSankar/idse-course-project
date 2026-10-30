@@ -104,6 +104,11 @@ class CaseBundle:
     truth: CaseTruth
 
 
+
+def _sentence(text: str) -> str:
+    """"the firm's card…" opens a teaser: capitalise it."""
+    return text[:1].upper() + text[1:]
+
 def unlocked_until(level: int) -> list[ToolId]:
     unlocked = {t for lv, spec in LEVELS.items() if lv <= level for t in spec.unlocks}
     return [t for t in TOOL_ORDER if t in unlocked]
@@ -111,7 +116,7 @@ def unlocked_until(level: int) -> list[ToolId]:
 
 def level_infos() -> list[LevelInfo]:
     return [
-        LevelInfo(level=s.level, title=s.title, teaser=s.teaser.format(company="the firm"),
+        LevelInfo(level=s.level, title=s.title, teaser=_sentence(s.teaser.format(company="the firm")),
                   budget=s.budget, difficulty=s.difficulty)
         for s in LEVELS.values()
     ]

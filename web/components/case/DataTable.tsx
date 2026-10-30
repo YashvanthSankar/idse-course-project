@@ -7,6 +7,7 @@ import { getRows } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { formatINR } from "@/lib/format";
 import type { Suspect } from "@/lib/types";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 const PAGE = 200;
 const ROW_H = 34;
@@ -32,6 +33,8 @@ export function DataTable({ caseId, open, onClose, suspects, implicated, flagged
   implicated: string[];
   flaggedTxns: Set<string>;
 }) {
+  const trap = useFocusTrap<HTMLElement>(open);
+
   const [sort, setSort] = useState<{ key: string; dir: 1 | -1 } | null>(null);
   const [who, setWho] = useState<string>("all");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -95,6 +98,8 @@ export function DataTable({ caseId, open, onClose, suspects, implicated, flagged
         <>
           <motion.div className="fixed inset-0 z-[95] bg-black/60" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
           <motion.aside
+            ref={trap}
+            tabIndex={-1}
             role="dialog"
             aria-label="Raw ledger"
             data-testid="data-table"

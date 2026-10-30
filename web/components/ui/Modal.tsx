@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 const noop = () => () => {};
 
@@ -23,6 +24,7 @@ export function Modal({ open, onClose, children, className, label }: {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
   const mounted = useSyncExternalStore(noop, () => true, () => false);
+  const trap = useFocusTrap<HTMLDivElement>(open && mounted);
   if (!mounted) return null;
 
   return createPortal(
@@ -36,6 +38,8 @@ export function Modal({ open, onClose, children, className, label }: {
           onClick={onClose}
         >
           <motion.div
+            ref={trap}
+            tabIndex={-1}
             role="dialog"
             aria-modal
             aria-label={label}

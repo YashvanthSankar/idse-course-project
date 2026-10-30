@@ -23,6 +23,7 @@ import { useMediaQuery } from "@/lib/useMediaQuery";
 import type { Suspect, ToolResult } from "@/lib/types";
 import { EvidencePolaroid } from "./EvidencePolaroid";
 import { PinHead, RedString, type Point } from "./RedString";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 type Line = { id: string; from: Point; to: Point };
 
@@ -88,6 +89,7 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
   suspects: Suspect[];
   results: ToolResult[];
 }) {
+  const trap = useFocusTrap<HTMLDivElement>(open);
   const links = useCaseStore((s) => s.links);
   const verdict = useCaseStore((s) => s.verdict);
   const budgetLeft = useCaseStore((s) => s.meta?.budget_left ?? 1);
@@ -193,6 +195,8 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
     <AnimatePresence>
       {open && (
         <motion.div
+          ref={trap}
+          tabIndex={-1}
           role="dialog"
           aria-modal
           aria-label="Corkboard"
@@ -204,7 +208,8 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
           className="fixed inset-0 z-[120] overflow-y-auto overflow-x-hidden bg-[#2b1709] p-2 sm:p-4"
         >
           <div className="tex-cork relative min-h-full rounded-[3px] shadow-[inset_0_0_0_6px_#4a2a12,inset_0_0_60px_rgba(0,0,0,0.65),0_20px_60px_rgba(0,0,0,0.6)]">
-            <div ref={surface} className="relative mx-auto max-w-6xl px-3 pb-24 pt-4 sm:px-8 sm:pt-6">
+            {/* two fraudsters: room at the bottom so the pair picker never covers the photos */}
+            <div ref={surface} className={cn("relative mx-auto max-w-6xl px-3 pt-4 sm:px-8 sm:pt-6", culprits > 1 ? "pb-60" : "pb-24")}>
               <header className="relative z-40 mb-6 flex flex-wrap items-start justify-between gap-3">
                 <div className="tex-paper -rotate-1 rounded-[2px] px-4 py-2 shadow-[0_8px_18px_rgba(0,0,0,0.5)]">
                   <p className="font-type text-[10px] tracking-[0.35em] opacity-60">EVIDENCE BOARD</p>
@@ -316,6 +321,9 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
                     <p className="font-type text-xs tracking-[0.25em] text-paper">
                       TWO FRAUDSTERS · PICK BOTH ({pairPicks.length}/2)
                     </p>
+                    {readyList.length < 2 && (
+                      <p className="text-xs text-paper/80">Tie a clue to the second fraudster too, then pick both.</p>
+                    )}
                     <div className="flex flex-wrap justify-center gap-2">
                       {readyList.map((suspect) => (
                         <button
