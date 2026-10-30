@@ -22,7 +22,11 @@ export function ToolKit({ specs, params, selected, onSelect, onParam, onRun, bus
         <h2 className="font-display text-xl italic text-paper">Tool kit</h2>
         <p className="hidden text-xs text-paper/45 lg:block">keys 1–9 run instantly</p>
       </div>
-      {SHELVES.map((shelf) => (
+      {specs.length === 0 && (
+        // the kit arrives a moment after the case: no empty shelves in the meantime
+        <p className="animate-pulse px-2.5 text-sm text-paper/55" role="status">Loading the tool kit…</p>
+      )}
+      {specs.length > 0 && SHELVES.map((shelf) => (
         <div key={shelf.title}>
           <h3 className="mb-1 px-2.5 text-xs font-medium uppercase tracking-[0.18em] text-paper/45">{shelf.title}</h3>
           <ul className="flex flex-col gap-0.5">
