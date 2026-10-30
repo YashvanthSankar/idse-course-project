@@ -22,11 +22,32 @@ export function HoldToConfirm({ onConfirm, duration = 1500, disabled = false, la
   const fired = useRef(false);
   const lastTick = useRef(0);
 
+  const [nudge, setNudge] = useState(false); // let go too early: say so
+  const progressRef = useRef(0);
+
   useEffect(() => () => cancelAnimationFrame(raf.current), []);
+
+  // The confirm action ran but failed (the caller enables the button again): allow another hold.
+  // Without this the button stayed "fired" and every later hold did nothing until a reload.
+  const wasDisabled = useRef(disabled);
+  useEffect(() => {
+    if (wasDisabled.current && !disabled) {
+      fired.current = false;
+      progressRef.current = 0;
+      setProgress(0);
+    }
+    wasDisabled.current = disabled;
+  }, [disabled]);
+  useEffect(() => {
+    if (!nudge) return;
+    const t = window.setTimeout(() => setNudge(false), 1600);
+    return () => window.clearTimeout(t);
+  }, [nudge]);
 
   const tick = (now: number) => {
     if (started.current === null) started.current = now;
     const p = Math.min(1, (now - started.current) / duration);
+    progressRef.current = p;
     setProgress(p);
     if (now - lastTick.current > 140) {
       lastTick.current = now;
@@ -42,6 +63,7 @@ export function HoldToConfirm({ onConfirm, duration = 1500, disabled = false, la
 
   const begin = () => {
     if (disabled || fired.current) return;
+    setNudge(false);
     cancelAnimationFrame(raf.current);
     started.current = null;
     raf.current = requestAnimationFrame(tick);
@@ -49,7 +71,10 @@ export function HoldToConfirm({ onConfirm, duration = 1500, disabled = false, la
 
   const release = () => {
     cancelAnimationFrame(raf.current);
-    if (!fired.current) setProgress(0);
+    if (fired.current) return;
+    if (progressRef.current > 0) setNudge(true); // a click, or let go before the ring filled
+    progressRef.current = 0;
+    setProgress(0);
   };
 
   return (
@@ -90,7 +115,11 @@ export function HoldToConfirm({ onConfirm, duration = 1500, disabled = false, la
       </svg>
       <span className="relative text-center font-type leading-tight text-[#ffd9da]">
         <span className={cn("block tracking-[0.2em]", small ? "text-base" : "text-lg")}>{label}</span>
-        {sublabel && <span className={cn("block text-red/80", small ? "text-[8px] tracking-[0.2em]" : "text-[10px] tracking-[0.3em]")}>{sublabel}</span>}
+        {(nudge || sublabel) && (
+          <span className={cn("block", nudge ? "text-amber" : "text-red/80", small ? "text-[8px] tracking-[0.2em]" : "text-[10px] tracking-[0.3em]")}>
+            {nudge ? "KEEP HOLDING" : sublabel}
+          </span>
+        )}
       </span>
     </button>
   );
