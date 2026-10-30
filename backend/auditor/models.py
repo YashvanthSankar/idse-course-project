@@ -137,6 +137,7 @@ class Verdict(BaseModel):
     catching_tools: list[ToolId]
     evidence: list[EvidenceGrade]
     reveal_figure: dict = Field(default_factory=dict)
+    accused_id: str | None = None  # who the player accused (any device can show it)
 
 
 class Profile(BaseModel):

@@ -13,15 +13,17 @@ export function fits(result: Pick<ToolResult, "tool_id" | "params">, theory: The
   return theory.fits.some((f) => f.tool === result.tool_id && (f.setting == null || f.setting === settingOf(result)));
 }
 
-const singlesOut = (r: ToolResult, suspectId: string) => r.implicates.includes(suspectId) && r.implicates.length <= 2;
+/** Names the suspect and nobody else, or one other when two fraudsters share the ledger. */
+const singlesOut = (r: ToolResult, suspectId: string, culprits: number) =>
+  r.implicates.includes(suspectId) && r.implicates.length <= Math.max(1, culprits);
 
 export type ProofLevel = "proven" | "lead" | "none";
 
 /** Mirrors the server (auditor/career/proof.py): a clue that fits your theory and singles the
  *  accused out proves it, and so do two different tools that agree. Measured against the player's
  *  own theory, never the answer. */
-export function proofOf(suspectId: string, theory: Theory | null, clues: ToolResult[]): ProofLevel {
-  const naming = clues.filter((c) => singlesOut(c, suspectId));
+export function proofOf(suspectId: string, theory: Theory | null, clues: ToolResult[], culprits = 1): ProofLevel {
+  const naming = clues.filter((c) => singlesOut(c, suspectId, culprits));
   if ((theory && naming.some((c) => fits(c, theory))) || new Set(naming.map((c) => c.tool_id)).size >= 2) return "proven";
   return clues.some((c) => c.implicates.includes(suspectId)) ? "lead" : "none";
 }

@@ -1,9 +1,14 @@
 "use client";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useSyncExternalStore, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
 
-/** Dimmed overlay + springy panel. Closes on Esc and backdrop click. */
+const noop = () => () => {};
+
+/** Dimmed overlay + springy panel. Closes on Esc and backdrop click. Rendered at the end of
+ *  <body>, so a parent with a blur or transform (the case header has one) can't trap it under
+ *  the page. */
 export function Modal({ open, onClose, children, className, label }: {
   open: boolean;
   onClose?: () => void;
@@ -17,8 +22,10 @@ export function Modal({ open, onClose, children, className, label }: {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
+  const mounted = useSyncExternalStore(noop, () => true, () => false);
+  if (!mounted) return null;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
@@ -43,6 +50,7 @@ export function Modal({ open, onClose, children, className, label }: {
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

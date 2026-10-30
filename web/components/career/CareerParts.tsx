@@ -11,7 +11,7 @@ import { toolMeta } from "@/lib/toolMeta";
 import type { Appraisal, CompanyCard, Greeting, SeniorNotes } from "@/lib/types";
 
 const TIER_STYLE: Record<string, string> = {
-  small: "border-paper/40 text-paper/70",
+  small: "border-[#8a7a5a] text-[#8a7a5a]", // readable on the dark hub and on a paper letter
   mid: "border-cyan/60 text-cyan",
   large: "border-amber/70 text-amber",
   very_large: "border-red/70 text-red",
@@ -191,7 +191,7 @@ export function AppraisalModal({ appraisal, onClose }: { appraisal: Appraisal | 
             transition={{ delay: 0.3, type: "spring", stiffness: 260, damping: 14 }}
             onAnimationComplete={() => sfx.play("stamp")}
             data-testid="appraisal-band"
-            className={cn("absolute right-5 top-6 rounded border-[3px] px-3 py-1 font-type text-lg tracking-[0.25em] mix-blend-multiply",
+            className={cn("mt-2 inline-block rounded border-[3px] sm:absolute sm:right-5 sm:top-6 sm:mt-0 px-3 py-1 font-type text-lg tracking-[0.25em] mix-blend-multiply",
               appraisal.band === "bad" ? "border-[#a3121f] text-[#a3121f]" : appraisal.band === "exceptional" ? "border-[#9a6a00] text-[#9a6a00]" : "border-[#1f6b3a] text-[#1f6b3a]")}
           >
             {BAND_LABEL[appraisal.band].toUpperCase()}

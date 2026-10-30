@@ -1,4 +1,5 @@
 "use client";
+import { ApiError } from "@/lib/api";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
 import { ShakeProvider } from "@/components/fx/Shake";
@@ -7,7 +8,13 @@ import { sfx } from "@/lib/sound";
 
 export function Providers({ children }: { children: ReactNode }) {
   const [client] = useState(
-    () => new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } }),
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          // one retry for a network blip; a 404 won't change by asking again
+          queries: { retry: (count, err) => count < 1 && !(err instanceof ApiError && err.status === 404), refetchOnWindowFocus: false },
+        },
+      }),
   );
   const reduceEffects = useSettings((s) => s.reduceEffects);
 

@@ -2,14 +2,19 @@
 import { BackButton } from "@/components/ui/BackButton";
 import { useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSyncExternalStore } from "react";
 import { Rain } from "@/components/fx/Rain";
 import { createRoom } from "@/lib/api";
-import { saveHostToken } from "@/lib/hostToken";
+import { lastHostedRoom, saveHostToken } from "@/lib/hostToken";
 import { sfx } from "@/lib/sound";
+
+const noop = () => () => {};
 
 export function HostLanding() {
   const router = useRouter();
+  const resume = useSyncExternalStore(noop, lastHostedRoom, () => null);
   const start = useMutation({
     mutationFn: createRoom,
     onSuccess: ({ code, host_token }) => {
@@ -43,6 +48,13 @@ export function HostLanding() {
         >
           {start.isPending ? "OPENING THE ROOM…" : "START A CLASS SESSION"}
         </button>
+        {resume && (
+          <p className="mt-5">
+            <Link href={`/host/${resume}`} data-testid="resume-room" className="inline-block py-2 text-lg text-amber underline underline-offset-4">
+              Back to room {resume} →
+            </Link>
+          </p>
+        )}
         {start.isError && (
           <p className="mt-4 text-red">The Python brain isn&apos;t answering. Is the backend running?</p>
         )}

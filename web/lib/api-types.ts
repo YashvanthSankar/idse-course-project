@@ -336,7 +336,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Retire */
+        /**
+         * Retire
+         * @description Start over. Retiring twice hands back the same fresh career.
+         */
         post: operations["retire_api_career__code__retire_post"];
         delete?: never;
         options?: never;
@@ -1134,6 +1137,8 @@ export interface components {
             reveal_figure?: {
                 [key: string]: unknown;
             };
+            /** Accused Id */
+            accused_id?: string | null;
         };
     };
     responses: never;

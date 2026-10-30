@@ -9,7 +9,7 @@ export type BoardRow = { rank: number; player_id: string; name: string; score: n
 export type RoomMessage =
   | { type: "lobby"; status: "lobby" | "running" | "ended"; players: LobbyPlayer[] }
   | { type: "welcome"; player_id: string; status: string }
-  | { type: "round_start"; level: number; ends_at: number }
+  | { type: "round_start"; level: number; ends_at: number; seconds?: number; grace?: number }
   | { type: "your_case"; case_id: string }
   | { type: "leaderboard"; top: BoardRow[]; solved: number; total: number }
   | { type: "ticker"; text: string }
@@ -23,6 +23,9 @@ export type RoomState = {
   players: LobbyPlayer[];
   level: number | null;
   endsAt: number | null;
+  /** the round's length and the server's grace period after the clock hits zero (seconds) */
+  roundSeconds: number | null;
+  grace: number;
   caseId: string | null;
   playerId: string | null;
   top: BoardRow[];
@@ -36,6 +39,8 @@ export const INITIAL_ROOM: RoomState = {
   players: [],
   level: null,
   endsAt: null,
+  roundSeconds: null,
+  grace: 15,
   caseId: null,
   playerId: null,
   top: [],
@@ -52,9 +57,14 @@ export function roomReducer(state: RoomState, msg: RoomMessage): RoomState {
     case "lobby":
       return { ...state, players: msg.players, phase: msg.status === "running" ? "running" : msg.status === "ended" ? "ended" : state.phase };
     case "welcome":
-      return { ...state, playerId: msg.player_id };
+      // a phone that reloads after the round ended must say so, not "you're in"
+      return { ...state, playerId: msg.player_id, phase: msg.status === "ended" ? "ended" : state.phase };
     case "round_start":
-      return { ...state, phase: "running", level: msg.level, endsAt: msg.ends_at, caseId: null };
+      // a new round starts a fresh ticker; a projector that reconnects gets the old lines replayed
+      return {
+        ...state, phase: "running", level: msg.level, endsAt: msg.ends_at, caseId: null, ticker: [],
+        roundSeconds: msg.seconds ?? state.roundSeconds, grace: msg.grace ?? state.grace,
+      };
     case "your_case":
       return { ...state, caseId: msg.case_id };
     case "leaderboard":

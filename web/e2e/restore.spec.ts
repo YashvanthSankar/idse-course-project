@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { runTool } from "./fixtures/tools";
 
-const API = "http://localhost:8000";
+const API = process.env.API_URL ?? "http://localhost:8000";
 
 // A reload (or a locked phone) must lose nothing: results, pinned evidence, then the verdict.
 test("reloading restores results, pins and the verdict", async ({ page, request }) => {
@@ -49,7 +49,7 @@ test("unknown pages get the noir 404", async ({ page }) => {
 });
 
 test("a host screen opened without its token explains who owns it", async ({ page, request }) => {
-  const { code } = await (await request.post("http://localhost:8000/api/rooms")).json();
+  const { code } = await (await request.post(`${API}/api/rooms`)).json();
   await page.goto(`/host/${code}`);
   await expect(page.getByText("This screen belongs to another session.")).toBeVisible();
   await expect(page.getByRole("link", { name: "START A NEW CLASS SESSION" })).toBeVisible();

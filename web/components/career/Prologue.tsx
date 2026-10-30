@@ -24,7 +24,7 @@ const PANELS = [
   },
   {
     kicker: "THE RULE OF THE JOB",
-    text: "You get a budget. Every tool costs coins and you can't run them all, so think before you spend. One accusation per case, with two pieces of evidence. And remember this: an outlier is a question, not an answer. Big isn't crooked. Strange isn't guilty. Prove it.",
+    text: "You get a budget. Every tool costs coins and you can't run them all, so think before you spend. One accusation per case: name the trick, show the clue that proves it, pin the rows. And remember this: an outlier is a question, not an answer. Big isn't crooked. Strange isn't guilty. Prove it.",
   },
 ] as const;
 
@@ -43,16 +43,18 @@ const ROWS = [
   ["2026-08-20", "11", "E1", "Lamington Road Electronics", "equipment", "30,980.00", "6,12,400"],
 ];
 
-export function Prologue({ onStart, onContinue, starting, error }: {
+export function Prologue({ onStart, onContinue, starting, error, enterCode = false }: {
   onStart: () => void;
   onContinue: (code: string) => void;
   starting: boolean;
   error: string | null;
+  /** open straight on the "I have a code" form (from the hub's "Enter another code") */
+  enterCode?: boolean;
 }) {
   const reduced = useReducedEffects();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(enterCode ? PANELS.length : 0);
   const [typed, setTyped] = useState(-1);
-  const [entering, setEntering] = useState(false);
+  const [entering, setEntering] = useState(enterCode);
   const [code, setCode] = useState("");
   const last = step === PANELS.length;
 

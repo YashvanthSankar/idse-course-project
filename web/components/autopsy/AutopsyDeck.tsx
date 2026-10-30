@@ -2,10 +2,10 @@
 import { BackButton } from "@/components/ui/BackButton";
 import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { PlotlyChart } from "@/components/case/PlotlyChart";
 import { Typewriter } from "@/components/fx/Typewriter";
-import { getAutopsy } from "@/lib/api";
+import { ApiError, getAutopsy } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { sfx } from "@/lib/sound";
 import { useMediaQuery } from "@/lib/useMediaQuery";
@@ -14,17 +14,25 @@ import { takeaway } from "./takeaway";
 
 type Figure = { data?: unknown[]; layout?: Record<string, unknown> };
 
-/** The slide already says the title out loud: drop the chart's own and park the legend top-right. */
-function forSlide(figure: Figure): Figure {
+/** The slide already says the title out loud: drop the chart's own and park the legend top-right.
+ *  On a projector every label is bigger, to read from the back row. */
+function forSlide(figure: Figure, projector: boolean): Figure {
+  const size = projector ? 18 : 12;
   return {
     ...figure,
     layout: {
       ...figure.layout,
       title: { text: "" },
-      legend: { orientation: "h", x: 1, xanchor: "right", y: 1.02, yanchor: "bottom", font: { size: 14 } },
+      font: { ...((figure.layout?.font as object) ?? {}), size },
+      legend: { orientation: "h", x: 1, xanchor: "right", y: 1.02, yanchor: "bottom", font: { size } },
     },
   };
 }
+
+const onResize = (cb: () => void) => {
+  window.addEventListener("resize", cb);
+  return () => window.removeEventListener("resize", cb);
+};
 
 export function AutopsyDeck({ code }: { code: string }) {
   const autopsy = useQuery({ queryKey: ["autopsy", code], queryFn: () => getAutopsy(code) });
@@ -34,6 +42,12 @@ export function AutopsyDeck({ code }: { code: string }) {
   const [showCode, setShowCode] = useState(true);
   // The projector gets a big chart; phones get one that fits above the code.
   const projector = useMediaQuery("(min-width: 1024px)") ?? true;
+  // The chart fills what's left of the screen under the title and above the footer, so a 720p
+  // projector never pushes it off the bottom.
+  const viewport = useSyncExternalStore(onResize, () => window.innerHeight, () => 900);
+  const chartHeight = projector ? Math.max(300, Math.min(700, viewport - 380)) : 340;
+  const touch = useMediaQuery("(pointer: coarse)") ?? false;
+  const missing = autopsy.error instanceof ApiError && autopsy.error.status === 404;
 
   const go = useCallback(
     (delta: number) => {
@@ -67,7 +81,7 @@ export function AutopsyDeck({ code }: { code: string }) {
     <main className="flex min-h-dvh flex-col bg-[radial-gradient(ellipse_at_50%_-20%,#1b2540_0%,#07080b_60%)] px-4 py-6 sm:px-10 sm:py-8 lg:h-dvh lg:overflow-hidden">
       <header className="flex items-center justify-between text-lg text-paper/60">
         <BackButton href={`/host/${code}`} label={`Room ${code}`} />
-        <span data-testid="slide-counter">
+        <span data-testid="slide-counter" className="text-xl">
           {index + 1} / {total}
         </span>
       </header>
@@ -85,7 +99,9 @@ export function AutopsyDeck({ code }: { code: string }) {
           {autopsy.isPending ? (
             <p className="m-auto text-2xl text-paper/60">Running the numbers…</p>
           ) : autopsy.isError ? (
-            <p className="m-auto text-2xl text-red">Couldn&apos;t load the autopsy. Is the backend running?</p>
+            <p className="m-auto px-4 text-center text-2xl text-red">
+              {missing ? `There's no room ${code}, or it has closed.` : "Couldn't reach the game server. Check the Wi-Fi and reload."}
+            </p>
           ) : !slide ? (
             <div className="m-auto max-w-5xl text-center">
               <p className="font-type text-xl tracking-[0.5em] text-cyan">CLASS AUTOPSY</p>
@@ -95,7 +111,7 @@ export function AutopsyDeck({ code }: { code: string }) {
               <p className="mt-8 text-2xl text-paper/70">
                 <Typewriter text="Every click you made is now a row in a pandas DataFrame." speed={35} sound={false} />
               </p>
-              <p className="mt-14 text-lg text-paper/40">Press → to begin</p>
+              <p className="mt-14 text-lg text-paper/60">{touch ? "Tap → to begin" : "Press → to begin"}</p>
             </div>
           ) : (
             <>
@@ -112,11 +128,11 @@ export function AutopsyDeck({ code }: { code: string }) {
                 )}
               >
                 <div className="min-h-0 rounded-xl border border-line bg-ink-900/60 p-4">
-                  <PlotlyChart figure={forSlide(slide.figure)} height={projector ? 700 : 340} />
+                  <PlotlyChart figure={forSlide(slide.figure, projector)} height={chartHeight} />
                 </div>
                 {showCode && (
                   <div className="flex min-h-0 flex-col">
-                    <p className="mb-2 text-lg text-paper/60">The pandas that made it</p>
+                    <p className="mb-2 text-xl text-paper/70">The pandas that made it</p>
                     <div className="min-h-0 flex-1">
                       <CodePanel code={slide.code} />
                     </div>
@@ -128,36 +144,35 @@ export function AutopsyDeck({ code }: { code: string }) {
         </motion.section>
       </AnimatePresence>
 
-      <footer className="mt-6 flex items-center justify-between">
-        <button onClick={() => go(-1)} disabled={index === 0} className="text-xl text-paper/60 disabled:opacity-20" aria-label="Previous slide">
-          ←
-        </button>
-        <div className="flex gap-2" data-testid="progress-pips">
-          {Array.from({ length: total }, (_, i) => (
-            <button
-              key={i}
-              aria-label={`Slide ${i + 1}`}
-              onClick={() => setIndex(i)}
-              className={cn("h-2 rounded-full transition-all", i === index ? "w-10 bg-amber" : "w-2 bg-line")}
-            />
-          ))}
-        </div>
-        <div className="flex items-center gap-6">
-          {slide && (
-            <button onClick={() => setShowCode((s) => !s)} className="text-lg text-paper/60 hover:text-paper">
-              {showCode ? "Hide code (C)" : "Show code (C)"}
-            </button>
-          )}
-          <button
-            onClick={() => go(1)}
-            disabled={index === total - 1}
-            className="text-xl text-paper/60 disabled:opacity-20"
-            aria-label="Next slide"
-          >
-            →
+      {!autopsy.isError && (
+        <footer className="relative z-10 mt-4 flex items-center justify-between gap-3">
+          <button onClick={() => go(-1)} disabled={index === 0} className="flex size-12 items-center justify-center rounded-lg text-3xl text-paper/70 hover:bg-white/5 disabled:opacity-20" aria-label="Previous slide">
+            ←
           </button>
-        </div>
-      </footer>
+          <div className="flex" data-testid="progress-pips">
+            {Array.from({ length: total }, (_, i) => (
+              <button key={i} aria-label={`Slide ${i + 1}`} onClick={() => setIndex(i)} className="flex h-10 items-center px-1.5">
+                <span className={cn("h-2.5 rounded-full transition-all", i === index ? "w-10 bg-amber" : "w-2.5 bg-paper/25")} />
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-3 sm:gap-6">
+            {slide && (
+              <button onClick={() => setShowCode((s) => !s)} className="min-h-11 text-lg text-paper/70 hover:text-paper">
+                {showCode ? "Hide code" : "Show code"}<span className="hidden lg:inline"> (C)</span>
+              </button>
+            )}
+            <button
+              onClick={() => go(1)}
+              disabled={index === total - 1}
+              className="flex size-12 items-center justify-center rounded-lg text-3xl text-paper/70 hover:bg-white/5 disabled:opacity-20"
+              aria-label="Next slide"
+            >
+              →
+            </button>
+          </div>
+        </footer>
+      )}
     </main>
   );
 }

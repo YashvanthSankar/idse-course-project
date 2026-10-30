@@ -45,7 +45,7 @@ export function BriefingModal({ meta, onClose, onOpenFiles, closeLabel = "BACK T
             </div>
             <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 font-type text-[13px] sm:text-sm">
               <dt className="opacity-60">TO:</dt>
-              <dd>Rookie Auditor</dd>
+              <dd>{career ? "Forensic Auditor" : "Rookie Auditor"}</dd>
               <dt className="opacity-60">FROM:</dt>
               <dd>R. Desai, Chief Auditor</dd>
               <dt className="opacity-60">RE:</dt>
@@ -62,7 +62,7 @@ export function BriefingModal({ meta, onClose, onOpenFiles, closeLabel = "BACK T
             </p>
             {career && career.culprits > 1 && (
               <p data-testid="two-culprits" className="mt-2 font-type text-[13px] font-bold text-[#8f1d27]">
-                Two fraudsters in this ledger. Accuse both — with two clues each.
+                Two fraudsters in this ledger. Accuse both, with a clue that fits each one&apos;s trick.
               </p>
             )}
             <p className="mt-1 font-type text-[13px] opacity-75">

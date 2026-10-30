@@ -168,6 +168,7 @@ def test_a_server_restart_rebuilds_the_open_case(app, client, tmp_path):
     code = client.post("/api/career").json()["code"]
     client.post(f"/api/career/{code}/sign", json={"company_id": "lakshmi"})
     meta = client.post(f"/api/career/{code}/case").json()
+    assert app.state.careers.flush()  # the old server wrote everything before it went
     fresh = TestClient(create_app(store=SessionStore(),
                                   telemetry=Telemetry(str(tmp_path / "t.db")),
                                   careers=CareerStore(str(tmp_path / "t.db"))))

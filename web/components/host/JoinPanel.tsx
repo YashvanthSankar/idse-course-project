@@ -17,7 +17,7 @@ export function JoinPanel({ code, compact = false }: { code: string; compact?: b
       <div className="flex items-center gap-4 rounded-lg border border-line bg-ink-900/80 px-4 py-3">
         {origin && <QRCodeSVG value={url} size={72} bgColor="#efe6d2" fgColor="#07080b" includeMargin />}
         <div>
-          <p className="text-sm text-paper/60">Late? Join with code</p>
+          <p className="text-base text-paper/70">Late? Join with code</p>
           <p className="font-mono text-3xl font-bold tracking-[0.2em] text-amber">{code}</p>
         </div>
       </div>
@@ -34,17 +34,17 @@ export function JoinPanel({ code, compact = false }: { code: string; compact?: b
             bgColor="#efe6d2"
             fgColor="#07080b"
             data-testid="join-qr"
-            style={{ width: "min(280px, 62vw)", height: "auto" }}
+            style={{ width: "min(280px, 62vw, 32vh)", height: "auto" }}
           />
         ) : (
-          <div className="aspect-square w-[min(280px,62vw)]" />
+          <div className="aspect-square w-[min(280px,62vw,32vh)]" />
         )}
       </div>
       <p className="mt-4 break-all font-mono text-base text-paper/60 sm:text-lg">{url.replace(/^https?:\/\//, "")}</p>
-      <p className="mt-8 text-lg text-paper/60">Room code</p>
+      <p className="mt-8 text-lg text-paper/60 short:mt-3">Room code</p>
       <p
         data-testid="room-code"
-        className="font-display text-[clamp(64px,9vw,168px)] font-black leading-none tracking-[0.08em] text-amber [text-shadow:0_0_40px_rgba(245,165,36,0.35)]"
+        className="font-display text-[clamp(56px,min(9vw,14vh),168px)] font-black leading-none tracking-[0.08em] text-amber [text-shadow:0_0_40px_rgba(245,165,36,0.35)]"
       >
         {code}
       </p>

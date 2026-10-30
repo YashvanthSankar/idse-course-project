@@ -21,6 +21,15 @@ class Slide:
     stats: dict
 
 
+
+def _shown(fn) -> str:
+    """The slide's own code for the projector: the analysis, without the plumbing that packs
+    the slide up at the end."""
+    lines = inspect.getsource(fn).splitlines()
+    end = next((i for i, line in enumerate(lines) if line.startswith("    return Slide(")),
+               len(lines))
+    return "\n".join([*lines[:end], "    return fig"])
+
 def latest_round(events: pd.DataFrame) -> pd.DataFrame:
     """Keep each detective's most recent case only, so a second round is analysed alone."""
     started = events[events["type"] == "case_started"]
@@ -72,7 +81,7 @@ def verdict_slide(players: pd.DataFrame) -> Slide:
                            text=list(counts.values()), textposition="outside"))
     fig.update_layout(title="How the class did", yaxis_title="detectives")
     median = players["seconds_to_accuse"].median()
-    return Slide("The verdicts", fig_to_json(fig), inspect.getsource(verdict_slide), {
+    return Slide("The verdicts", fig_to_json(fig), _shown(verdict_slide), {
         "players": len(players),
         "solve_rate": round(float(players["correct"].mean()), 3),
         "median_seconds": 0.0 if pd.isna(median) else float(median),
@@ -87,8 +96,10 @@ def tool_usage_slide(events: pd.DataFrame) -> Slide:
     fig.update_layout(title="Tool runs across the whole class",
                       yaxis={"autorange": "reversed"}, xaxis_title="times used")
     return Slide("Which tools did the class reach for?", fig_to_json(fig),
-                 inspect.getsource(tool_usage_slide),
-                 {"most_used": names[0] if names else "none", "total_runs": int(usage.sum())})
+                 _shown(tool_usage_slide),
+                 {"most_used": names[0] if names else "none", "total_runs": int(usage.sum()),
+                  "tied": [n for n, c in zip(names, usage.to_numpy(), strict=True)
+                           if len(usage) and c == usage.iloc[0]]})
 
 
 def timing_slide(players: pd.DataFrame) -> Slide:
@@ -101,7 +112,7 @@ def timing_slide(players: pd.DataFrame) -> Slide:
                       xaxis_title="seconds", yaxis_title="detectives")
     right = players.loc[players["correct"] == 1, "seconds_to_accuse"]
     wrong = players.loc[(players["correct"] == 0), "seconds_to_accuse"]
-    return Slide("How long did it take?", fig_to_json(fig), inspect.getsource(timing_slide), {
+    return Slide("How long did it take?", fig_to_json(fig), _shown(timing_slide), {
         "median_right": float(right.median()) if right.notna().any() else 0.0,
         "median_wrong": float(wrong.median()) if wrong.notna().any() else 0.0,
     })
@@ -126,7 +137,7 @@ def analysis_pays_slide(players: pd.DataFrame) -> Slide:
                       xaxis_title="tools run", yaxis={"title": "right (1) / wrong (0)",
                                                       "range": [-0.2, 1.2]})
     return Slide("Does more analysis pay off?", fig_to_json(fig),
-                 inspect.getsource(analysis_pays_slide),
+                 _shown(analysis_pays_slide),
                  {"pearson_r": round(float(r), 3), "p_value": float(p)})
 
 
@@ -155,7 +166,7 @@ def predictive_tool_slide(events: pd.DataFrame, players: pd.DataFrame) -> Slide:
                       yaxis={"tickformat": ".0%"})
     best = result.sort_values("p").iloc[0] if len(result) else None
     return Slide("Which tool predicts success?", fig_to_json(fig),
-                 inspect.getsource(predictive_tool_slide),
+                 _shown(predictive_tool_slide),
                  {"best_tool": best["tool"] if best is not None else "none",
                   "best_p": float(best["p"]) if best is not None else 1.0,
                   "tests": len(result),  # many tests at once: treat as exploratory
@@ -171,7 +182,7 @@ def archetype_slide(players: pd.DataFrame) -> Slide:
                            marker={"colors": [COLORS["amber"], COLORS["cyan"], COLORS["red"],
                                               COLORS["green"]]}))
     fig.update_layout(title="KMeans sorted the class into four kinds of detective")
-    return Slide("Detective archetypes", fig_to_json(fig), inspect.getsource(archetype_slide),
+    return Slide("Detective archetypes", fig_to_json(fig), _shown(archetype_slide),
                  {k: int(v) for k, v in counts.items()})
 
 
@@ -180,7 +191,7 @@ def build_autopsy(events: pd.DataFrame) -> list[Slide]:
         fig = go.Figure()
         fig.add_annotation(text="Waiting for the class to play…", showarrow=False,
                            font={"size": 22, "color": COLORS["muted"]})
-        return [Slide("No detectives yet", fig_to_json(fig), inspect.getsource(build_autopsy),
+        return [Slide("No detectives yet", fig_to_json(fig), _shown(build_autopsy),
                       {})]
     players = player_table(events)
     return [

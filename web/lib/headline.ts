@@ -52,9 +52,25 @@ function howWeKnow(summary: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+// When a tool flags nobody, its own sentence still describes the flagged case: say what it checked.
+const QUIET_DETAIL: Record<string, string> = {
+  groupby: "Everyone's mix was compared with the rest of the office (chi-square): nobody's was different enough.",
+  timeseries: "Weekend spending was compared with weekdays for everyone (binomial test): nobody's stood out.",
+  benford: "Every ledger's first digits were tested against Benford's law: none broke the pattern.",
+};
+
+/** The summary's rupee amounts in the same Indian grouping as the headline (₹1,88,08,902). */
+const indianRupees = (text: string) =>
+  text.replace(/₹([\d,]+(?:\.\d+)?)/g, (_, n: string) => formatINR(Number(n.replace(/,/g, ""))));
+
 export function finding(result: ResultLike, names: Record<string, string>): Finding {
-  const detail = result.tool_id === "summary" ? withNames(result.summary, names) : howWeKnow(result.summary);
   const ids = result.implicates;
+  const detail =
+    result.tool_id === "summary"
+      ? indianRupees(withNames(result.summary, names))
+      : ids.length === 0 && QUIET_DETAIL[result.tool_id]
+        ? QUIET_DETAIL[result.tool_id]
+        : howWeKnow(result.summary);
   if (result.tool_id === "summary") {
     const total = Number(result.stats.total_spend ?? 0);
     return { headline: `${formatINR(total)} spent across the ledger`, pill: "Overview only", tone: "info", detail };

@@ -10,7 +10,7 @@ import { JoinPanel } from "./JoinPanel";
 export const ROUND_LENGTHS = [3, 6, 10] as const;
 
 export function HostLobby({
-  code, players, level, minutes, onLevel, onMinutes, onStart, canStart,
+  code, players, level, minutes, onLevel, onMinutes, onStart, canStart, offline = false,
 }: {
   code: string;
   players: LobbyPlayer[];
@@ -20,22 +20,29 @@ export function HostLobby({
   onMinutes: (minutes: number) => void;
   onStart: () => void;
   canStart: boolean;
+  /** the game server can't be reached: say so where the whole class can see it */
+  offline?: boolean;
 }) {
   const levels = useQuery({ queryKey: ["levels"], queryFn: listLevels });
   const online = players.filter((p) => p.connected);
 
   return (
-    <div className="grid flex-1 gap-10 px-10 pb-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-      <section className="flex items-center justify-center rounded-2xl border border-line bg-ink-900/60 p-8">
+    <div className="grid flex-1 gap-6 px-4 pb-8 sm:gap-10 sm:px-10 sm:pb-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] short:gap-5 short:pb-5">
+      <section className="flex items-center justify-center rounded-2xl border border-line bg-ink-900/60 p-6 sm:p-8 short:sm:p-5">
         <JoinPanel code={code} />
       </section>
 
-      <section className="flex min-w-0 flex-col gap-8">
+      <section className="flex min-w-0 flex-col gap-8 short:gap-4">
+        {(offline || levels.isError) && (
+          <p role="alert" className="rounded-lg border border-red/60 bg-red/10 px-4 py-3 text-xl text-[#ffd9da]">
+            Can&apos;t reach the game server. Check the Wi-Fi; this screen reconnects by itself.
+          </p>
+        )}
         <div>
-          <p data-testid="joined-count" className="font-display text-6xl font-black italic text-paper">
+          <p data-testid="joined-count" className="font-display text-4xl font-black italic text-paper sm:text-6xl short:sm:text-5xl">
             {online.length} {online.length === 1 ? "detective" : "detectives"} joined
           </p>
-          <div className="mt-6 flex max-h-[34vh] flex-wrap content-start gap-3 overflow-y-auto pr-2">
+          <div className="mt-6 flex max-h-[34vh] flex-wrap content-start gap-3 overflow-y-auto pr-2 short:mt-3 short:max-h-[18vh]">
             <AnimatePresence>
               {players.map((p) => (
                 <motion.span
@@ -58,7 +65,7 @@ export function HostLobby({
           </div>
         </div>
 
-        <div className="mt-auto space-y-6">
+        <div className="mt-auto space-y-6 short:space-y-3">
           <div>
             <p className="mb-3 text-lg text-paper/70">Choose the case</p>
             <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
@@ -71,13 +78,13 @@ export function HostLobby({
                     sfx.play("tick");
                   }}
                   className={cn(
-                    "rounded-lg border px-4 py-3 text-left transition",
+                    "flex flex-col justify-start rounded-lg border px-4 py-3 text-left transition short:py-2",
                     level === l.level
                       ? "border-amber bg-amber/10 shadow-[0_0_24px_rgba(245,165,36,0.2)]"
                       : "border-line bg-ink-900/60 hover:border-paper/40",
                   )}
                 >
-                  <span className="block font-mono text-sm text-paper/50">Case {String(l.level).padStart(2, "0")}</span>
+                  <span className="block font-mono text-base text-paper/60">Case {String(l.level).padStart(2, "0")}</span>
                   <span className="block font-display text-xl italic text-paper">{l.title}</span>
                   <span className="text-sm text-red">{"★".repeat(l.difficulty)}<span className="text-paper/20">{"★".repeat(5 - l.difficulty)}</span></span>
                 </button>
@@ -107,7 +114,7 @@ export function HostLobby({
               data-testid="start-round"
               onClick={onStart}
               disabled={!canStart}
-              className="ml-auto rounded-lg bg-red px-16 py-5 font-type text-3xl tracking-[0.3em] text-white shadow-[0_0_50px_rgba(229,72,77,0.55)] ring-2 ring-[#ff8a8e]/60 transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-ink-800 disabled:text-paper/40 disabled:shadow-none disabled:ring-0"
+              className="ml-auto rounded-lg bg-red px-12 py-4 font-type text-3xl sm:px-16 sm:py-5 short:sm:py-3 tracking-[0.3em] text-white shadow-[0_0_50px_rgba(229,72,77,0.55)] ring-2 ring-[#ff8a8e]/60 transition hover:brightness-110 disabled:cursor-not-allowed disabled:bg-ink-800 disabled:text-paper/40 disabled:shadow-none disabled:ring-0"
             >
               START
             </button>

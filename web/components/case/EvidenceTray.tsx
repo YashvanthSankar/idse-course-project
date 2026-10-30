@@ -5,10 +5,11 @@ import { sfx } from "@/lib/sound";
 import { toolMeta } from "@/lib/toolMeta";
 import type { Suspect, ToolResult } from "@/lib/types";
 
-export function EvidenceTray({ pinned, suspects, onUnpin, onSelect, onOpenBoard, files = 2 }: {
+export function EvidenceTray({ pinned, suspects, onUnpin, onSelect, onOpenBoard, files = 2, career = false }: {
   pinned: ToolResult[];
-  /** clues filed with the accusation: 2, or 4 when there are two fraudsters */
+  /** clues needed to accuse: 2 in Quick Case; in Career Mode one per fraudster */
   files?: number;
+  career?: boolean;
   suspects: Suspect[];
   onUnpin: (id: string) => void;
   onSelect: (id: string) => void;
@@ -59,11 +60,15 @@ export function EvidenceTray({ pinned, suspects, onUnpin, onSelect, onOpenBoard,
             </motion.li>
           ))}
         </AnimatePresence>
-        {pinned.length < 2 && (
+        {pinned.length < files && (
           <li className="rounded-[3px] border border-dashed border-line px-3 py-4 text-center text-sm leading-snug text-paper/55">
-            {pinned.length === 0
-              ? "Pin 2 results that point at the same person"
-              : "Pin 1 more result to build your case"}
+            {career
+              ? files > 1
+                ? "Pin one clue for each fraudster"
+                : "Pin the result that shows the trick"
+              : pinned.length === 0
+                ? "Pin 2 results that point at the same person"
+                : "Pin 1 more result to build your case"}
           </li>
         )}
       </ul>

@@ -210,7 +210,7 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
                   <p className="font-type text-[10px] tracking-[0.35em] opacity-60">EVIDENCE BOARD</p>
                   <h2 className="font-display text-2xl italic leading-tight sm:text-3xl">Connect the dots</h2>
                   <p className="max-w-xs text-[11px] opacity-75 sm:text-xs">
-                    Drag a photo onto a suspect — or tap the photo, then the suspect. Two strings make a case.
+                    Drag a photo onto a suspect — or tap the photo, then the suspect. {career ? "One string that fits the trick makes a case." : "Two strings make a case."}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

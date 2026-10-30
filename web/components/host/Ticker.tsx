@@ -10,7 +10,7 @@ export function Ticker({ lines }: { lines: { id: number; text: string }[] }) {
             key={line.id}
             layout
             initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1 - i * 0.15, x: 0 }}
+            animate={{ opacity: Math.max(0.5, 1 - i * 0.1), x: 0 }}
             exit={{ opacity: 0 }}
             className="text-xl text-paper"
           >

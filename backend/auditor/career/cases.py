@@ -62,7 +62,7 @@ HINT: dict[SchemeId, str] = {
 VAGUE = ("The board can't say what's wrong at {company}. Only that something is. You've got "
          "the ledger and a budget. Find it.")
 TWO = ("Two of them this time, working separately, each hiding from a different tool. "
-       "Find both, and bring two clues for each.")
+       "Find both, and bring a clue that fits each one's trick.")
 FINAL: list[str] = [
     ("The Commission's first file. Two people at Kaveri Holdings are moving money they "
      "shouldn't. Whoever trained them knows how you work."),
@@ -143,6 +143,22 @@ def _intended_cost(scheme: SchemeId, unlocked: list[ToolId]) -> int:
 
 def intended_cost(schemes: list[SchemeId], unlocked: list[ToolId]) -> int:
     return sum(_intended_cost(s, unlocked) for s in schemes)
+
+
+def telling_rows(df: pd.DataFrame, culprit: Culprit) -> list[str]:
+    """Rows besides the fraud that show the trick just as well, so pinning them as exhibits is
+    fair: the honest original of every bill billed twice (the pair is the evidence), and the
+    fraudster's own weekend claims (honest ones look exactly like the fraud)."""
+    mine = df[df["employee_id"] == culprit.fraudster_id]
+    if culprit.scheme == "duplicates":
+        fraud = mine[mine["txn_id"].isin(culprit.fraud_txn_ids)]
+        twins = set(zip(fraud["vendor"], fraud["amount"], strict=True))
+        rows = mine[[k in twins for k in zip(mine["vendor"], mine["amount"], strict=True)]]
+    elif culprit.scheme == "weekend":
+        rows = mine[pd.to_datetime(mine["date"]).dt.weekday >= 5]
+    else:
+        return []
+    return sorted(set(rows["txn_id"]) - set(culprit.fraud_txn_ids))
 
 
 def build_career_case(plan: CasePlan, people: list[Person], code: str, case_id: str,

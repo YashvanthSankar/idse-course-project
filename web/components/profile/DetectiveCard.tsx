@@ -20,7 +20,7 @@ const ICON: Record<string, string> = {
 /** Shrink the radar inside its box so every axis label fits. */
 function roomyRadar(figure: { layout?: Record<string, unknown> }) {
   const polar = (figure.layout?.polar ?? {}) as Record<string, unknown>;
-  return { ...figure, layout: { ...figure.layout, polar: { ...polar, domain: { x: [0.14, 0.86], y: [0.1, 0.9] } } } };
+  return { ...figure, layout: { ...figure.layout, polar: { ...polar, domain: { x: [0.22, 0.78], y: [0.12, 0.88] } } } };
 }
 
 export function DetectiveCardPage({ playerId }: { playerId: string }) {
@@ -36,9 +36,20 @@ export function DetectiveCardPage({ playerId }: { playerId: string }) {
       {profile.isPending && <p className="text-xl text-paper/60">Pulling your file…</p>}
       {profile.isError && (
         <div className="max-w-sm text-center">
-          <p className="font-display text-4xl italic text-paper">No file on this detective yet.</p>
-          <p className="mt-3 text-lg text-paper/60">Play a case first — then come back for your card.</p>
-          <Link href="/" className="mt-6 inline-block text-amber underline">Back to the title screen</Link>
+          {profile.error instanceof ApiError && profile.error.status === 404 ? (
+            <>
+              <p className="font-display text-4xl italic text-paper">No file on this detective yet.</p>
+              <p className="mt-3 text-lg text-paper/60">Play a case first — then come back for your card.</p>
+            </>
+          ) : (
+            <>
+              <p className="font-display text-4xl italic text-paper">Can&apos;t reach the records room.</p>
+              <p className="mt-3 text-lg text-paper/60">Check the Wi-Fi and try again.</p>
+              <button onClick={() => profile.refetch()} className="mt-6 min-h-11 rounded-lg border border-amber/60 px-5 text-amber">
+                TRY AGAIN
+              </button>
+            </>
+          )}
         </div>
       )}
       {profile.data && <Card profile={profile.data} />}
@@ -106,7 +117,7 @@ function Card({ profile }: { profile: Profile }) {
             {ICON[profile.archetype] ?? "?"}
           </span>
           <div className="min-w-0">
-            <p data-testid="archetype" className="font-display text-3xl font-black italic leading-tight">
+            <p data-testid="archetype" className="break-words font-display text-2xl font-black italic leading-tight sm:text-3xl">
               {profile.archetype}
             </p>
             <p className="truncate text-lg">{profile.name}</p>
@@ -126,7 +137,7 @@ function Card({ profile }: { profile: Profile }) {
           {stats.map(([label, value]) => (
             <div key={label} className="rounded-lg border border-[#2a2418]/25 bg-black/5 px-3 py-2">
               <dt className="text-xs opacity-60">{label}</dt>
-              <dd className="font-mono text-xl font-bold">{value}</dd>
+              <dd className="whitespace-nowrap font-mono text-lg font-bold sm:text-xl">{value}</dd>
             </div>
           ))}
         </dl>

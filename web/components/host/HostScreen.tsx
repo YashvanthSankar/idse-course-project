@@ -3,10 +3,11 @@ import { BackButton } from "@/components/ui/BackButton";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { listLevels } from "@/lib/api";
+import { listLevels, roomExists } from "@/lib/api";
 import { loadHostToken } from "@/lib/hostToken";
 import { sfx } from "@/lib/sound";
 import { useClock } from "@/lib/useClock";
+import { useMediaQuery } from "@/lib/useMediaQuery";
 import { useRoomSocket } from "@/lib/ws";
 import { CountdownRing } from "./CountdownRing";
 import { HostLobby } from "./HostLobby";
@@ -24,31 +25,56 @@ export function HostScreen({ code }: { code: string }) {
   const levels = useQuery({ queryKey: ["levels"], queryFn: listLevels });
   const [level, setLevel] = useState(1);
   const [minutes, setMinutes] = useState(6);
-  const [roundSeconds, setRoundSeconds] = useState(360);
   const [setupAgain, setSetupAgain] = useState(false);
   const now = useClock();
+  const short = useMediaQuery("(max-height: 820px)") ?? false;
   const endedRef = useRef<number | null>(null);
+  // Without the token we can't connect, so ask the API whether the room exists at all.
+  const exists = useQuery({ queryKey: ["room-exists", code], queryFn: () => roomExists(code), enabled: token === "" });
+  const roundSeconds = state.roundSeconds ?? minutes * 60;
+  const overtime = state.phase === "running" && state.endsAt !== null && now !== null && now * 1000 >= state.endsAt;
 
-  // The projector ends the round when the clock runs out.
+  // The server ends the round after its grace period; the projector only steps in if that
+  // message never arrives (late accusations sent at 0:00 must still count).
   useEffect(() => {
     if (state.phase !== "running" || !state.endsAt || now === null) return;
-    if (now * 1000 >= state.endsAt && endedRef.current !== state.endsAt) {
+    if (now * 1000 >= state.endsAt + (state.grace + 3) * 1000 && endedRef.current !== state.endsAt) {
       endedRef.current = state.endsAt;
       send({ type: "end" });
     }
-  }, [now, state.phase, state.endsAt, send]);
+  }, [now, state.phase, state.endsAt, state.grace, send]);
 
   const start = () => {
     sfx.unlock();
     sfx.play("stamp");
-    setRoundSeconds(minutes * 60);
     setSetupAgain(false);
     send({ type: "start", level, seconds: minutes * 60 });
   };
 
+  const again = () => {
+    // the next round starts from the last one's setup
+    if (state.level) setLevel(Math.min(6, state.level));
+    if (state.roundSeconds) setMinutes(Math.round(state.roundSeconds / 60));
+    setSetupAgain(true);
+  };
+
+  if (token === "" && exists.data === false) {
+    return (
+      <Shell code={code} connected={null}>
+        <div className="flex flex-1 flex-col items-center justify-center gap-5 px-4 text-center">
+          <p className="font-display text-4xl italic text-paper sm:text-5xl">There&apos;s no room {code}.</p>
+          <p className="max-w-xl text-lg text-paper/70">It may have closed, or the code has a typo.</p>
+          <Link href="/host" className="mt-2 rounded-lg border-2 border-amber px-6 py-3 font-type tracking-[0.2em] text-amber hover:bg-amber/10">
+            START A NEW CLASS SESSION
+          </Link>
+        </div>
+      </Shell>
+    );
+  }
+
   if (token === "" || status === "forbidden") {
     return (
-      <Shell code={code}>
+      <Shell code={code} connected={null}>
         <div className="flex flex-1 flex-col items-center justify-center gap-5 px-4 text-center">
           <p className="font-display text-4xl italic text-paper sm:text-5xl">This screen belongs to another session.</p>
           <p className="max-w-xl text-lg text-paper/70">
@@ -64,9 +90,9 @@ export function HostScreen({ code }: { code: string }) {
 
   if (status === "not_found") {
     return (
-      <Shell code={code}>
-        <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-          <p className="font-display text-5xl italic text-paper">This room has closed.</p>
+      <Shell code={code} connected={null}>
+        <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 text-center">
+          <p className="font-display text-4xl italic text-paper sm:text-5xl">This room has closed.</p>
           <Link href="/host" className="text-xl text-amber underline">Open a new class session</Link>
         </div>
       </Shell>
@@ -88,21 +114,28 @@ export function HostScreen({ code }: { code: string }) {
           onMinutes={setMinutes}
           onStart={start}
           canStart={status === "open" && state.players.length > 0}
+          offline={status !== "open" && status !== "connecting"}
         />
       )}
 
       {view === "running" && (
-        <div className="grid flex-1 gap-6 px-4 pb-8 sm:gap-10 sm:px-10 sm:pb-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div className="grid flex-1 gap-6 px-4 pb-8 sm:gap-10 sm:px-10 sm:pb-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] short:gap-5 short:pb-5">
           <section className="min-w-0">
-            <p className="text-lg text-paper/60">Case {String(state.level ?? "").padStart(2, "0")}</p>
-            <h2 className="mb-6 font-display text-3xl font-black italic text-paper sm:text-5xl">{caseTitle ?? "In progress"}</h2>
+            <p className="text-xl text-paper/70">Case {String(state.level ?? "").padStart(2, "0")}</p>
+            <h2 className="mb-6 font-display text-3xl font-black italic text-paper sm:text-5xl short:mb-3 short:sm:text-4xl">{caseTitle ?? "In progress"}</h2>
             <Leaderboard rows={state.top} />
           </section>
-          <section className="flex min-w-0 flex-col gap-6 sm:gap-8">
-            <div className="flex items-center gap-4 rounded-2xl border border-line bg-ink-900/60 p-4 sm:gap-8 sm:p-6">
-              {state.endsAt && <CountdownRing endsAt={state.endsAt} totalSeconds={roundSeconds} />}
+          <section className="flex min-w-0 flex-col gap-6 sm:gap-8 short:sm:gap-4">
+            <div className="flex items-center gap-4 rounded-2xl border border-line bg-ink-900/60 p-4 sm:gap-8 sm:p-6 short:sm:p-4">
+              {state.endsAt && <CountdownRing endsAt={state.endsAt} totalSeconds={roundSeconds} size={short ? 112 : 150} />}
               <div className="min-w-0 flex-1">
-                <p className="text-lg text-paper/60">Cases closed</p>
+                {overtime ? (
+                  <p className="text-lg text-amber" data-testid="grace">Time! Last accusations still count for {state.grace} s.</p>
+                ) : state.total > 0 && state.solved === state.total ? (
+                  <p className="text-lg text-green" data-testid="all-done">Everyone&apos;s done. End the round when you&apos;re ready.</p>
+                ) : (
+                  <p className="text-xl text-paper/70">Cases closed</p>
+                )}
                 <p data-testid="solved-meter" className="font-mono text-3xl font-bold text-paper sm:text-5xl">
                   {state.solved}
                   <span className="text-paper/40"> / {state.total || state.players.length}</span>
@@ -115,8 +148,8 @@ export function HostScreen({ code }: { code: string }) {
                 </div>
               </div>
             </div>
-            <div className="flex-1 rounded-2xl border border-line bg-ink-900/60 p-4 sm:p-6">
-              <p className="mb-4 text-lg text-paper/60">Live from the field</p>
+            <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-line bg-ink-900/60 p-4 sm:p-6 short:sm:p-4">
+              <p className="mb-4 text-xl text-paper/70 short:mb-2">Live from the field</p>
               <Ticker lines={state.ticker} />
             </div>
             <div className="flex flex-wrap items-center justify-between gap-4">
@@ -134,20 +167,20 @@ export function HostScreen({ code }: { code: string }) {
       )}
 
       {view === "ended" && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-12 px-10 pb-10">
-          <h2 className="font-display text-6xl font-black italic text-paper">Top detectives</h2>
+        <div className="flex flex-1 flex-col items-center justify-center gap-8 px-4 pb-8 sm:px-10 lg:gap-12 short:gap-5 short:pb-5">
+          <h2 className="font-display text-4xl font-black italic text-paper sm:text-6xl short:sm:text-5xl">Top detectives</h2>
           <Podium rows={state.top} />
-          <div className="flex gap-5">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-5">
             <Link
               href={`/host/${code}/autopsy`}
               data-testid="open-autopsy"
-              className="rounded-lg bg-amber px-10 py-4 font-type text-2xl tracking-[0.2em] text-ink-950 hover:brightness-110"
+              className="rounded-lg bg-amber px-6 py-4 font-type text-xl tracking-[0.2em] text-ink-950 hover:brightness-110 sm:px-10 sm:text-2xl"
             >
               OPEN CLASS AUTOPSY
             </Link>
             <button
-              onClick={() => setSetupAgain(true)}
-              className="rounded-lg border border-line px-8 py-4 font-type text-xl tracking-[0.15em] text-paper/80 hover:border-paper/50"
+              onClick={again}
+              className="rounded-lg border border-line px-6 py-4 font-type text-xl tracking-[0.15em] text-paper/80 hover:border-paper/50 sm:px-8"
             >
               ANOTHER ROUND
             </button>
@@ -158,22 +191,26 @@ export function HostScreen({ code }: { code: string }) {
   );
 }
 
-function Shell({ code, connected = true, children }: { code: string; connected?: boolean; children: React.ReactNode }) {
+/** `connected`: true / false for a live socket, null when there is none to show. */
+function Shell({ code, connected, children }: { code: string; connected: boolean | null; children: React.ReactNode }) {
   return (
-    <main className="flex min-h-dvh flex-col bg-[radial-gradient(ellipse_at_50%_-20%,#1b2540_0%,#07080b_65%)]">
-      <header className="flex items-center justify-between px-10 py-6">
+    <main className="flex min-h-dvh flex-col overflow-x-clip bg-[radial-gradient(ellipse_at_50%_-20%,#1b2540_0%,#07080b_65%)]">
+      <header className="flex items-center justify-between gap-4 px-4 py-4 sm:px-10 sm:py-6 short:sm:py-3">
         <div className="flex items-center gap-4">
           <BackButton href="/host" label="Class Mode" short="Back" />
-          <p className="arcade-logo font-pixel text-xl">
+          <p className="arcade-logo hidden font-pixel text-xl sm:block">
             OUTLIER
           </p>
         </div>
-        <div className="flex items-center gap-4 text-lg text-paper/60">
-          <span>Class Mode · Room {code}</span>
-          <span
-            title={connected ? "Connected" : "Reconnecting…"}
-            className={`size-3 rounded-full ${connected ? "bg-green" : "animate-pulse bg-red"}`}
-          />
+        <div className="flex items-center gap-3 text-right text-base text-paper/70 sm:gap-4 sm:text-xl">
+          <span className="whitespace-nowrap"><span className="hidden sm:inline">Class Mode · </span>Room {code}</span>
+          {connected === false && <span className="text-red" role="status">Reconnecting…</span>}
+          {connected !== null && (
+            <span
+              title={connected ? "Connected" : "Reconnecting…"}
+              className={`size-3 rounded-full ${connected ? "bg-green" : "animate-pulse bg-red"}`}
+            />
+          )}
         </div>
       </header>
       {children}

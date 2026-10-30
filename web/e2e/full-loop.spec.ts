@@ -119,5 +119,5 @@ test("a wrong verdict offers to try the same case again", async ({ page, request
   await page.mouse.up();
   await expect(page.getByTestId("next-case")).toContainText("TRY AGAIN · No. 01", { timeout: 20_000 });
   await page.getByTestId("next-case").click();
-  await expect(page.getByText("Case No. 01")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText(/^Case No\. 01 —/)).toBeVisible({ timeout: 20_000 }); // the memo, not the hidden verdict header
 });

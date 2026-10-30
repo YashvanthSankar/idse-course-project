@@ -26,6 +26,12 @@ describe("takeaway", () => {
     expect(takeaway("Which tool predicts success?", { best_tool: "Benford's Law", best_p: 0.02 })).toBe(
       "Benford's Law separated winners from the rest (p = 0.02)",
     );
+    expect(takeaway("Which tool predicts success?", { best_tool: "Box & Whisker", best_p: 0.1 })).toBe(
+      "No tool clearly separated winners yet · closest: Box & Whisker (p = 0.1)",
+    );
+    expect(takeaway("Which tools did the class reach for?", { most_used: "Z-Score Scan", total_runs: 6, tied: ["Z-Score Scan", "Case Summary"] })).toBe(
+      "Z-Score Scan and Case Summary tied as the go-to tools · 6 runs in total",
+    );
     expect(takeaway("Detective archetypes", { "The Gambler": 3, "The Statistician": 9 })).toBe(
       "Mostly The Statistician — 9 of 12 detectives",
     );

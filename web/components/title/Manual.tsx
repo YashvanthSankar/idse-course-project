@@ -8,7 +8,7 @@ const STEPS = [
   ["Read the briefing", "The Chief hints at what smells wrong. Every case has five suspects — one is cooking the books."],
   ["Investigate", "Run detective tools on the ledger. Each one is real Python analysis and costs budget. Re-running the same tool is free."],
   ["Pin evidence", "Pin results that point at someone. On the corkboard, drag them onto a suspect — red string ties the case together."],
-  ["Accuse", "Quick Case: choose one suspect and attach exactly two pieces of evidence. Career Mode: name the trick, attach one or two clues, and pin the rows that show it. One shot. No take-backs."],
+  ["Accuse", "Quick Case: choose one suspect and attach two pieces of evidence (if your budget runs out first, you file what you have). Career Mode: name the trick, attach one or two clues, and pin the rows that show it. One shot. No take-backs."],
   ["Verdict", "Quick Case: right suspect = 1000 points, strong evidence +250 each, every coin you didn't spend +40. Career Mode: a rating out of 100 (below). There's no clock — the budget is the challenge: you can't run every tool, so pick the analysis that fits the clue."],
 ];
 
@@ -35,8 +35,8 @@ const CAREER_POINTS = [
   ["Verdict", "35", "the right person"],
   ["Theory", "10", "the right trick"],
   ["Proof", "10", "a clue that fits your theory, or two tools that agree"],
-  ["Exhibits", "25", "the rows that show it — and only those"],
-  ["Spending", "20", "coins past what the case needed (a cross-check is free at small firms)"],
+  ["Exhibits", "25", "the rows that show it — and only those (both halves of a twin pair count)"],
+  ["Spending", "20", "coins past what the case needed (a cross-check is free at small firms); only when a clue points at who you accused"],
 ];
 
 export function Manual({ open, onClose }: { open: boolean; onClose: () => void }) {

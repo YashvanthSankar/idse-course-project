@@ -57,14 +57,16 @@ export function Spotlight({ caseId, accused, evidenceFor, required = 2, onCancel
     picked.key === pickKey && picked.ids[s.id] ? picked.ids[s.id] : defaultPick(evidenceFor(s.id), s.id, required);
   const choosingAny = accused.some((s) => evidenceFor(s.id).length > required);
   // Choosing clues adds a list: shrink the portrait so the hold button stays on screen
-  const compact = pair || career !== null || (choosingAny && (short || phone));
+  const compact = pair || career !== null || short || (choosingAny && phone);
+  const touch = useMediaQuery("(pointer: coarse)") ?? false;
 
   // Career Mode: a case file per accused — the trick, one or two clues, the rows
-  const theories = useQuery({
+  const careerView = useQuery({
     queryKey: ["career", career?.code ?? ""],
     queryFn: () => getCareer(career!.code),
     enabled: career !== null && open,
-  }).data?.theories ?? [];
+  });
+  const theories = careerView.data?.theories ?? [];
   const [charges, setCharges] = useState<{ key: string; by: Record<string, Charge> }>({ key: "", by: {} });
   const chargeFor = (s: Suspect): Charge =>
     (charges.key === pickKey && charges.by[s.id]) || {
@@ -76,6 +78,21 @@ export function Spotlight({ caseId, accused, evidenceFor, required = 2, onCancel
     setCharges({ key: pickKey, by: { ...Object.fromEntries(accused.map((a) => [a.id, chargeFor(a)])), [s.id]: next } });
 
   const ready = career ? accused.every((s) => chargeReady(chargeFor(s))) : accused.every((s) => chosenFor(s).length === required);
+  // Career Mode: what's still missing, said in one line next to the hold button
+  const missing = career
+    ? accused
+        .map((s) => {
+          const c = chargeFor(s);
+          const step = !c.theory ? "name the trick" : c.clues.length === 0 ? "pick a clue" : c.exhibits.length === 0 ? "pin the rows" : null;
+          return step && (pair ? `${s.name.split(" ")[0]}: ${step}` : step);
+        })
+        .filter(Boolean)
+        .join(" · ")
+    : accused
+        .map((s) => required - chosenFor(s).length)
+        .filter((n) => n > 0)
+        .map((n) => `choose ${n} more clue${n === 1 ? "" : "s"}`)
+        .join(" · ");
   const toggle = (s: Suspect, id: string) => {
     sfx.play("tick");
     const current = chosenFor(s);
@@ -133,7 +150,8 @@ export function Spotlight({ caseId, accused, evidenceFor, required = 2, onCancel
     const evidence = evidenceFor(s.id);
     if (career) {
       return (
-        <CaseFile caseId={caseId} suspect={s} evidence={evidence} theories={theories}
+        <CaseFile caseId={caseId} suspect={s} evidence={evidence} theories={theories} culprits={career.culprits}
+          theoriesFailed={careerView.isError || (careerView.isSuccess && theories.length === 0)}
           charge={chargeFor(s)} onChange={(next) => setCharge(s, next)} disabled={pending} />
       );
     }
@@ -208,6 +226,7 @@ export function Spotlight({ caseId, accused, evidenceFor, required = 2, onCancel
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
           className="fixed inset-0 z-[140] overflow-y-auto overflow-x-hidden bg-black"
+          style={{ scrollPaddingBottom: 150 }} // keep things clear of the sticky hold bar
         >
           {/* the lamp's cone and the darkness around it */}
           <motion.div
@@ -223,7 +242,7 @@ export function Spotlight({ caseId, accused, evidenceFor, required = 2, onCancel
           <div aria-hidden className="pointer-events-none absolute left-1/2 top-0 h-3 w-24 -translate-x-1/2 rounded-b-full bg-[#2a2a2a] shadow-[0_6px_30px_rgba(255,220,160,0.6)]" />
           <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_36%,transparent_0,transparent_150px,rgba(0,0,0,0.88)_340px)]" />
 
-          <div className={cn("relative flex min-h-full flex-col items-center px-4 pb-10 text-center", compact ? "pt-[3vh]" : "pt-[8vh]")}>
+          <div className={cn("relative flex min-h-full flex-col items-center px-4 pb-0 text-center", compact ? "pt-[3vh]" : "pt-[8vh]")}>
             {pair ? (
               <>
                 <p className="font-type text-[11px] tracking-[0.45em] text-red">THE ACCUSED · BOTH OF THEM</p>
@@ -237,7 +256,10 @@ export function Spotlight({ caseId, accused, evidenceFor, required = 2, onCancel
                       transition={{ delay: 0.2 + i * 0.2, type: "spring", stiffness: 140, damping: 16 }}
                       className="flex flex-col items-center gap-3"
                     >
-                      <Portrait suspect={s} size={phone ? 104 : 140} highlight />
+                      {/* a fixed box: Portrait's padding is a share of its parent's width */}
+                      <div className="shrink-0" style={{ width: phone ? 104 : 140 }}>
+                        <Portrait suspect={s} size={phone ? 104 : 140} highlight />
+                      </div>
                       <div>
                         <h2 className="font-display text-3xl italic text-paper">{s.name}</h2>
                         <p className="font-type text-sm text-muted">{s.role} · {s.department}</p>
@@ -273,26 +295,36 @@ export function Spotlight({ caseId, accused, evidenceFor, required = 2, onCancel
               </>
             )}
 
-            <div className={cn("flex flex-col items-center gap-4", compact ? "mt-5" : "mt-8")}>
-              <HoldToConfirm
-                label={pending ? "…" : "HOLD"}
-                sublabel={pending ? "FILING" : "TO ACCUSE"}
-                disabled={pending || !ready}
-                onConfirm={confirm}
-              />
-              <p className="font-type text-[11px] tracking-[0.3em] text-muted">ONE SHOT · NO TAKE-BACKS</p>
-              {error && (
-                <p role="alert" className="max-w-sm rounded-sm border border-red/60 bg-ink-900 px-3 py-2 font-type text-sm text-[#ffd9da]">
-                  {error}
-                </p>
-              )}
-              <button
-                onClick={onCancel}
-                disabled={pending}
-                className="font-type text-xs tracking-[0.3em] text-paper/60 underline-offset-4 hover:text-paper hover:underline"
-              >
-                NOT YET (ESC)
-              </button>
+            <div aria-hidden className="h-6 shrink-0" />
+            {/* the hold button stays on screen, pinned to the bottom, whatever the case file's length */}
+            <div className="sticky bottom-0 z-10 -mx-4 mt-auto w-[calc(100%+2rem)] border-t border-white/10 bg-black/90 px-4 py-3 backdrop-blur" data-testid="accuse-bar">
+              <div className="mx-auto flex max-w-xl items-center gap-4 text-left">
+                <HoldToConfirm
+                  small
+                  label={pending ? "…" : "HOLD"}
+                  sublabel={pending ? "FILING" : "TO ACCUSE"}
+                  disabled={pending || !ready}
+                  onConfirm={confirm}
+                />
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p data-testid="accuse-missing" className={cn("text-sm", ready ? "text-green" : "text-amber")}>
+                    {ready ? "Ready. Hold the button to accuse." : `Next: ${missing}`}
+                  </p>
+                  <p className="font-type text-[11px] tracking-[0.3em] text-muted">ONE SHOT · NO TAKE-BACKS</p>
+                  {error && (
+                    <p role="alert" className="rounded-sm border border-red/60 bg-ink-900 px-3 py-2 font-type text-sm text-[#ffd9da]">
+                      {error}
+                    </p>
+                  )}
+                  <button
+                    onClick={onCancel}
+                    disabled={pending}
+                    className="-ml-2 min-h-10 px-2 font-type text-xs tracking-[0.3em] text-paper/70 underline-offset-4 hover:text-paper hover:underline"
+                  >
+                    NOT YET{touch ? "" : " (ESC)"}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>

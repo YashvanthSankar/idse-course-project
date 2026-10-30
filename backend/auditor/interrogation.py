@@ -42,34 +42,47 @@ THEMES: dict[SchemeId, list[str]] = {
     ],
 }
 
-# Off-topic alibis: colour, never evidence.
+# Off-topic alibis: colour, never evidence. At least as many as the biggest lineup (the Final's ten).
 ALIBIS = [
     "Ask anyone on my floor — I'm the most careful person here.",
     "I was at my cousin's wedding in Pune half of September. Check the photos.",
     "The CEO signs off on everything I do. Talk to him.",
     "I've been here eleven years. Why would I throw that away now?",
     "You auditors always come after the people who actually work.",
+    "I take the 7:40 local every morning and leave at six. My life is very small.",
+    "Finance approves my claims before I even see them. Ask them.",
+    "I've got two kids in school and a home loan. I can't afford trouble.",
+    "I flagged a dodgy vendor myself last year. Look it up.",
+    "Honestly? I don't even like spending the company's money. Too much paperwork.",
+    "My manager reviews every rupee. If something's wrong, it got past both of us.",
+    "Check my desk, check my phone. I've got nothing to hide.",
 ]
 
 
 def statements(case: CaseBundle) -> dict[str, str]:
-    """One line per suspect, stable for a given case."""
+    """One line per suspect, stable for a given case. The seed mixes in the (hidden) fraud rows,
+    so knowing the public briefing and names is not enough to replay the draw offline."""
     truth = case.truth
+    culprits = truth.culprits() if truth.fraudster_id and truth.scheme else []
+    hidden = ",".join(t for c in culprits for t in c.fraud_txn_ids)
     names = "|".join(s.name for s in case.meta.suspects)
-    rng = random.Random(zlib.crc32(f"{case.meta.briefing}|{names}".encode()))
+    rng = random.Random(zlib.crc32(f"{case.meta.briefing}|{names}|{hidden}".encode()))
     suspects = [s.id for s in case.meta.suspects]
-    theme = THEMES.get(truth.scheme) if truth.scheme else None
-
-    if theme is None:  # an honest company: everyone tells the truth, in their own way
-        pool = rng.sample(ALIBIS, len(suspects))
-        return dict(zip(suspects, pool, strict=True))
-
-    innocents = [s for s in suspects if s != truth.fraudster_id]
+    guilty = {c.fraudster_id for c in culprits}
+    innocents = [s for s in suspects if s not in guilty]
     rng.shuffle(innocents)
-    # The liar plus two innocents make claims about the scheme's behaviour; the rest give alibis.
-    claimers = [truth.fraudster_id, *innocents[:2]]
-    claims = rng.sample(theme, len(claimers))
-    lines = dict(zip(claimers, claims, strict=True))
-    for sid, alibi in zip(innocents[2:], rng.sample(ALIBIS, len(innocents) - 2), strict=True):
-        lines[sid] = alibi
+
+    lines: dict[str, str] = {}
+    # Each fraudster lies about their own scheme, and two innocents make true claims on the
+    # same theme, so the words alone never single the liar out.
+    for culprit in culprits:
+        theme = THEMES[culprit.scheme]
+        honest = [s for s in innocents if s not in lines][:2]
+        for sid, claim in zip([culprit.fraudster_id, *honest],
+                              rng.sample(theme, min(len(theme), 1 + len(honest))), strict=False):
+            lines[sid] = claim
+    rest = [s for s in suspects if s not in lines]
+    alibis = rng.sample(ALIBIS, min(len(rest), len(ALIBIS)))
+    for i, sid in enumerate(rest):
+        lines[sid] = alibis[i % len(alibis)]
     return {sid: lines[sid] for sid in suspects}

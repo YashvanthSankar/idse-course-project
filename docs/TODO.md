@@ -87,3 +87,16 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 - [x] T39 · Commit the branch and merge to main
 - [ ] T40 · Deploy the backend (VPS) and the frontend (Vercel) together: the career accusation request changed (theory + exhibits), so one without the other breaks accusations
 - [ ] T41 · Very large comes out at ~20% Exceptional (target 30–40%): the two-fraudster case is solved too rarely. Decide whether to loosen it (more spare coins on very hard) or keep it
+
+## 🛡️ CAREER HARDENING
+
+### M17 · Review fixes before the class plays it (verified locally, not deployed yet)
+- [x] T42 · Career saves go to a background writer: no request waits on the database, failed writes retry, a graceful restart flushes (200 students at once on a 1 s database: 8.7 s instead of 22.8 s, all 360 saves landed)
+- [x] T43 · Every change is made on a copy under the career's lock and swapped in whole; a case from an old contract, a closed case or a retired career can't be scored
+- [x] T44 · A hidden salt per career: fraudsters, seeds and the Final's culprit can't be worked out from the visible code
+- [x] T45 · Retire is idempotent; creating careers and guessing codes are rate-limited (only unknown codes count, so a class behind one Wi-Fi is fine); accusation strings are capped
+- [x] T46 · Live cases are bounded by ledger rows (~0.8 KB each, 400k ≈ 350 MB); solved cases expire after 30 min and are evicted first
+- [x] T47 · Interrogating the Final's 10 suspects works; both fraudsters lie about their own trick; the draw can't be replayed offline
+- [x] T48 · Rating: Spending needs a clue that points at the accused (no analysis can't be Exceptional); a twin's original and the fraudster's own weekend rows are fair exhibits; one-culprit proof needs a clue naming one person
+- [x] T49 · "What catches it" comes from the theories; firing resets every promotion streak (CAREER.md §5); a tricks list that fails to load says so; the row picker shows the amount on phones
+- [x] T50 · The live frontend (d2a6192) passes all its e2e tests against the new backend: deploy the backend first, then Vercel

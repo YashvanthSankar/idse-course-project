@@ -53,15 +53,16 @@ def fits(result: ToolResult, theory: SchemeId) -> bool:
                for f in THEORY_BY_ID[theory].fits)
 
 
-def singles_out(result: ToolResult, suspect: str) -> bool:
-    """Names the suspect and at most one other (two fraudsters can share a result)."""
-    return suspect in result.implicates and len(result.implicates) <= 2
+def singles_out(result: ToolResult, suspect: str, culprits: int = 1) -> bool:
+    """Names the suspect and nobody else, or, when two fraudsters share the ledger, at most one
+    other (both can turn up in one result)."""
+    return suspect in result.implicates and len(result.implicates) <= max(1, culprits)
 
 
-def proof(suspect: str, theory: SchemeId, clues: list[ToolResult]) -> Proof:
+def proof(suspect: str, theory: SchemeId, clues: list[ToolResult], culprits: int = 1) -> Proof:
     """Proven: a clue that fits the theory singles them out, or two different tools do.
     Lead: something points at them, but nothing proves it. None: nothing points at them."""
-    naming = [c for c in clues if singles_out(c, suspect)]
+    naming = [c for c in clues if singles_out(c, suspect, culprits)]
     if any(fits(c, theory) for c in naming) or len({c.tool_id for c in naming}) >= 2:
         return "proven"
     return "lead" if any(suspect in c.implicates for c in clues) else "none"

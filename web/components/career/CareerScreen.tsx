@@ -26,12 +26,16 @@ import { AppraisalModal, GreetingsModal, History, NotesModal, OfferLetter, TierC
 import { Cutscene } from "./Cutscene";
 import { Prologue } from "./Prologue";
 
+// The average a contract needs for Exceptional, by tier (backend/auditor/career/catalog.py)
+const EXCEPTIONAL_BAR: Record<string, number> = { small: 88, mid: 88, large: 92, very_large: 90, final: 90 };
+
 /** /career: the prologue for a new player, the hub for everyone else. */
 export function CareerScreen() {
   // localStorage is client-only: the server renders nothing, the client the saved career
   const stored = useSyncExternalStore(subscribeCareerCode, careerCodeSnapshot, () => undefined);
   const code = stored === undefined ? undefined : stored || null;
   const [error, setError] = useState<string | null>(null);
+  const [toCodeForm, setToCodeForm] = useState(false); // "Enter another code" goes straight to the form
   const client = useQueryClient();
   const setCode = (next: string | null) => saveCareerCode(next);
 
@@ -57,12 +61,15 @@ export function CareerScreen() {
 
   if (code === undefined) return <div className="min-h-dvh bg-[#05060d]" />;
   if (code === null) {
-    return <Prologue onStart={() => start.mutate()} onContinue={useCode} starting={start.isPending} error={error} />;
+    return <Prologue onStart={() => start.mutate()} onContinue={useCode} starting={start.isPending} error={error} enterCode={toCodeForm} />;
   }
   return (
     <Hub
       code={code}
-      onLeave={() => setCode(null)}
+      onLeave={() => {
+        setToCodeForm(true);
+        setCode(null);
+      }}
       onSwitch={(next) => {
         client.setQueryData(["career", next.code], next);
         setCode(next.code);
@@ -238,8 +245,12 @@ function Hub({ code, onLeave, onSwitch }: { code: string; onLeave: () => void; o
                       Average so far <span className="font-bold text-paper">{contract.average}</span>{" "}
                       <span className={cn("ml-1 rounded-sm border px-2 py-0.5 text-xs", BAND_STYLE[contract.band_so_far])}>{BAND_LABEL[contract.band_so_far]}</span>
                     </>
+                  ) : contract.practice ? (
+                    "Practice: rated like any contract, but no raise and no promotion credit."
+                  ) : contract.company.tier === "final" ? (
+                    "Three cases, played once. Catch them."
                   ) : (
-                    "88+ is Exceptional (and you must solve the hard case) · 70+ Good · 60+ OK."
+                    `${EXCEPTIONAL_BAR[contract.company.tier]}+ is Exceptional (and you must solve the hard case) · 70+ Good · 60+ OK.`
                   )}
                 </p>
                 {next && (
@@ -337,6 +348,7 @@ function Hub({ code, onLeave, onSwitch }: { code: string; onLeave: () => void; o
         onOpenFiles={(meta) => {
           // Career cases open with a free Case Summary on file: let the case screen load the
           // full state (results included) from the server instead of just the meta.
+          setBriefing(null); // the hub stays mounted: don't come back to this briefing
           useCaseStore.getState().reset();
           router.push(`/case/${meta.case_id}`);
         }}

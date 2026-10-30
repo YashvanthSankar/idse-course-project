@@ -1,6 +1,7 @@
 """A career's state and every rule that moves it (CAREER.md §1, §4, §5, §7.6)."""
 
 import hashlib
+import secrets
 import time
 from typing import Literal
 
@@ -96,6 +97,9 @@ class Career(BaseModel):
     code: str
     player_id: str | None = None
     created: float
+    # Hidden from every view: mixed into every random choice, so the visible code can't be
+    # used to work out a career's fraudsters offline. Old careers have none.
+    salt: str = ""
     status: Literal["offers", "contract", "ended", "retired"] = "offers"
     year: int = 1
     tier: Tier = "small"
@@ -114,6 +118,7 @@ class Career(BaseModel):
     final_culprit: str
     tool_counts: dict[str, int] = Field(default_factory=dict)
     ending: Literal["caught", "escaped"] | None = None
+    successor: str | None = None  # the fresh career that replaced this one when it retired
 
 
 class CareerError(Exception):
@@ -129,10 +134,15 @@ def _tier_index(tier: Tier) -> int:
     return TIERS.index(tier)
 
 
-def new_career(code: str, player_id: str | None = None) -> Career:
-    rng = _rng("career", code)
+def _seed_parts(career: Career, *parts: object) -> tuple[object, ...]:
+    return (career.salt, *parts) if career.salt else parts
+
+
+def new_career(code: str, player_id: str | None = None, salt: str | None = None) -> Career:
+    salt = secrets.token_hex(16) if salt is None else salt
+    rng = _rng(*((salt,) if salt else ()), "career", code)
     culprit = list(CAMEOS)[int(rng.integers(len(CAMEOS)))]  # who it was, all along
-    return Career(code=code, player_id=player_id, created=time.time(),
+    return Career(code=code, player_id=player_id, created=time.time(), salt=salt,
                   offers=[c.id for c in companies_in("small")], final_culprit=culprit)
 
 
@@ -191,7 +201,8 @@ def sign(career: Career, company_id: str, practice: bool = False) -> Contract:
             career.salary = max(career.salary, TIER_SPECS[company.tier].base)  # promotion
         career.tier = company.tier
 
-    rng = _rng("contract", career.code, career.year, company_id, len(career.history))
+    rng = _rng(*_seed_parts(career, "contract", career.code, career.year, company_id,
+                            len(career.history)))
     cameos = list(CAMEOS) if company.tier == "final" else ([] if practice else
                                                            _pick_cameos(career, rng))
     plans = plan_contract(company, rng, career.tool_counts, career.final_culprit)
@@ -207,6 +218,8 @@ def sign(career: Career, company_id: str, practice: bool = False) -> Contract:
 
 
 def current_case(career: Career) -> CaseRecord:
+    if career.status == "retired":
+        raise CareerError("This career is retired")
     if career.status != "contract" or career.contract is None:
         raise CareerError("No contract in progress")
     return next(c for c in career.contract.cases if c.rating is None)
@@ -217,7 +230,11 @@ def current_case(career: Career) -> CaseRecord:
 def record_case(career: Career, index: int, rating: CaseRating, tools_used: list[str],
                 caught_cameo: bool | None = None) -> Appraisal | None:
     """Store a verdict. Returns the appraisal when it was the contract's last case."""
+    if career.status != "contract" or career.contract is None:
+        raise CareerError("No contract in progress")
     case = career.contract.cases[index]
+    if case.rating is not None:
+        raise CareerError("That case is already closed")
     case.rating = rating
     case.correct = rating.caught == rating.culprits
     case.caught_cameo = caught_cameo
@@ -248,7 +265,7 @@ def appraise(career: Career) -> Appraisal:
     before = career.salary
     events: list[str] = []
     new: list[str] = []
-    rng = _rng("appraisal", career.code, career.year, company.id)
+    rng = _rng(*_seed_parts(career, "appraisal", career.code, career.year, company.id))
 
     if company.tier == "final":
         _close_final(career, events)
@@ -341,7 +358,9 @@ def _apply_rules(career: Career, company_id: str, band: Band, rng: np.random.Gen
 
     if not career.offers:  # there is always somewhere to work
         _offer(career, "small", 3, rng) or career.offers.append(company_id)
-    return [o for o in career.offers if o not in offered_before]
+    # Starting over at the same firm after a bad year isn't a new offer
+    return [o for o in career.offers
+            if o not in offered_before and not (band == "bad" and o == company_id)]
 
 
 def _fire(career: Career, company_id: str, rng: np.random.Generator, events: list[str]) -> None:
@@ -362,12 +381,11 @@ def _fire(career: Career, company_id: str, rng: np.random.Generator, events: lis
     _offer(career, lower, 2, rng)
     career.tier = lower
     career.salary = TIER_SPECS[lower].base
-    if _tier_index(tier) <= _tier_index("mid"):
-        career.mid_good = []
-    if _tier_index(tier) <= _tier_index("large"):
-        career.large_exceptional = []
-    career.vl_exceptional = []
-    events.append(f"Fired. Two bad years in a row at {company.name}. Back to "
+    # Every promotion streak starts again from zero (CAREER.md §5): the climb is earned anew
+    career.mid_good, career.large_exceptional, career.vl_exceptional = [], [], []
+    for record in career.companies.values():
+        record.goods = 0
+    events.append(f"Fired. Two bad years in a row at {company.name.rstrip('.')}. Back to "
                   f"{TIER_NAMES[lower].lower()} firms, at their starting salary.")
 
 
@@ -405,6 +423,12 @@ def next_goal(career: Career) -> str:
     if career.ending == "escaped":
         return "They got away. The story is done — replay any company for practice."
     tier = career.tier
+    higher = [COMPANIES[o].tier for o in career.offers
+              if o in COMPANIES and _tier_index(COMPANIES[o].tier) > _tier_index(tier)]
+    if higher:
+        best = max(higher, key=_tier_index)
+        return (f"{TIER_NAMES[best]} firms have made you an offer. Sign one to move up."
+                if best != "final" else "The Commission wants you. Sign for the Kaveri Inquiry.")
     if tier == "small":
         return "One Good contract brings offers from mid-size firms."
     if tier == "mid":

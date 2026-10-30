@@ -1,6 +1,6 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { suspectRows, type LedgerRow } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { fits, proofOf, roleOf, ROLE_LABEL, ROLE_STYLE, settingOf } from "@/lib/proof";
@@ -28,11 +28,15 @@ const PROOF_TEXT = {
 
 /** Career Mode's accusation, for one accused (CAREER.md §3.1): the trick you think they used,
  *  one or two clues, and the rows from their own ledger that show it. */
-export function CaseFile({ caseId, suspect, evidence, theories, charge, onChange, disabled }: {
+export function CaseFile({ caseId, suspect, evidence, theories, culprits = 1, theoriesFailed = false, charge, onChange, disabled }: {
   caseId: string;
   suspect: Suspect;
   evidence: ToolResult[];
   theories: Theory[];
+  /** fraudsters in this case: with two, one result may name both */
+  culprits?: number;
+  /** the list of tricks didn't load (a server too old or too far away) */
+  theoriesFailed?: boolean;
   charge: Charge;
   onChange: (next: Charge) => void;
   disabled: boolean;
@@ -41,7 +45,17 @@ export function CaseFile({ caseId, suspect, evidence, theories, charge, onChange
   const first = suspect.name.split(" ")[0];
   const theory = theories.find((t) => t.id === charge.theory) ?? null;
   const clues = evidence.filter((r) => charge.clues.includes(r.result_id));
-  const proof = PROOF_TEXT[proofOf(suspect.id, theory, clues)];
+  const proof = PROOF_TEXT[proofOf(suspect.id, theory, clues, culprits)];
+  // The proof meter appears under the sticky hold bar on short screens: bring it into view
+  // when the theory or the clues change (not on the first render)
+  const meter = useRef<HTMLParagraphElement>(null);
+  const seen = useRef(`${charge.theory}|${charge.clues.length}`);
+  useEffect(() => {
+    const now = `${charge.theory}|${charge.clues.length}`;
+    if (now === seen.current) return;
+    seen.current = now;
+    meter.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [charge.theory, charge.clues.length]);
 
   const toggleClue = (id: string) => {
     sfx.play("tick");
@@ -54,6 +68,9 @@ export function CaseFile({ caseId, suspect, evidence, theories, charge, onChange
       <section>
         <h3 className="font-type text-[11px] tracking-[0.35em] text-paper/60">1 · THE TRICK</h3>
         <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label={`How ${first} did it`}>
+          {theoriesFailed && (
+            <p className="text-sm text-red" role="alert">The list of tricks didn&apos;t load. Close this and try again in a moment.</p>
+          )}
           {theories.map((t) => (
             <button
               key={t.id}
@@ -104,17 +121,17 @@ export function CaseFile({ caseId, suspect, evidence, theories, charge, onChange
                     <span className={cn("rounded-sm border px-1.5", ROLE_STYLE[role])}>{ROLE_LABEL[role]}</span>
                     {theory && fits(r, theory) && <span className="rounded-sm border border-green/70 px-1.5 text-green">FITS YOUR THEORY</span>}
                     {!pointsAt && <span className="text-red">doesn&apos;t point at {first}</span>}
-                    {pointsAt && r.implicates.length > 2 && <span className="text-amber">points at {r.implicates.length} people</span>}
+                    {pointsAt && r.implicates.length > Math.max(1, culprits) && <span className="text-amber">points at {r.implicates.length} people</span>}
                   </span>
                 </button>
               </li>
             );
           })}
         </ul>
-        {charge.clues.length > 0 && (
-          <p className={cn("mt-2 rounded-sm border px-3 py-1.5 text-xs", proof.tone)} data-testid="proof-meter">
+        {charge.clues.length > 0 && theory && (
+          <p ref={meter} className={cn("mt-2 rounded-sm border px-3 py-1.5 text-xs", proof.tone)} data-testid="proof-meter">
             <span className="mr-2 font-type tracking-[0.25em]">{proof.label}</span>
-            {theory ? proof.text : "Name the trick to see whether your clues prove it."}
+            {proof.text}
           </p>
         )}
       </section>
@@ -150,24 +167,27 @@ export function CaseFile({ caseId, suspect, evidence, theories, charge, onChange
   );
 }
 
-/** What the accusation is marked on, spelled out before the player files it. */
+/** What the accusation is marked on: one line, open it to read more. */
 function ScoreGuide() {
   return (
-    <aside className="rounded-sm border border-line bg-ink-900/70 p-3 text-xs leading-relaxed text-paper/75" data-testid="score-guide">
-      <p className="font-type text-[11px] tracking-[0.3em] text-paper/60">HOW THIS IS MARKED</p>
-      <ul className="mt-1.5 space-y-1">
-        <li><b className="text-paper">The trick (10)</b>: name the way they really did it.</li>
-        <li><b className="text-paper">The clue (10)</b>: full marks when a clue from a tool that PROVES your trick singles them out, or two different tools agree. Anything less is only a lead.</li>
-        <li>
-          <b className="text-paper">The rows (25)</b>: pin the rows that are the fraud itself. Up to 3 correct rows earn full marks, and every honest row you pin takes marks off.
-          Pin 5 rows with 2 fraud ones and you get about 7 of 25. Pin just 3 fraud rows and you get all 25.
-        </li>
+    <details className="group rounded-sm border border-line bg-ink-900/70 text-xs leading-relaxed text-paper/75" data-testid="score-guide">
+      <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between px-3 font-type text-[11px] tracking-[0.3em] text-paper/60 hover:text-paper">
+        HOW IS THIS MARKED?
+        <span aria-hidden className="transition-transform group-open:rotate-180">▾</span>
+      </summary>
+      <ul className="space-y-1 px-3 pb-3">
+        <li><b className="text-paper">Verdict · 35</b>: the right person.</li>
+        <li><b className="text-paper">Theory · 10</b>: the right trick.</li>
+        <li><b className="text-paper">Proof · 10</b>: a clue from a tool marked PROVES that names only them, or two different tools that agree.</li>
+        <li><b className="text-paper">Exhibits · 25</b>: up to 3 rows that show the trick is full marks. Each honest row costs you.</li>
+        <li><b className="text-paper">Spending · 20</b>: don&apos;t spend much more than the case needed.</li>
       </ul>
-    </aside>
+    </details>
   );
 }
 
-const COLUMNS = ["date", "hour", "vendor", "category", "amount", "revenue", "invoice_id"] as const;
+// Amount next to the date, so a phone shows it without scrolling sideways
+const COLUMNS = ["date", "amount", "vendor", "hour", "category", "revenue", "invoice_id"] as const;
 
 function RowsPicker({ caseId, suspect, picked, onChange, onClose }: {
   caseId: string;
@@ -177,6 +197,17 @@ function RowsPicker({ caseId, suspect, picked, onChange, onClose }: {
   onClose: () => void;
 }) {
   const rows = useQuery({ queryKey: ["suspect-rows", caseId, suspect.id], queryFn: () => suspectRows(caseId, suspect.id) });
+  const [full, setFull] = useState(false); // a 6th row was tapped: say why nothing happened
+  // Escape closes only the ledger, not the spotlight underneath (it listens on window too)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.stopImmediatePropagation();
+      onClose();
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [onClose]);
   const [sort, setSort] = useState<"amount" | "date">("amount");
   const [filter, setFilter] = useState<{ col: (typeof COLUMNS)[number]; value: string } | null>(null);
   const shown = (r: LedgerRow, c: (typeof COLUMNS)[number]) => (c === "date" ? String(r[c]).slice(0, 10) : String(r[c] ?? ""));
@@ -193,6 +224,7 @@ function RowsPicker({ caseId, suspect, picked, onChange, onClose }: {
   };
   const toggle = (id: string) => {
     sfx.play("tick");
+    setFull(!picked.includes(id) && picked.length >= MAX_EXHIBITS);
     onChange(picked.includes(id) ? picked.filter((x) => x !== id) : picked.length < MAX_EXHIBITS ? [...picked, id] : picked);
   };
 
@@ -204,7 +236,7 @@ function RowsPicker({ caseId, suspect, picked, onChange, onClose }: {
           <div>
             <p className="font-type text-[11px] tracking-[0.35em] text-paper/60">PIN UP TO {MAX_EXHIBITS} ROWS</p>
             <h3 className="font-display text-2xl italic text-paper">{suspect.name}&apos;s ledger</h3>
-            <p className="text-xs text-paper/60">Pin the rows that show the trick, and only those. An honest row costs you; 3 fraud rows is a full mark.</p>
+            <p className="text-xs text-paper/60">Pin the rows that show the trick, and only those. An honest row costs you; up to 3 fraud rows is a full mark (fewer if the fraud left fewer).</p>
             <p className="text-xs text-cyan/80">Tip: tap the 🔍 beside any value (a vendor, an amount, a date) to show only rows that share it, then pin them together.</p>
           </div>
           <div className="flex items-center gap-2 text-xs">
@@ -253,14 +285,14 @@ function RowsPicker({ caseId, suspect, picked, onChange, onClose }: {
                       className={cn("cursor-pointer border-b border-line/40", on ? "bg-amber/15" : "hover:bg-white/5")}>
                       <td className="px-2 py-1.5 text-center text-amber">{on ? "☑" : "☐"}</td>
                       {COLUMNS.map((c) => (
-                        <td key={c} className={cn("px-2 py-1.5", (c === "amount" || c === "revenue") && "text-right tabular-nums")}>
+                        <td key={c} className={cn("whitespace-nowrap px-2 py-1.5", (c === "amount" || c === "revenue") && "text-right tabular-nums")}>
                           {c === "amount" || c === "revenue" ? Number(r[c]).toLocaleString("en-IN") : shown(r, c)}
                           {/* the row pins wherever you tap it; only the 🔍 filters */}
                           {c !== "invoice_id" && (
                             <button type="button" title={`Show every row with this ${c}`} aria-label={`Show every row with this ${c}`}
                               data-testid="filter-value"
                               onClick={(e) => { e.stopPropagation(); sfx.play("tick"); setFilter({ col: c, value: shown(r, c) }); }}
-                              className="ml-1 px-0.5 text-[10px] opacity-40 hover:opacity-100">
+                              className="-my-2 ml-0.5 inline-flex size-8 items-center justify-center align-middle text-[11px] opacity-50 hover:opacity-100">
                               🔍
                             </button>
                           )}
@@ -276,8 +308,9 @@ function RowsPicker({ caseId, suspect, picked, onChange, onClose }: {
         <footer className="flex items-center justify-between gap-3 border-t border-line px-4 py-3">
           <span className="flex items-center gap-3 text-sm tabular-nums text-paper/70">
             {picked.length} of {MAX_EXHIBITS} pinned
+            {full && <span className="text-amber" role="status">That&apos;s the most you can pin.</span>}
             {picked.length > 0 && (
-              <button type="button" onClick={() => onChange([])} className="text-xs text-red underline">clear all</button>
+              <button type="button" onClick={() => { setFull(false); onChange([]); }} className="min-h-9 px-2 text-xs text-red underline">clear all</button>
             )}
           </span>
           <button type="button" onClick={onClose} data-testid="rows-done"

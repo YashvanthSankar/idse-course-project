@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const API = "http://localhost:8000";
+const API = process.env.API_URL ?? "http://localhost:8000";
 
 test("every screen has a visible way back", async ({ page, request }) => {
   await page.goto("/office");

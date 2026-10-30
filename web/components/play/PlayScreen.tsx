@@ -10,7 +10,8 @@ import { rememberRoomCase } from "@/lib/roomCase";
 import { getPlayerSnapshot, loadPlayer, MAX_NAME, setPlayerName, subscribePlayer } from "@/lib/player";
 import { sfx } from "@/lib/sound";
 import { useCaseStore } from "@/lib/store";
-import { useRoomSocket } from "@/lib/ws";
+import { useClock } from "@/lib/useClock";
+import { useRoomSocket, type RoomState } from "@/lib/ws";
 
 function usePlayer() {
   const raw = useSyncExternalStore(subscribePlayer, getPlayerSnapshot, () => null);
@@ -30,6 +31,21 @@ export function PlayScreen({ code }: { code: string }) {
   const room = useQuery({ queryKey: ["room-exists", code], queryFn: () => roomExists(code), retry: 1 });
   if (me === null || room.isPending) return <Centered><p className="text-paper/60">Opening the case file…</p></Centered>;
   if (room.data === false) return <NoSuchRoom code={code} />;
+  if (room.isError) {
+    return (
+      <Centered>
+        <p className="text-lg text-paper/60">Room {code}</p>
+        <h1 className="mt-2 font-display text-4xl font-black italic text-paper">Can&apos;t reach the game.</h1>
+        <p className="mt-3 text-lg text-paper/70">Check your Wi-Fi, then try again.</p>
+        <button
+          onClick={() => room.refetch()}
+          className="mt-8 w-full rounded-lg bg-amber py-4 font-type text-xl tracking-[0.25em] text-ink-950"
+        >
+          TRY AGAIN
+        </button>
+      </Centered>
+    );
+  }
   if (!me.name) return <NameForm code={code} />;
   return <Joined code={code} playerId={me.id} name={me.name} />;
 }
@@ -94,7 +110,7 @@ function Joined({ code, playerId, name }: { code: string; playerId: string; name
   if (state.caseId && !closed) {
     return (
       <div data-testid="play-case" data-case-id={state.caseId}>
-        <InvestigationScreen caseId={state.caseId} redirectWhenClosed={false} />
+        <InvestigationScreen caseId={state.caseId} redirectWhenClosed={false} classRoom={code} banner={<RoundBar code={code} state={state} />} />
       </div>
     );
   }
@@ -111,9 +127,29 @@ function Joined({ code, playerId, name }: { code: string; playerId: string; name
       <p className="mt-4 text-xl text-paper/70">
         {closed ? "Waiting for the round to end." : "Look up at the big screen."}
       </p>
+      <p className="mt-6 font-mono text-lg tracking-[0.3em] text-paper/50">ROOM {code}</p>
       {status !== "open" && <p className="mt-6 text-sm text-red">Reconnecting…</p>}
       {closed && <ProfileLink playerId={playerId} />}
     </Centered>
+  );
+}
+
+/** The phone's view of the round: which room, and how long is left (then the grace period). */
+function RoundBar({ code, state }: { code: string; state: RoomState }) {
+  const now = useClock();
+  if (!state.endsAt || now === null) return null;
+  const left = Math.ceil(state.endsAt / 1000 - now);
+  const grace = Math.max(0, left + state.grace);
+  const mm = Math.floor(Math.max(0, left) / 60);
+  const ss = String(Math.max(0, left) % 60).padStart(2, "0");
+  return (
+    <div
+      data-testid="round-bar"
+      className={`flex items-center justify-between px-4 py-1.5 font-mono text-sm ${left <= 0 ? "bg-red text-white" : left <= 30 ? "bg-red/20 text-red" : "bg-ink-900 text-paper/70"}`}
+    >
+      <span className="tracking-[0.2em]">ROOM {code}</span>
+      <span aria-live="polite">{left > 0 ? `${mm}:${ss} left` : grace > 0 ? `Time! Accuse now · ${grace}s` : "Round over"}</span>
+    </div>
   );
 }
 
@@ -160,7 +196,7 @@ function NoSuchRoom({ code }: { code: string }) {
           TRY THIS ROOM
         </button>
       </form>
-      <Link href="/" className="mt-8 inline-block py-2 text-amber underline">Back to the title screen</Link>
+
     </Centered>
   );
 }

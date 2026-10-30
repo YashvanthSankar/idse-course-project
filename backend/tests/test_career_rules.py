@@ -70,7 +70,7 @@ def test_rating_a_lone_clue_that_doesnt_fit_is_only_a_lead():
 
 
 def test_rating_two_different_tools_agreeing_prove_it():
-    z, box = result("zscore", ["E2"], 2), result("iqr_box", ["E2", "E4"], 2)
+    z, box = result("zscore", ["E2"], 2), result("iqr_box", ["E2"], 2)
     r = rate_case([TWINS], [charge("E2", "weekend", [z, box], ["T1"])],
                   spent=4, intended=2, slack=2)
     assert parts(r)["Proof"] == 10 and parts(r)["Theory"] == 0  # proven, wrong trick named
@@ -103,9 +103,51 @@ def test_rating_spending_past_the_cross_check_costs_points():
 
 
 def test_rating_wrong_suspect_keeps_only_spending():
-    twins = result("duplicates", ["E2"], 2)
-    r = rate_case([TWINS], [charge("E4", "duplicates", [twins], ["H1"])], 2, 2, 0)
+    misled = result("duplicates", ["E4"], 2)  # a clue that pointed at the wrong person
+    r = rate_case([TWINS], [charge("E4", "duplicates", [misled], ["H1"])], 2, 2, 0)
     assert r.total == 20 and r.caught == 0
+
+
+def test_rating_no_analysis_is_never_exceptional():
+    """The free Case Summary names nobody: right guess, right trick, right rows, but no proof
+    means no investigation to be thrifty about, so it stays well under every Exceptional bar."""
+    summary = result("summary", [], 0)
+    r = rate_case([TWINS], [charge("E2", "duplicates", [summary], ["T1", "T2", "T3"])],
+                  spent=0, intended=2, slack=0)
+    assert parts(r)["Proof"] == 0 and parts(r)["Spending"] == 0
+    assert r.total == 70 < min(s.exceptional for s in TIER_SPECS.values())
+    # running a cheap tool that names nobody changes nothing
+    cheap = result("groupby", [], 1, {"by": "category"})
+    r = rate_case([TWINS], [charge("E2", "duplicates", [cheap], ["T1", "T2", "T3"])],
+                  spent=1, intended=2, slack=0)
+    assert parts(r)["Spending"] == 0
+
+
+def test_rating_a_clue_naming_two_people_singles_nobody_out_in_a_one_culprit_case():
+    box = result("iqr_box", ["E2", "E4"], 2)
+    big = Culprit(fraudster_id="E2", scheme="big_invoice", fraud_txn_ids=["T1"],
+                  catching_tools=["iqr_box"], explanation="")
+    r = rate_case([big], [charge("E2", "big_invoice", [box], ["T1"])], 2, 2, 0)
+    assert parts(r)["Proof"] == 4  # a lead: it fits, but it names two people
+    a = Culprit(fraudster_id="E2", scheme="big_invoice", fraud_txn_ids=["T1"],
+                catching_tools=["iqr_box"], explanation="")
+    b = Culprit(fraudster_id="E4", scheme="big_invoice", fraud_txn_ids=["T2"],
+                catching_tools=["iqr_box"], explanation="")
+    r = rate_case([a, b], [charge("E2", "big_invoice", [box], ["T1"]),
+                           charge("E4", "big_invoice", [box], ["T2"])], 2, 2, 0)
+    assert parts(r)["Proof"] == 10  # two fraudsters: one result may name both
+
+
+def test_rating_the_original_of_a_twin_is_a_fair_exhibit():
+    twins = result("duplicates", ["E2"], 2)
+    # T1, T2 are the copies; O1, O2 the honest originals they copy
+    r = rate_case([TWINS], [charge("E2", "duplicates", [twins], ["T1", "O1", "T2", "O2"])],
+                  spent=2, intended=2, slack=0, telling={"E2": ["O1", "O2"]})
+    assert parts(r)["Exhibits"] == 25
+    # but originals alone are not enough: the case still needs as many rows as the fraud left
+    r = rate_case([TWINS], [charge("E2", "duplicates", [twins], ["H1", "O1"])],
+                  spent=2, intended=2, slack=0, telling={"E2": ["O1"]})
+    assert parts(r)["Exhibits"] < 25
 
 
 def test_rating_two_fraudsters_split_the_verdict():

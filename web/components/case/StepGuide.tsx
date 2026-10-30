@@ -1,11 +1,12 @@
 "use client";
 import { cn } from "@/lib/cn";
 
-const STEPS = ["Investigate", "Pin 2 clues", "Accuse"];
+
 
 /** 1 Investigate · 2 Pin 2 clues · 3 Accuse — highlights where the player is. */
-export function StepGuide({ results, pinned }: { results: number; pinned: number }) {
-  const current = results === 0 ? 0 : pinned < 2 ? 1 : 2;
+export function StepGuide({ results, pinned, clues = 2 }: { results: number; pinned: number; clues?: number }) {
+  const STEPS = ["Investigate", `Pin ${clues} clue${clues === 1 ? "" : "s"}`, "Accuse"];
+  const current = results === 0 ? 0 : pinned < clues ? 1 : 2;
   return (
     <ol data-testid="step-guide" aria-label="Your progress" className="flex items-center gap-1 text-[13px]">
       {STEPS.map((label, i) => {
@@ -22,7 +23,7 @@ export function StepGuide({ results, pinned }: { results: number; pinned: number
             >
               {done ? "✓" : i + 1}
             </span>
-            <span className={cn(now ? "text-paper" : done ? "text-paper/60" : "text-paper/40")}>{label}</span>
+            <span className={cn("whitespace-nowrap", now ? "text-paper" : done ? "text-paper/60" : "text-paper/40")}>{label}</span>
           </li>
         );
       })}

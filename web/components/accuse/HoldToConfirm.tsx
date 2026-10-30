@@ -7,8 +7,10 @@ const R = 54;
 const C = 2 * Math.PI * R;
 
 /** A button you must hold (mouse, touch, Space or Enter) until the ring fills. */
-export function HoldToConfirm({ onConfirm, duration = 1500, disabled = false, label, sublabel }: {
+export function HoldToConfirm({ onConfirm, duration = 1500, disabled = false, label, sublabel, small = false }: {
   onConfirm: () => void;
+  /** a smaller button, for the action bar pinned to the bottom of the screen */
+  small?: boolean;
   duration?: number;
   disabled?: boolean;
   label: string;
@@ -74,7 +76,8 @@ export function HoldToConfirm({ onConfirm, duration = 1500, disabled = false, la
         if (e.key === " " || e.key === "Enter") release();
       }}
       className={cn(
-        "relative grid h-36 w-36 shrink-0 touch-none select-none place-items-center rounded-full",
+        "relative grid shrink-0 touch-none select-none place-items-center rounded-full",
+        small ? "h-24 w-24" : "h-36 w-36",
         "bg-[radial-gradient(circle,#3a0d10_0%,#1a0607_70%)] shadow-[0_0_40px_rgba(229,72,77,0.35)]",
         "transition-transform active:scale-95 disabled:opacity-50",
       )}
@@ -86,8 +89,8 @@ export function HoldToConfirm({ onConfirm, duration = 1500, disabled = false, la
           style={{ filter: "drop-shadow(0 0 6px rgba(229,72,77,0.9))" }} />
       </svg>
       <span className="relative text-center font-type leading-tight text-[#ffd9da]">
-        <span className="block text-lg tracking-[0.2em]">{label}</span>
-        {sublabel && <span className="block text-[10px] tracking-[0.3em] text-red/80">{sublabel}</span>}
+        <span className={cn("block tracking-[0.2em]", small ? "text-base" : "text-lg")}>{label}</span>
+        {sublabel && <span className={cn("block text-red/80", small ? "text-[8px] tracking-[0.2em]" : "text-[10px] tracking-[0.3em]")}>{sublabel}</span>}
       </span>
     </button>
   );

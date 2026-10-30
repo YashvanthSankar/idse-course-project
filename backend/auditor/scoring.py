@@ -53,5 +53,6 @@ def score_accusation(
         explanation=truth.explanation,
         fraud_txn_ids=truth.fraud_txn_ids,
         catching_tools=truth.catching_tools,
+        accused_id=accused,
         evidence=grades,
     )

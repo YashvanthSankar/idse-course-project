@@ -4,7 +4,7 @@ import { useClock } from "@/lib/useClock";
 export function CountdownRing({ endsAt, totalSeconds, size = 150 }: { endsAt: number; totalSeconds: number; size?: number }) {
   const now = useClock();
   const left = now === null ? totalSeconds : Math.max(0, Math.round(endsAt / 1000 - now));
-  const fraction = totalSeconds > 0 ? left / totalSeconds : 0;
+  const fraction = totalSeconds > 0 ? Math.min(1, left / totalSeconds) : 0;
   const r = size / 2 - 10;
   const circumference = 2 * Math.PI * r;
   const urgent = left <= 30;

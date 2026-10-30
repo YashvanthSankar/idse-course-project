@@ -50,7 +50,8 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
   const results = useCaseStore((s) => s.results);
   const accusedInMemory = useAccused((s) => s.byCase[caseId]);
   const accusedStored = useSyncExternalStore(noSubscribe, () => loadCaseMemory(caseId)?.accused ?? null, () => null);
-  const accusedId = accusedInMemory ?? accusedStored;
+  // the server records who was accused, so another device never shows the wrong person
+  const accusedId = accusedInMemory ?? accusedStored ?? verdict?.accused_id ?? null;
   const valid = meta?.case_id === caseId && verdict !== null;
   const [phase, setPhase] = useState<Phase>("stamp");
   const revealRef = useRef<HTMLDivElement>(null);
@@ -117,8 +118,8 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
       <LampLight size={900} />
       <header className="relative z-30 flex items-center justify-between gap-3 border-b border-black/60 bg-[#0b0d12]/85 px-4 py-2 backdrop-blur">
         <div className="flex shrink-0 items-center gap-3">
-          <BackButton href="/office" label="Case desk" short="Desk" />
-          <Link href="/office" className="hidden whitespace-nowrap arcade-logo font-pixel text-xs sm:inline">
+          <BackButton href={classRoom ? `/play/${classRoom}` : "/office"} label={classRoom ? "Class" : "Case desk"} short={classRoom ? "Class" : "Desk"} />
+          <Link href={classRoom ? `/play/${classRoom}` : "/office"} className="hidden whitespace-nowrap arcade-logo font-pixel text-xs sm:inline">
             OUTLIER
           </Link>
         </div>
@@ -170,7 +171,9 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
                   <span key={g.result_id} data-testid="evidence-grade" data-grade={g.grade}
                     className={cn("rounded-sm border px-3 py-1.5 font-mono text-[11px]", GRADE_STYLE[g.grade])}>
                     <span className="mr-1 font-display font-bold italic">{toolMeta(g.tool_id).icon}</span>
-                    {resultTitle(g.result_id, g.tool_id)} · {g.grade.toUpperCase()} {g.points > 0 ? `+${g.points}` : g.points}
+                    {resultTitle(g.result_id, g.tool_id)} · {g.grade.toUpperCase()}
+                    {/* a wrong verdict scores no evidence: don't show points the tally doesn't count */}
+                    {verdict.correct && ` ${g.points > 0 ? `+${g.points}` : g.points}`}
                   </span>
                 ))}
               </div>
@@ -223,21 +226,26 @@ export function VerdictScreen({ caseId }: { caseId: string }) {
                   BACK TO CLASS · {classRoom} →
                 </Link>
               )}
-              <Link
-                href={`/office?open=${target}`}
-                onClick={() => sfx.play("pin")}
-                data-testid="next-case"
-                className="rounded-sm border-2 border-amber bg-amber/15 px-6 py-3 text-center font-type whitespace-nowrap tracking-[0.18em] text-amber shadow-[0_0_30px_rgba(245,165,36,0.25)] hover:bg-amber/25"
-              >
-                {nextLabel}
-              </Link>
-              <Link
-                href="/office"
-                onClick={() => sfx.play("tick")}
-                className="rounded-sm border border-line px-6 py-3 text-center font-type whitespace-nowrap tracking-[0.18em] text-paper/70 hover:border-paper/50 hover:text-paper"
-              >
-                BACK TO THE DESK
-              </Link>
+              {/* in a classroom the solo links would pull the phone out of the room */}
+              {!classRoom && (
+                <>
+                  <Link
+                    href={`/office?open=${target}`}
+                    onClick={() => sfx.play("pin")}
+                    data-testid="next-case"
+                    className="rounded-sm border-2 border-amber bg-amber/15 px-6 py-3 text-center font-type whitespace-nowrap tracking-[0.18em] text-amber shadow-[0_0_30px_rgba(245,165,36,0.25)] hover:bg-amber/25"
+                  >
+                    {nextLabel}
+                  </Link>
+                  <Link
+                    href="/office"
+                    onClick={() => sfx.play("tick")}
+                    className="rounded-sm border border-line px-6 py-3 text-center font-type whitespace-nowrap tracking-[0.18em] text-paper/70 hover:border-paper/50 hover:text-paper"
+                  >
+                    BACK TO THE DESK
+                  </Link>
+                </>
+              )}
               <a
                 href={reportUrl(meta.case_id)}
                 download

@@ -30,7 +30,12 @@ describe("proof", () => {
   });
 
   it("two different tools agreeing prove it, whatever the theory", () => {
-    expect(proofOf("E2", THEORIES.duplicates, [clue("zscore", ["E2"]), clue("iqr_box", ["E2", "E4"])])).toBe("proven");
+    expect(proofOf("E2", THEORIES.duplicates, [clue("zscore", ["E2"]), clue("iqr_box", ["E2"])])).toBe("proven");
+  });
+
+  it("a clue naming two people singles out nobody, unless two fraudsters share the ledger", () => {
+    expect(proofOf("E2", THEORIES.duplicates, [clue("duplicates", ["E2", "E4"])])).toBe("lead");
+    expect(proofOf("E2", THEORIES.duplicates, [clue("duplicates", ["E2", "E4"])], 2)).toBe("proven");
   });
 
   it("a clue that points at half the company proves nothing", () => {

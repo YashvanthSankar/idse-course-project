@@ -47,11 +47,17 @@ export function InvestigationScreen({
   caseId,
   onOpenBoard,
   redirectWhenClosed = true,
+  classRoom,
+  banner,
 }: {
   caseId: string;
   onOpenBoard?: () => void;
   /** Solo play jumps to the verdict page when a reloaded case is already closed. */
   redirectWhenClosed?: boolean;
+  /** Class Mode: the room this phone plays in, so "back" stays in the classroom */
+  classRoom?: string;
+  /** a strip above the header (Class Mode's round clock) */
+  banner?: React.ReactNode;
 }) {
   const router = useRouter();
   const store = useCaseStore();
@@ -88,7 +94,8 @@ export function InvestigationScreen({
 
   const meta = storeHasCase ? store.meta : null;
   const career = meta?.career ?? null;
-  const home = career ? "/career" : "/office";
+  const home = classRoom ? `/play/${classRoom}` : career ? "/career" : "/office";
+  const homeLabel = classRoom ? "Class" : career ? "Career" : "Case desk";
   const lockedText = career ? "isn't available at this tier yet — bigger companies unlock it." : null;
   // Career Mode: the senior's notes on this company stay one tap away
   const contract = useQuery({
@@ -285,7 +292,8 @@ export function InvestigationScreen({
     evidence: (
       <EvidenceTray
         pinned={pinnedResults}
-        files={2 * (career?.culprits ?? 1)}
+        files={career ? career.culprits : 2}
+        career={career !== null}
         suspects={meta.suspects}
         onUnpin={(id) => store.unpin(id)}
         onSelect={(id) => {
@@ -324,17 +332,18 @@ export function InvestigationScreen({
   } satisfies Record<Tab, React.ReactNode>;
 
   return (
-    <div className="relative flex min-h-dvh flex-col overflow-x-hidden bg-[radial-gradient(ellipse_at_50%_0%,#151b28_0%,#0a0d13_55%,#07080b_100%)] md:h-dvh md:overflow-hidden">
+    <div className="relative flex min-h-dvh flex-col overflow-x-hidden bg-[radial-gradient(ellipse_at_50%_0%,#151b28_0%,#0a0d13_55%,#07080b_100%)] md:h-dvh md:overflow-clip">
+      {banner}
       <header className="relative z-20 flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-white/5 bg-[#0b0d12]/90 px-4 py-3 backdrop-blur sm:px-6">
-        <BackButton href={home} label={career ? "Career" : "Case desk"} short={career ? "Career" : "Desk"} />
-        <Link href={home} onClick={() => sfx.play("tick")} className="hidden arcade-logo font-pixel text-xs sm:inline" title={career ? "Back to your career" : "Back to the case desk"}>
+        <BackButton href={home} label={homeLabel} short={homeLabel === "Case desk" ? "Desk" : homeLabel} />
+        <Link href={home} onClick={() => sfx.play("tick")} className="hidden arcade-logo font-pixel text-xs sm:inline" title={`Back to the ${homeLabel.toLowerCase()}`}>
           OUTLIER
         </Link>
-        <div className="min-w-0 flex-1 lg:flex-none">
-          <p className="text-xs text-amber/80">
+        <div className="min-w-0 flex-1 lg:max-w-[36ch] lg:flex-none">
+          <p className="whitespace-nowrap text-xs text-amber/80">
             {career ? `Case ${career.index} of ${career.total}${career.culprits > 1 ? " · two fraudsters" : ""}` : `Case ${meta.level}`}
           </p>
-          <h1 data-testid="case-title" className="truncate font-display text-xl italic leading-tight text-paper">
+          <h1 data-testid="case-title" title={meta.title} className="line-clamp-2 font-display text-lg italic leading-tight text-paper sm:truncate sm:text-xl">
             {meta.title}
           </h1>
         </div>
@@ -345,14 +354,17 @@ export function InvestigationScreen({
               setNotesOpen(true);
             }}
             data-testid="case-notes"
-            className="min-h-11 rounded-sm border border-amber/50 px-3 text-xs text-amber hover:bg-amber/10"
+            aria-label={`Notes from ${contract.senior.name.split(" ")[0]}`}
+            title={`Notes from ${contract.senior.name.split(" ")[0]}`}
+            className="min-h-11 min-w-11 rounded-sm border border-amber/50 px-3 text-xs text-amber hover:bg-amber/10"
           >
-            📒 Notes from {contract.senior.name.split(" ")[0]}
+            📒<span className="hidden 2xl:inline"> Notes from {contract.senior.name.split(" ")[0]}</span>
           </button>
         )}
         <NotesModal open={notesOpen} notes={contract?.senior ?? null} company={contract?.company ?? null} onClose={() => setNotesOpen(false)} />
-        <div className="hidden flex-1 justify-center lg:flex">
-          <StepGuide results={store.results.length} pinned={store.pinned.length} />
+        {/* tablets: the guide gets its own row under the header; wider screens: in the middle */}
+        <div className="order-last hidden basis-full justify-center md:flex lg:order-none lg:basis-auto lg:flex-1">
+          <StepGuide results={store.results.length} pinned={store.pinned.length} clues={career ? career.culprits : 2} />
         </div>
         <div className="flex items-center gap-5">
           <BudgetMeter budget={meta.budget} left={meta.budget_left} errorTick={errorTick} />
@@ -395,7 +407,7 @@ export function InvestigationScreen({
         /* Phone: one panel at a time with a bottom tab bar */
         <>
           <div className="border-b border-white/5 px-4 py-2.5">
-            <StepGuide results={store.results.length} pinned={store.pinned.length} />
+            <StepGuide results={store.results.length} pinned={store.pinned.length} clues={career ? career.culprits : 2} />
           </div>
           <div className="flex-1 px-4 pb-24 pt-4">{panels[tab]}</div>
           <nav aria-label="Investigation sections" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-[#0b0d12]/95 backdrop-blur">

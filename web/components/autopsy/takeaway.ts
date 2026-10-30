@@ -17,7 +17,12 @@ export function takeaway(title: string, stats: Stats): string {
     case "The verdicts":
       return `${pct(stats.solve_rate)} caught the fraudster · median ${formatSeconds(num(stats.median_seconds))}`;
     case "Which tools did the class reach for?":
-      return `${stats.most_used} was the go-to tool · ${stats.total_runs} runs in total`;
+    {
+      const tied = Array.isArray(stats.tied) ? (stats.tied as string[]) : [];
+      return tied.length > 1
+        ? `${tied.join(" and ")} tied as the go-to tools · ${stats.total_runs} runs in total`
+        : `${stats.most_used} was the go-to tool · ${stats.total_runs} runs in total`;
+    }
     case "How long did it take?":
       return `Right answers took ${formatSeconds(num(stats.median_right))} · wrong ones ${formatSeconds(num(stats.median_wrong))}`;
     case "Does more analysis pay off?": {
@@ -27,7 +32,9 @@ export function takeaway(title: string, stats: Stats): string {
         : `Not clearly — effort alone didn't decide it ${tail}`;
     }
     case "Which tool predicts success?":
-      return `${stats.best_tool} separated winners from the rest (p = ${p(stats.best_p)})`;
+      return num(stats.best_p) < 0.05
+        ? `${stats.best_tool} separated winners from the rest (p = ${p(stats.best_p)})`
+        : `No tool clearly separated winners yet · closest: ${stats.best_tool} (p = ${p(stats.best_p)})`;
     case "Detective archetypes": {
       const entries = Object.entries(stats).map(([k, v]) => [k, num(v)] as const);
       const total = entries.reduce((sum, [, v]) => sum + v, 0);

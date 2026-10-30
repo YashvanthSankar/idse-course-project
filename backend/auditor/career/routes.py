@@ -3,15 +3,15 @@ only starting a case and accusing are career-specific."""
 
 import os
 from collections.abc import Callable
-from typing import Literal
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel, Field, StringConstraints
 
-from auditor.career.cases import CasePlan, build_career_case, intended_cost
+from auditor.career.cases import CasePlan, build_career_case, intended_cost, telling_rows
 from auditor.career.catalog import CAMEOS, COMPANIES, TIER_NAMES, TIER_SPECS, Band, Tier
 from auditor.career.people import company_people
-from auditor.career.proof import THEORIES, Theory
+from auditor.career.proof import THEORIES, THEORY_BY_ID, Theory
 from auditor.career.rating import MAX_EXHIBITS, CaseRating, Charge, contract_band, rate_case
 from auditor.career.rules import (
     Appraisal,
@@ -91,7 +91,7 @@ class CareerView(BaseModel):
 
 
 class CareerCreate(BaseModel):
-    player_id: str | None = None
+    player_id: Annotated[str, StringConstraints(max_length=64)] | None = None
 
 
 class Sign(BaseModel):
@@ -107,13 +107,16 @@ class DebugJump(BaseModel):
     salary: float | None = None
 
 
+Short = Annotated[str, StringConstraints(max_length=24)]
+
+
 class Charged(BaseModel):
     """One accusation: who, the trick you think they used, your clues and the rows that show it."""
 
-    suspect_id: str
+    suspect_id: Short
     theory: SchemeId
-    evidence_ids: list[str] = Field(min_length=1, max_length=2)
-    exhibits: list[str] = Field(min_length=1, max_length=MAX_EXHIBITS)  # txn ids
+    evidence_ids: list[Short] = Field(min_length=1, max_length=2)
+    exhibits: list[Short] = Field(min_length=1, max_length=MAX_EXHIBITS)  # txn ids
 
 
 class CareerAccusation(BaseModel):
@@ -217,15 +220,32 @@ def cutscene(career: Career) -> Cutscene | None:
         stops=stops)
 
 
+def catchers(scheme: SchemeId, unlocked: list[ToolId]) -> list[ToolId]:
+    """The tools that prove a trick (THEORIES), as far as this case has them."""
+    tools = [f.tool for f in THEORY_BY_ID[scheme].fits if f.tool in unlocked]
+    return list(dict.fromkeys(tools))
+
+
+MISSES_PER_MINUTE = 30  # unknown career codes one address may try: codes can't be guessed
+
+
 def register_career(app, store: SessionStore, careers: CareerStore,
-                    log: Callable[..., None]) -> None:
+                    log: Callable[..., None],
+                    limit: Callable[..., None] = lambda *_a, **_k: None) -> None:
     router = APIRouter(prefix="/api/career")
 
-    def load(code: str) -> Career:
+    def load(code: str, request: Request | None = None) -> Career:
+        """The live career, read-only."""
         try:
             return careers.get(normalise_code(code))
         except KeyError:
+            if request is not None:
+                limit(request, "career-misses", MISSES_PER_MINUTE)
             raise HTTPException(404, "No career with that code") from None
+
+    def editable(code: str) -> Career:
+        """A private copy to change; `careers.save` swaps it in. Call it holding the lock."""
+        return load(code).model_copy(deep=True)
 
     def rules(fn):
         try:
@@ -234,45 +254,53 @@ def register_career(app, store: SessionStore, careers: CareerStore,
             raise HTTPException(409, str(exc)) from None
 
     @router.post("", response_model=CareerView)
-    def create(body: CareerCreate | None = None):
+    def create(request: Request, body: CareerCreate | None = None):
+        limit(request, "careers")
         career = new_career(careers.unused_code(), (body or CareerCreate()).player_id)
         careers.save(career)
         return view(career)
 
     @router.get("/{code}", response_model=CareerView)
-    def get(code: str):
-        return view(load(code))
+    def get(code: str, request: Request):
+        return view(load(code, request))
 
     @router.get("/{code}/ending", response_model=Cutscene)
-    def ending(code: str):
-        scene = cutscene(load(code))
+    def ending(code: str, request: Request):
+        scene = cutscene(load(code, request))
         if scene is None:
             raise HTTPException(404, "The story isn't over yet")
         return scene
 
     @router.post("/{code}/sign", response_model=CareerView)
-    def sign_contract(code: str, body: Sign):
-        career = load(code)
-        with careers.lock(career.code):
+    def sign_contract(code: str, body: Sign, request: Request):
+        code = load(code, request).code
+        with careers.lock(code):
+            career = editable(code)
             rules(lambda: sign(career, body.company_id, body.practice))
             careers.save(career)
         return view(career)
 
     @router.post("/{code}/retire", response_model=CareerView)
-    def retire(code: str):
-        career = load(code)
-        with careers.lock(career.code):
-            career.status = "retired"
+    def retire(code: str, request: Request):
+        """Start over. Retiring twice hands back the same fresh career."""
+        code = load(code, request).code
+        with careers.lock(code):
+            career = editable(code)
+            if career.status == "retired" and career.successor:
+                return view(load(career.successor))
+            limit(request, "careers")
+            fresh = new_career(careers.unused_code(), career.player_id)
+            career.status, career.successor = "retired", fresh.code
+            careers.save(fresh)
             careers.save(career)
-        fresh = new_career(careers.unused_code(), career.player_id)
-        careers.save(fresh)
         return view(fresh)
 
     @router.post("/{code}/case", response_model=CaseMeta)
-    def open_case(code: str):
+    def open_case(code: str, request: Request):
         """The contract's current case — created on first call, rebuilt if the server forgot."""
-        career = load(code)
-        with careers.lock(career.code):
+        code = load(code, request).code
+        with careers.lock(code):
+            career = editable(code)
             record = rules(lambda: current_case(career))
             if record.case_id:
                 try:
@@ -314,10 +342,18 @@ def register_career(app, store: SessionStore, careers: CareerStore,
         session = store.get(case_id)
         if session.career_code is None:
             raise HTTPException(409, "Not a career case")
-        career = load(session.career_code)
-        with careers.lock(career.code), session.lock:
+        with careers.lock(session.career_code), session.lock:
             if session.career_verdict is not None:
                 return session.career_verdict  # one shot, no take-backs
+            career = editable(session.career_code)
+            if career.status == "retired":
+                raise HTTPException(409, "This career is retired")
+            contract = career.contract
+            if (career.status != "contract" or contract is None
+                    or session.career_index >= len(contract.cases)
+                    or contract.cases[session.career_index].case_id != case_id
+                    or contract.cases[session.career_index].rating is not None):
+                raise HTTPException(409, "This case is no longer open")
             meta = session.bundle.meta
             truth = session.bundle.truth
             culprits = truth.culprits()
@@ -332,9 +368,11 @@ def register_career(app, store: SessionStore, careers: CareerStore,
                        for a, (_, clues) in zip(accusations, filed, strict=True)]
             schemes = [c.scheme for c in culprits]
             tier = COMPANIES[meta.career.company_id].tier
+            df = session.bundle.df
             rating = rate_case(culprits, charges, meta.budget - session.budget_left,
                                intended_cost(schemes, meta.unlocked_tools),
-                               TIER_SPECS[tier].slack)
+                               TIER_SPECS[tier].slack,
+                               {c.fraudster_id: telling_rows(df, c) for c in culprits})
 
             accused_ids = {a.suspect_id for a in accusations}
             first_target = next((a for a in accusations if a.suspect_id == truth.fraudster_id),
@@ -345,17 +383,20 @@ def register_career(app, store: SessionStore, careers: CareerStore,
                                        session.budget_left)
             reveals = []
             for c in culprits:
-                fig = reveal_figure(session.bundle.df, c.fraudster_id, c.fraud_txn_ids, names)
+                fig = reveal_figure(df, c.fraudster_id, c.fraud_txn_ids, names)
                 reveals.append(CulpritReveal(
                     fraudster=next(s for s in meta.suspects if s.id == c.fraudster_id),
                     scheme=c.scheme, explanation=c.explanation,
-                    fraud_txn_ids=c.fraud_txn_ids, catching_tools=c.catching_tools,
+                    fraud_txn_ids=c.fraud_txn_ids,
+                    catching_tools=catchers(c.scheme, meta.unlocked_tools),
                     reveal_figure=fig, caught=c.fraudster_id in accused_ids))
             verdict.reveal_figure = reveals[0].reveal_figure
             grades = []
             for suspect_id, clues in filed:
                 target = next((c for c in culprits if c.fraudster_id == suspect_id), culprits[0])
-                grades += [grade_evidence(r, suspect_id, target.catching_tools) for r in clues]
+                grades += [grade_evidence(r, suspect_id,
+                                          catchers(target.scheme, meta.unlocked_tools))
+                           for r in clues]
 
             record_index = session.career_index
             forced = career.contract.cases[record_index].forced_cameo
@@ -363,9 +404,9 @@ def register_career(app, store: SessionStore, careers: CareerStore,
             if forced:
                 caught_cameo = any(session.lineup_cameos.get(s) == forced for s in accused_ids
                                    if any(c.fraudster_id == s for c in culprits))
-            appraisal = record_case(career, record_index, rating,
-                                    [r.tool_id for r in results if r.cost_charged > 0],
-                                    caught_cameo)
+            appraisal = rules(lambda: record_case(
+                career, record_index, rating, [r.tool_id for r in results if r.cost_charged > 0],
+                caught_cameo))
             careers.save(career)
 
             cases = (career.contract.cases if career.contract else None)
@@ -408,10 +449,11 @@ def register_career(app, store: SessionStore, careers: CareerStore,
     def debug_jump(code: str, body: DebugJump):
         if os.getenv("AUDITOR_DEBUG") != "1":
             raise HTTPException(404, "Not Found")
-        career = load(code)
-        if career.status == "contract" or any(o not in COMPANIES for o in body.offers):
-            raise HTTPException(409, "Can't jump from here")
-        with careers.lock(career.code):
+        code = load(code).code
+        with careers.lock(code):
+            career = editable(code)
+            if career.status == "contract" or any(o not in COMPANIES for o in body.offers):
+                raise HTTPException(409, "Can't jump from here")
             career.offers, career.tier = body.offers, body.tier
             if body.salary is not None:
                 career.salary = body.salary
@@ -433,8 +475,9 @@ def _check(accusations: list[Charged], session: CaseSession, culprits: int) -> N
     if len({a.suspect_id for a in accusations}) != culprits or any(
             a.suspect_id not in suspects for a in accusations):
         raise HTTPException(422, "Accuse different suspects from this case")
-    ids = [e for a in accusations for e in a.evidence_ids]
-    if len(set(ids)) != len(ids) or any(e not in session.results for e in ids):
+    # One result may back both accusations (it can name both fraudsters), never twice in one
+    if any(len(set(a.evidence_ids)) != len(a.evidence_ids) for a in accusations) or any(
+            e not in session.results for a in accusations for e in a.evidence_ids):
         raise HTTPException(422, "Attach different pieces of evidence from this case")
     df = session.bundle.df
     owner = dict(zip(df["txn_id"], df["employee_id"], strict=True))

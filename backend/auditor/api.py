@@ -114,14 +114,14 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
     timers: set[asyncio.Task] = set()  # keep round timers alive until they fire
     hits: dict[tuple[str, str], deque[float]] = {}
 
-    def limit(request: Request, bucket: str) -> None:
+    def limit(request: Request, bucket: str, per_minute: int | None = None) -> None:
         """At most `rate_limit` creations per minute per client address and bucket."""
         key = (bucket, request.client.host if request.client else "?")
         window = hits.setdefault(key, deque())
         now = time.monotonic()
         while window and now - window[0] > 60:
             window.popleft()
-        if len(window) >= rate_limit:
+        if len(window) >= (per_minute or rate_limit):
             raise HTTPException(429, "Slow down, detective")
         window.append(now)
 
@@ -304,10 +304,8 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
         rooms.add_socket(code, ws, role, pid)
         try:
             if role == "host":
-                await ws.send_json(rooms.lobby(code))
-                if room.status == "running":
-                    await ws.send_json(rooms.round_start(code))
-                    await ws.send_json(rooms.leaderboard(code))
+                for message in rooms.host_catch_up(code):
+                    await ws.send_json(message)
             else:
                 rooms.join(code, pid, name)
                 case_id = await run_in_threadpool(rooms.ensure_case, code, pid)
@@ -369,7 +367,8 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
         careers = CareerStore(app.state.telemetry.url)  # same database as telemetry
     app.state.careers = careers
     if careers is not None:
-        register_career(app, app.state.store, careers, log)
+        register_career(app, app.state.store, careers, log, limit)
+        app.router.add_event_handler("shutdown", careers.flush)  # no save lost on a restart
 
     @app.get("/api/debug/cases/{case_id}/truth", response_model=CaseTruth)
     def debug_truth(case_id: str):

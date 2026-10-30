@@ -18,12 +18,13 @@ export function CodePanel({ code }: { code: string }) {
   return (
     <div
       data-testid="autopsy-code"
-      className="h-full overflow-auto rounded-xl border border-line bg-ink-950 p-5 text-[15px] leading-relaxed [&_pre]:!bg-transparent [&_pre]:whitespace-pre-wrap [&_pre]:break-words"
+      // whitespace-pre keeps Python's indentation honest (wrapped lines would restart at column 0)
+      className="h-full overflow-auto rounded-xl border border-line bg-ink-950 p-5 text-[clamp(13px,0.95vw,18px)] leading-relaxed [&_pre]:!bg-transparent [&_pre]:whitespace-pre"
     >
       {ready ? (
         <div dangerouslySetInnerHTML={{ __html: html.html }} />
       ) : (
-        <pre className="whitespace-pre-wrap font-mono text-paper/70">{code}</pre>
+        <pre className="whitespace-pre font-mono text-paper/70">{code}</pre>
       )}
     </div>
   );

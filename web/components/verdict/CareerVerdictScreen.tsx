@@ -127,7 +127,7 @@ export function CareerVerdictScreen({ caseId }: { caseId: string }) {
           className="tex-paper relative w-full max-w-2xl rounded-[2px] p-5 shadow-[0_30px_70px_rgba(0,0,0,0.65)] sm:p-8"
         >
           <p className="font-type text-[10px] tracking-[0.35em] opacity-60">ACCUSED</p>
-          <div className={cn("mt-2 grid gap-5", accused.length > 1 ? "grid-cols-2" : "grid-cols-1")}>
+          <div className={cn("mt-2 grid gap-5", accused.length > 1 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1")}>
             {accused.map((s) => (
               <div key={s.id} className="flex items-center gap-4">
                 <div className="shrink-0" style={{ width: phone ? 72 : 120 }}><Portrait suspect={s} size={phone ? 72 : 120} /></div>
@@ -292,6 +292,7 @@ export function CareerVerdictScreen({ caseId }: { caseId: string }) {
         onClose={() => router.push("/career")}
         onOpenFiles={(m) => {
           leaving.current = true;
+          setBriefing(null);
           useCaseStore.getState().reset();
           router.push(`/case/${m.case_id}`);
         }}

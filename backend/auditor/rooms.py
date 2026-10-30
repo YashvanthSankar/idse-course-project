@@ -4,6 +4,7 @@ import asyncio
 import secrets
 import threading
 import time
+from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Literal
@@ -19,6 +20,7 @@ CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ"  # no I or O: nobody squints at a pro
 MAX_NAME = 16
 GRACE_SECONDS = 15  # accusations sent just as the clock hits zero still count
 ROOM_TTL_SECONDS = 12 * 3600
+TICKER_LINES = 6  # what a projector that reconnects gets back
 
 
 @dataclass
@@ -40,12 +42,14 @@ class Room:
     level: int = 1
     seed: int = 0
     ends_at: float | None = None  # epoch seconds
+    seconds: int = 0  # the round's length, so a screen that reconnects can draw the clock
     started_at: float = 0.0  # monotonic clock, shared start line for every timer
     players: dict[str, PlayerState] = field(default_factory=dict)
     bundle: CaseBundle | None = None
     round: int = 0
     host_token: str = field(default_factory=lambda: secrets.token_urlsafe(24))
     created_at: float = 0.0  # epoch seconds
+    ticker: deque[str] = field(default_factory=lambda: deque(maxlen=TICKER_LINES))
 
 
 class RoomManager:
@@ -97,7 +101,8 @@ class RoomManager:
             room.level, room.seed, room.bundle = level, seed, bundle
             room.round += 1
             room.status, room.started_at = "running", self.clock()
-            room.ends_at = self.wall() + seconds
+            room.ends_at, room.seconds = self.wall() + seconds, seconds
+            room.ticker.clear()
             for player in list(room.players.values()):
                 player.case_id, player.score, player.solved, player.correct = None, 0, False, False
                 player.solved_at = None
@@ -150,16 +155,18 @@ class RoomManager:
         player.solved, player.correct, player.score = True, verdict.correct, verdict.score
         player.solved_at = self.clock()
         self.broadcast_threadsafe(room.code, self.leaderboard(room.code))
-        self.broadcast_threadsafe(room.code, {"type": "ticker",
-                                              "text": f"{player.name} made an accusation"})
+        self._tick(room, f"{player.name} made an accusation")
         return True
 
     def tool_ran(self, session: CaseSession, tool_name: str) -> None:
         room = self.rooms.get(session.room_code or "")
         player = room.players.get(session.player_id or "") if room else None
         if player is not None:
-            self.broadcast_threadsafe(room.code, {"type": "ticker",
-                                                  "text": f"{player.name} ran {tool_name}"})
+            self._tick(room, f"{player.name} ran {tool_name}")
+
+    def _tick(self, room: Room, text: str) -> None:
+        room.ticker.append(text)
+        self.broadcast_threadsafe(room.code, {"type": "ticker", "text": text})
 
     # ---- messages ---------------------------------------------------------
 
@@ -183,7 +190,19 @@ class RoomManager:
     def round_start(self, code: str) -> dict:
         room = self.rooms[code]
         return {"type": "round_start", "level": room.level,
-                "ends_at": int((room.ends_at or 0) * 1000)}
+                "ends_at": int((room.ends_at or 0) * 1000), "seconds": room.seconds,
+                "grace": GRACE_SECONDS}
+
+    def host_catch_up(self, code: str) -> list[dict]:
+        """Everything a projector that (re)connects needs to redraw the room as it is."""
+        room = self.rooms[code]
+        messages = [self.lobby(code)]
+        if room.status == "running":
+            messages.append(self.round_start(code))
+        if room.round:
+            messages.append(self.leaderboard(code))
+            messages += [{"type": "ticker", "text": t} for t in room.ticker]
+        return messages
 
     # ---- sockets ----------------------------------------------------------
 
