@@ -123,7 +123,7 @@ export function DataTable({ caseId, open, onClose, suspects, implicated, flagged
                     aria-checked={who === s.id}
                     onClick={() => setWho(s.id)}
                     className={cn(
-                      "rounded-sm border px-2 py-0.5 font-mono text-[11px]",
+                      "min-h-8 rounded-sm border px-2 font-mono text-[11px]",
                       who === s.id ? "border-amber bg-amber/15 text-amber" : "border-line text-muted hover:text-paper",
                       implicated.includes(s.id) && who !== s.id && "border-red/60 text-red/90",
                     )}
@@ -132,7 +132,7 @@ export function DataTable({ caseId, open, onClose, suspects, implicated, flagged
                   </button>
                 ))}
               </div>
-              <button onClick={onClose} aria-label="Close" className="rounded-sm border border-line px-2.5 py-1 font-mono text-xs text-muted hover:text-paper">
+              <button onClick={onClose} aria-label="Close" className="min-h-9 rounded-sm border border-line px-2.5 font-mono text-xs text-muted hover:text-paper">
                 esc ✕
               </button>
             </header>

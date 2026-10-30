@@ -98,7 +98,7 @@ def _ledger(session: CaseSession, names: dict[str, str]):
     dates = pd.to_datetime(df["date"]) + pd.to_timedelta(df["hour"], unit="h")
     theirs = df["employee_id"].eq(truth.fraudster_id)
     fraud = df["txn_id"].isin(truth.fraud_txn_ids)
-    ax = _axes(fig, [0.09, 0.42, 0.85, 0.33])  # room below for the slanted date labels
+    ax = _axes(fig, [0.09, 0.45, 0.85, 0.30])  # room below for the slanted date labels
     ax.scatter(dates[~theirs], df.loc[~theirs, "amount"], s=7, color=MUTED,
                alpha=0.35, label="Other claims")
     ax.scatter(dates[theirs], df.loc[theirs, "amount"], s=14, color=AMBER,
@@ -110,14 +110,15 @@ def _ledger(session: CaseSession, names: dict[str, str]):
     ax.legend(facecolor=BG, edgecolor=LINE, labelcolor=PAPER, fontsize=8, loc="upper left")
     fig.autofmt_xdate()
 
-    ax2 = _axes(fig, [0.09, 0.09, 0.85, 0.17])
-    df["employee_name"] = df["employee_id"].map(names)
-    order = [names[s.id] for s in session.bundle.meta.suspects]
+    ax2 = _axes(fig, [0.09, 0.12, 0.85, 0.17])
+    # first names, upright: full names on a slant ran into the page footer
+    first = {k: v.split()[0] for k, v in names.items()}
+    df["employee_name"] = df["employee_id"].map(first)
+    order = [first[s.id] for s in session.bundle.meta.suspects]
     sns.boxplot(data=df, x="employee_name", y="amount", order=order, ax=ax2,
                 color=CYAN, fliersize=1, linewidth=0.8)
     ax2.set_yscale("log")
-    _label(ax2, "Employee", "Amount (INR)")
-    ax2.tick_params(axis="x", labelrotation=15)
+    _label(ax2, "", "Amount (INR)")
     return fig
 
 
@@ -143,7 +144,9 @@ def _technique(session: CaseSession, names: dict[str, str]):
         groups = log_amount.groupby([df["employee_id"], df["category"]])
         z = ((log_amount - groups.transform("mean")) / groups.transform("std")).fillna(0)
         positions = df["employee_id"].map({eid: i for i, eid in enumerate(ids)})
-        sns.stripplot(x=z, y=positions, ax=ax, color=MUTED, size=2, alpha=0.45, jitter=0.2)
+        # a jittered strip per person (seaborn's stripplot would treat the z-scores as categories)
+        jitter = np.random.default_rng(0).uniform(-0.2, 0.2, len(positions))
+        ax.scatter(z, positions + jitter, color=MUTED, s=4, alpha=0.45)
         ax.scatter(z[fraud], positions[fraud], color=RED, marker="x", s=70, zorder=5)
         for threshold in (-3, 3):
             ax.axvline(threshold, color=AMBER, linestyle="--")

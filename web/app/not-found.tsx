@@ -4,7 +4,7 @@ export default function NotFound() {
   return (
     <main className="tex-desk flex min-h-dvh items-center justify-center px-4 py-16">
       <div className="tex-paper relative w-full max-w-md -rotate-1 rounded-[2px] px-8 py-10 text-center shadow-[0_30px_60px_rgba(0,0,0,0.6)]">
-        <p className="pr-20 font-type text-xs tracking-[0.3em] opacity-60 sm:pr-0">RECORDS ROOM · FILE 404</p>
+        <p className="whitespace-nowrap pr-16 font-type text-[11px] tracking-[0.2em] opacity-60 sm:pr-0 sm:text-xs sm:tracking-[0.3em]">RECORDS ROOM · FILE 404</p>
         <h1 className="mt-3 font-display text-5xl font-black italic">Case not found</h1>
         <p className="mt-4 text-base leading-relaxed opacity-80">
           Somebody shredded this page — or it never existed. Either way, there&apos;s nothing to audit here.

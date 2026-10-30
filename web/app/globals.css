@@ -3,6 +3,13 @@
 /* Short screens (a 720p projector, a laptop): tighter vertical spacing so the main button fits. */
 @custom-variant short (@media (max-height: 820px));
 
+/* A shaking stamp or a rotated folder must never add a sideways scrollbar (clip, unlike hidden,
+   keeps position: sticky working). */
+html,
+body {
+  overflow-x: clip;
+}
+
 /* ── OUTLIER design tokens (docs/DESIGN.md §9.1) — dark only ───────── */
 :root {
   --ink-950: #07080b;

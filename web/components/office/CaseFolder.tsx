@@ -126,8 +126,8 @@ export function CaseFolder({ info, locked, best, opening, onOpen }: {
         {locked && (
           <>
             <div className="absolute inset-0 bg-[#1a1208]/45" />
-            <div className="absolute left-[-20%] top-[42%] w-[140%] -rotate-[18deg] bg-[repeating-linear-gradient(90deg,#b3141f_0_12px,#c81e2a_12px_24px)] py-1.5 text-center font-type text-[11px] font-bold tracking-[0.35em] text-[#ffe9d6] shadow-[0_6px_10px_rgba(0,0,0,0.5)]">
-              SEALED EVIDENCE
+            <div className="absolute left-[-20%] top-[42%] w-[140%] -rotate-[18deg] bg-[repeating-linear-gradient(90deg,#b3141f_0_12px,#c81e2a_12px_24px)] py-1.5 text-center font-type text-[11px] font-bold tracking-[0.25em] text-[#ffe9d6] shadow-[0_6px_10px_rgba(0,0,0,0.5)]">
+              SEALED
             </div>
             <div className="absolute left-[-20%] top-[60%] w-[140%] rotate-[12deg] bg-[repeating-linear-gradient(90deg,#b3141f_0_12px,#c81e2a_12px_24px)] py-1 text-center font-type text-[10px] tracking-[0.35em] text-[#ffe9d6]/90 shadow-[0_6px_10px_rgba(0,0,0,0.5)]">
               DO NOT OPEN

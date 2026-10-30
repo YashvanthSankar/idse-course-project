@@ -85,13 +85,17 @@ def rate_case(culprits: list[Culprit], charges: list[Charge], spent: int, intend
         "one of the two" if n == 2 and caught else "the right suspect" if caught else
         "the wrong suspect")
     tricks = " and ".join(THEORY_BY_ID[c.scheme].name.lower() for c in culprits)
+    named_right = {c.scheme for c in caught if by_suspect[c.fraudster_id].theory == c.scheme}
+    right = " and ".join(THEORY_BY_ID[s].name.lower() for s in named_right)
+    missed = " and ".join(THEORY_BY_ID[c.scheme].name.lower() for c in culprits
+                          if c.scheme not in named_right)
     parts = [
         RatingPart(name="Verdict", points=round(verdict, 1), out_of=VERDICT,
                    reason=f"You accused {who}."),
         # Reasons follow the points: full marks only when every culprit earned them
         RatingPart(name="Theory", points=round(theory, 1), out_of=THEORY, reason=(
             f"You named the trick: {tricks}." if named == n else
-            f"You named {named} of the {n} tricks: {tricks}." if named else
+            f"You named {named} of the {n} tricks ({right}); the other was {missed}." if named else
             f"The trick was {tricks}." if caught else "A theory about the wrong person.")),
         RatingPart(name="Proof", points=round(flag, 1), out_of=FLAG, reason=(
             "A clue that fits your theory singled them out." if proven == n

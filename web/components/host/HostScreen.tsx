@@ -10,7 +10,7 @@ import { useClock } from "@/lib/useClock";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { useRoomSocket } from "@/lib/ws";
 import { CountdownRing } from "./CountdownRing";
-import { HostLobby } from "./HostLobby";
+import { HostLobby, ROUND_LENGTHS } from "./HostLobby";
 import { JoinPanel } from "./JoinPanel";
 import { Leaderboard } from "./Leaderboard";
 import { Podium } from "./Podium";
@@ -54,7 +54,11 @@ export function HostScreen({ code }: { code: string }) {
   const again = () => {
     // the next round starts from the last one's setup
     if (state.level) setLevel(Math.min(6, state.level));
-    if (state.roundSeconds) setMinutes(Math.round(state.roundSeconds / 60));
+    if (state.roundSeconds) {
+      // the nearest preset (a 30 s test round still selects a button)
+      const m = state.roundSeconds / 60;
+      setMinutes(ROUND_LENGTHS.reduce((best, x) => (Math.abs(x - m) < Math.abs(best - m) ? x : best)));
+    }
     setSetupAgain(true);
   };
 
@@ -103,7 +107,7 @@ export function HostScreen({ code }: { code: string }) {
   const view = state.phase === "running" ? "running" : state.phase === "ended" && !setupAgain ? "ended" : "lobby";
 
   return (
-    <Shell code={code} connected={status === "open"}>
+    <Shell code={code} connected={status === "open"} fit={view === "running"}>
       {view === "lobby" && (
         <HostLobby
           code={code}
@@ -119,18 +123,21 @@ export function HostScreen({ code }: { code: string }) {
       )}
 
       {view === "running" && (
-        <div className="grid flex-1 gap-6 px-4 pb-8 sm:gap-10 sm:px-10 sm:pb-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] short:gap-5 short:pb-5">
-          <section className="min-w-0">
+        <div className="grid flex-1 gap-6 px-4 pb-8 sm:gap-10 sm:px-10 sm:pb-10 lg:min-h-0 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] short:gap-5 short:pb-5">
+          {/* a full top 10 scrolls inside its column, so END ROUND never drops below the fold */}
+          <section className="min-w-0 lg:min-h-0 lg:overflow-y-auto lg:[mask-image:linear-gradient(to_bottom,black_88%,transparent)]">
             <p className="text-xl text-paper/70">Case {String(state.level ?? "").padStart(2, "0")}</p>
             <h2 className="mb-6 font-display text-3xl font-black italic text-paper sm:text-5xl short:mb-3 short:sm:text-4xl">{caseTitle ?? "In progress"}</h2>
             <Leaderboard rows={state.top} />
           </section>
-          <section className="flex min-w-0 flex-col gap-6 sm:gap-8 short:sm:gap-4">
+          <section className="flex min-w-0 flex-col gap-6 sm:gap-8 lg:min-h-0 short:sm:gap-4">
             <div className="flex items-center gap-4 rounded-2xl border border-line bg-ink-900/60 p-4 sm:gap-8 sm:p-6 short:sm:p-4">
               {state.endsAt && <CountdownRing endsAt={state.endsAt} totalSeconds={roundSeconds} size={short ? 112 : 150} />}
               <div className="min-w-0 flex-1">
                 {overtime ? (
-                  <p className="text-lg text-amber" data-testid="grace">Time! Last accusations still count for {state.grace} s.</p>
+                  <p className="text-lg text-amber" data-testid="grace">
+                    Time! Last accusations still count for {Math.max(0, Math.ceil((state.endsAt ?? 0) / 1000 + state.grace - (now ?? 0)))} s.
+                  </p>
                 ) : state.total > 0 && state.solved === state.total ? (
                   <p className="text-lg text-green" data-testid="all-done">Everyone&apos;s done. End the round when you&apos;re ready.</p>
                 ) : (
@@ -192,9 +199,9 @@ export function HostScreen({ code }: { code: string }) {
 }
 
 /** `connected`: true / false for a live socket, null when there is none to show. */
-function Shell({ code, connected, children }: { code: string; connected: boolean | null; children: React.ReactNode }) {
+function Shell({ code, connected, fit = false, children }: { code: string; connected: boolean | null; fit?: boolean; children: React.ReactNode }) {
   return (
-    <main className="flex min-h-dvh flex-col overflow-x-clip bg-[radial-gradient(ellipse_at_50%_-20%,#1b2540_0%,#07080b_65%)]">
+    <main className={`flex min-h-dvh flex-col overflow-x-clip ${fit ? "lg:h-dvh lg:overflow-hidden" : ""} bg-[radial-gradient(ellipse_at_50%_-20%,#1b2540_0%,#07080b_65%)]`}>
       <header className="flex items-center justify-between gap-4 px-4 py-4 sm:px-10 sm:py-6 short:sm:py-3">
         <div className="flex items-center gap-4">
           <BackButton href="/host" label="Class Mode" short="Back" />

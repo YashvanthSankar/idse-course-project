@@ -79,15 +79,16 @@ export function CodeDrawer({
                   sfx.play("tick");
                   window.setTimeout(() => setCopied(false), 1500);
                 }}
-                className="rounded-sm border border-green/50 px-3 py-1 font-mono text-xs text-green hover:bg-green/10"
+                className="min-h-9 rounded-sm border border-green/50 px-3 font-mono text-xs text-green hover:bg-green/10"
               >
                 {copied ? "copied ✓" : "copy code"}
               </button>
-              <button onClick={onClose} aria-label="Close" className="rounded-sm border border-line px-2.5 py-1 font-mono text-xs text-muted hover:text-paper">
+              <button onClick={onClose} aria-label="Close" className="min-h-9 rounded-sm border border-line px-2.5 font-mono text-xs text-muted hover:text-paper">
                 esc ✕
               </button>
             </header>
-            <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden md:grid-cols-[1fr_300px]">
+            {/* phones: the code gets the room, the numbers a short strip under it */}
+            <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden md:grid-cols-[1fr_300px] md:grid-rows-1">
               <div className="min-h-0 overflow-auto p-4 text-[12.5px] leading-relaxed sm:p-6 [&_pre]:!bg-transparent [&_pre]:font-mono">
                 {html ? (
                   <div data-testid="code-html" dangerouslySetInnerHTML={{ __html: html }} />
@@ -95,7 +96,7 @@ export function CodeDrawer({
                   <pre className="whitespace-pre font-mono text-paper/80">{result.code}</pre>
                 )}
               </div>
-              <dl className="min-h-0 overflow-auto border-t border-line p-4 font-mono text-[13px] md:border-l md:border-t-0">
+              <dl className="max-h-36 min-h-0 overflow-auto border-t border-line p-4 font-mono text-[13px] md:max-h-none md:border-l md:border-t-0">
                 <p className="mb-2 text-xs text-paper/60">Numbers behind the finding</p>
                 {Object.entries(result.stats).map(([k, v]) => (
                   <div key={k} className="flex justify-between gap-3 border-b border-line/40 py-1">

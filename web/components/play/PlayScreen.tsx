@@ -102,6 +102,7 @@ function Joined({ code, playerId, name }: { code: string; playerId: string; name
       <Centered>
         <p className="font-display text-4xl italic text-paper">Round over.</p>
         <p className="mt-3 text-lg text-paper/70">Look up at the big screen for the podium.</p>
+        <p className="mt-4 font-mono text-lg tracking-[0.3em] text-paper/50">ROOM {code}</p>
         <ProfileLink playerId={playerId} />
       </Centered>
     );

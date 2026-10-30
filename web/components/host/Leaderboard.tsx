@@ -26,7 +26,7 @@ export function Leaderboard({ rows }: { rows: BoardRow[] }) {
             {row.solved && (
               <span
                 className={cn(
-                  "shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold sm:px-3 sm:py-1 sm:text-sm",
+                  "shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold sm:px-3 sm:py-1 sm:text-lg",
                   row.correct ? "bg-green/15 text-green" : "bg-red/15 text-red",
                 )}
               >

@@ -275,6 +275,7 @@ export function InvestigationScreen({
     ),
     result: (
       <ResultPanel
+        broke={meta.budget_left === 0}
         results={store.results}
         active={active}
         running={running}
@@ -350,12 +351,14 @@ export function InvestigationScreen({
         <Link href={home} onClick={() => sfx.play("tick")} className="hidden arcade-logo font-pixel text-xs sm:inline" title={`Back to the ${homeLabel.toLowerCase()}`}>
           OUTLIER
         </Link>
-        <div className="min-w-0 flex-1 lg:max-w-[36ch] lg:flex-none">
+        {/* phones: the title gets a row of its own, so the header's buttons can't squeeze it */}
+        <div className="order-last min-w-0 basis-full sm:order-none sm:basis-auto sm:flex-1 lg:max-w-[36ch] lg:flex-none">
           <p className="whitespace-nowrap text-xs text-amber/80">
             {career ? `Case ${career.index} of ${career.total}${career.culprits > 1 ? " · two fraudsters" : ""}` : `Case ${meta.level}`}
           </p>
           <h1 data-testid="case-title" title={meta.title} className="line-clamp-2 font-display text-lg italic leading-tight text-paper sm:truncate sm:text-xl">
-            {meta.title}
+            {/* career titles end in "· Case N", already said in the line above */}
+            {career ? meta.title.replace(/ · Case \d+$/, "") : meta.title}
           </h1>
         </div>
         {contract?.senior && (
@@ -375,7 +378,7 @@ export function InvestigationScreen({
         <NotesModal open={notesOpen} notes={contract?.senior ?? null} company={contract?.company ?? null} onClose={() => setNotesOpen(false)} />
         {/* tablets: the guide gets its own row under the header; wider screens: in the middle */}
         <div className="order-last hidden basis-full justify-center md:flex lg:order-none lg:basis-auto lg:flex-1">
-          <StepGuide results={store.results.length} pinned={store.pinned.length} clues={career ? career.culprits : 2} />
+          <StepGuide results={store.results.length} pinned={store.pinned.length} clues={career ? career.culprits : 2} broke={meta.budget_left === 0} />
         </div>
         <div className="flex items-center gap-5">
           <BudgetMeter budget={meta.budget} left={meta.budget_left} errorTick={errorTick} />
@@ -418,7 +421,7 @@ export function InvestigationScreen({
         /* Phone: one panel at a time with a bottom tab bar */
         <>
           <div className="border-b border-white/5 px-4 py-2.5">
-            <StepGuide results={store.results.length} pinned={store.pinned.length} clues={career ? career.culprits : 2} />
+            <StepGuide results={store.results.length} pinned={store.pinned.length} clues={career ? career.culprits : 2} broke={meta.budget_left === 0} />
           </div>
           <div className="flex-1 px-4 pb-24 pt-4">{panels[tab]}</div>
           <nav aria-label="Investigation sections" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-[#0b0d12]/95 backdrop-blur">

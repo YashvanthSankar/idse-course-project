@@ -100,3 +100,14 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 - [x] T48 · Rating: Spending needs a clue that points at the accused (no analysis can't be Exceptional); a twin's original and the fraudster's own weekend rows are fair exhibits; one-culprit proof needs a clue naming one person
 - [x] T49 · "What catches it" comes from the theories; firing resets every promotion streak (CAREER.md §5); a tricks list that fails to load says so; the row picker shows the amount on phones
 - [x] T50 · The live frontend (d2a6192) passes all its e2e tests against the new backend: deploy the backend first, then Vercel
+
+## 🖥️ UI STABILISATION
+
+### M18 · Every screen at phone, tablet, laptop and desktop (three review rounds, verified locally)
+- [x] T51 · Overlays: modals render on <body>, keyboard focus stays inside and returns on close, Escape closes only the top one; the screen shake no longer drags fixed layers
+- [x] T52 · Accusation: a sticky hold bar with a "Next: …" hint in every mode; Career case file, proof meter, rows picker (amount first, cap message, no wrapping) and score guide fixed
+- [x] T53 · Case screen: a readable title on every width, step guide on tablets, honest out-of-budget guidance, tools you can't afford are blocked up front, bigger tap targets
+- [x] T54 · Verdicts: the server records who was accused; stamps sit in the corner; no evidence points on a wrong verdict; unknown cases say "not found"
+- [x] T55 · Class Mode: the server's grace period is respected and counted down; round length, ticker and podium survive a reconnect; projector layouts fit 720p; phones get a round timer and stay in the room
+- [x] T56 · Autopsy: charts fit the screen, projector-size labels, code wraps under its own indentation, honest takeaways
+- [x] T57 · PDF report: readable technique chart, no label collisions, the game's own score labels, an archived-case page for old links

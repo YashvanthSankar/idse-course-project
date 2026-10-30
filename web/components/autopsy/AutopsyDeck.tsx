@@ -18,10 +18,18 @@ type Figure = { data?: unknown[]; layout?: Record<string, unknown> };
  *  On a projector every label is bigger, to read from the back row. */
 function forSlide(figure: Figure, projector: boolean): Figure {
   const size = projector ? 18 : 12;
+  // the chart theme sets axis font sizes itself: override them, or the back row can't read them
+  const axis = (key: string) => {
+    const a = (figure.layout?.[key] ?? {}) as Record<string, unknown>;
+    const title = (typeof a.title === "object" && a.title ? a.title : { text: a.title }) as Record<string, unknown>;
+    return { ...a, tickfont: { ...((a.tickfont as object) ?? {}), size }, title: { ...title, font: { ...((title.font as object) ?? {}), size } } };
+  };
   return {
     ...figure,
     layout: {
       ...figure.layout,
+      xaxis: axis("xaxis"),
+      yaxis: axis("yaxis"),
       title: { text: "" },
       font: { ...((figure.layout?.font as object) ?? {}), size },
       legend: { orientation: "h", x: 1, xanchor: "right", y: 1.02, yanchor: "bottom", font: { size } },
@@ -158,7 +166,7 @@ export function AutopsyDeck({ code }: { code: string }) {
           </div>
           <div className="flex items-center gap-3 sm:gap-6">
             {slide && (
-              <button onClick={() => setShowCode((s) => !s)} className="min-h-11 text-lg text-paper/70 hover:text-paper">
+              <button onClick={() => setShowCode((s) => !s)} className="min-h-11 whitespace-nowrap text-lg text-paper/70 hover:text-paper">
                 {showCode ? "Hide code" : "Show code"}<span className="hidden lg:inline"> (C)</span>
               </button>
             )}

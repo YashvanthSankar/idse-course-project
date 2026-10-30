@@ -1,7 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
-import { Stamp } from "@/components/fx/Stamp";
 import { sfx } from "@/lib/sound";
 import { useReducedEffects } from "@/lib/useReducedEffects";
 import type { BoardRow } from "@/lib/ws";
@@ -46,14 +45,6 @@ export function Podium({ rows }: { rows: BoardRow[] }) {
                 className="mb-4 w-full text-center"
                 data-testid={`podium-${place}`}
               >
-                {place === 1 && (
-                  // the stamp is drawn smaller, so give it a box of its drawn size (no overlap)
-                  <div className="mb-3 flex h-14 items-end justify-center">
-                    <div className="origin-bottom scale-[0.55]">
-                      <Stamp kind="closed" />
-                    </div>
-                  </div>
-                )}
                 <p className="break-words font-display text-xl font-black italic leading-tight text-paper sm:text-4xl">{row.name}</p>
                 <p className="font-mono text-lg text-amber sm:text-2xl">{row.score.toLocaleString()}</p>
               </motion.div>

@@ -172,7 +172,9 @@ class RoomManager:
 
     def lobby(self, code: str) -> dict:
         room = self.rooms[code]
-        return {"type": "lobby", "status": room.status, "players": [
+        return {"type": "lobby", "status": room.status,
+                "level": room.level if room.round else None, "seconds": room.seconds or None,
+                "players": [
             {"player_id": p.player_id, "name": p.name, "connected": p.connected,
              "solved": p.solved} for p in room.players.values()]}
 

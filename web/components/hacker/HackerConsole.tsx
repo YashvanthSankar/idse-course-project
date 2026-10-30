@@ -105,9 +105,13 @@ export function HackerConsole({ caseId, open, onClose, onBudget }: {
                 onChange={(e) => setCode(e.target.value)}
                 onKeyDown={(e) => {
                   if ((e.metaKey || e.ctrlKey) && e.key === "Enter") void run();
-                  if (e.key === "Tab") {
+                  // Tab indents at the cursor; Shift+Tab leaves the editor (keyboard users aren't stuck)
+                  if (e.key === "Tab" && !e.shiftKey) {
                     e.preventDefault();
-                    setCode((c) => `${c}    `);
+                    const el = e.currentTarget;
+                    const { selectionStart: at, selectionEnd: end } = el;
+                    setCode(`${code.slice(0, at)}    ${code.slice(end)}`);
+                    requestAnimationFrame(() => el.setSelectionRange(at + 4, at + 4));
                   }
                 }}
                 className="min-h-36 flex-1 resize-none rounded-md border border-line bg-black/60 p-4 font-mono text-[15px] leading-relaxed text-green outline-none focus:border-green/60"
@@ -117,7 +121,7 @@ export function HackerConsole({ caseId, open, onClose, onBudget }: {
                   <button
                     key={ex}
                     onClick={() => setCode(ex)}
-                    className="rounded-full border border-line px-3 py-1 font-mono text-xs text-paper/70 hover:border-green/50 hover:text-green"
+                    className="min-h-8 rounded-full border border-line px-3 font-mono text-xs text-paper/70 hover:border-green/50 hover:text-green"
                   >
                     {ex}
                   </button>

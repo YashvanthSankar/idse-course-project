@@ -7,7 +7,7 @@ import { API_URL } from "./api";
 export type LobbyPlayer = { player_id: string; name: string; connected: boolean; solved: boolean };
 export type BoardRow = { rank: number; player_id: string; name: string; score: number; correct: boolean; solved: boolean };
 export type RoomMessage =
-  | { type: "lobby"; status: "lobby" | "running" | "ended"; players: LobbyPlayer[] }
+  | { type: "lobby"; status: "lobby" | "running" | "ended"; players: LobbyPlayer[]; level?: number | null; seconds?: number | null }
   | { type: "welcome"; player_id: string; status: string }
   | { type: "round_start"; level: number; ends_at: number; seconds?: number; grace?: number }
   | { type: "your_case"; case_id: string }
@@ -55,7 +55,13 @@ let tickerId = 0;
 export function roomReducer(state: RoomState, msg: RoomMessage): RoomState {
   switch (msg.type) {
     case "lobby":
-      return { ...state, players: msg.players, phase: msg.status === "running" ? "running" : msg.status === "ended" ? "ended" : state.phase };
+      return {
+        ...state,
+        players: msg.players,
+        phase: msg.status === "running" ? "running" : msg.status === "ended" ? "ended" : state.phase,
+        level: msg.level ?? state.level, // a reloaded projector still knows the last round's setup
+        roundSeconds: msg.seconds ?? state.roundSeconds,
+      };
     case "welcome":
       // a phone that reloads after the round ended must say so, not "you're in"
       return { ...state, playerId: msg.player_id, phase: msg.status === "ended" ? "ended" : state.phase };

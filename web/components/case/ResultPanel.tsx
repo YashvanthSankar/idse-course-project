@@ -22,7 +22,7 @@ const ghost =
   "whitespace-nowrap rounded-md border border-line px-2 py-2 text-sm text-paper/80 transition-colors hover:border-paper/40 hover:text-paper sm:px-3.5";
 
 export function ResultPanel({
-  results, active, running, revealed, cached, onRevealed, onSelect, pinned, onPin, onCode, onData, suspects, phone,
+  results, active, running, revealed, cached, onRevealed, onSelect, pinned, onPin, onCode, onData, suspects, phone, broke = false,
 }: {
   results: ToolResult[];
   active: ToolResult | null;
@@ -37,6 +37,8 @@ export function ResultPanel({
   onData: () => void;
   suspects: Suspect[];
   phone: boolean;
+  /** the budget is spent: the only way forward is the board */
+  broke?: boolean;
 }) {
   const names = Object.fromEntries(suspects.map((s) => [s.id, s.name]));
   const tall = useMediaQuery("(min-height: 860px)") ?? false;
@@ -66,7 +68,7 @@ export function ResultPanel({
               aria-selected={active?.result_id === r.result_id}
               onClick={() => onSelect(r.result_id)}
               className={cn(
-                "shrink-0 rounded-full px-3 py-1 text-[13px] transition-colors",
+                "min-h-9 shrink-0 rounded-full px-3 py-1 text-[13px] transition-colors",
                 active?.result_id === r.result_id
                   ? "bg-amber/15 text-amber ring-1 ring-amber/50"
                   : "text-paper/60 ring-1 ring-line hover:text-paper",
@@ -90,10 +92,11 @@ export function ResultPanel({
               className="flex min-h-[360px] flex-col items-center justify-center text-center"
             >
               <div aria-hidden className="mb-4 font-display text-6xl italic text-amber/40">?</div>
-              <p className="font-display text-3xl italic text-paper">The ledger is waiting.</p>
+              <p className="font-display text-3xl italic text-paper">{broke ? "The budget is spent." : "The ledger is waiting."}</p>
               <p className="mt-3 max-w-sm text-base leading-relaxed text-paper/65">
-                {phone ? "Open the Tools tab" : "← Pick a tool from the kit"} to examine the ledger. Every tool is
-                real Python, and every one costs budget.
+                {broke
+                  ? "Open the board and make your accusation with what you have."
+                  : `${phone ? "Open the Tools tab" : "← Pick a tool from the kit"} to examine the ledger. Every tool is real Python, and every one costs budget.`}
               </p>
             </motion.div>
           ) : showTerminal ? (

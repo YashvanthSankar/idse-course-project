@@ -183,6 +183,12 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
 
   const count = (sid: string) => results.filter((r) => links[r.result_id] === sid).length;
   const readyList = suspects.filter((s) => count(s.id) >= required);
+  // When the two-fraudster bar slides up, bring the clue photos above it (they sit at the bottom)
+  const pairBar = culprits > 1 && readyList.length > 0 && !selected;
+  useEffect(() => {
+    const board = trap.current;
+    if (pairBar && board) board.scrollTo({ top: board.scrollHeight, behavior: "smooth" });
+  }, [pairBar, trap]);
   const pairPicks = pair.filter((id) => readyList.some((s) => s.id === id));
   const togglePair = (id: string) => {
     sfx.play("tick");
@@ -316,7 +322,7 @@ export function Corkboard({ open, onClose, caseId, suspects, results }: {
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: 80, opacity: 0 }}
                     data-testid="pair-picker"
-                    className="fixed inset-x-0 bottom-0 z-40 flex flex-col items-center gap-2 bg-[linear-gradient(to_top,rgba(0,0,0,0.85),transparent)] px-3 pb-5 pt-6"
+                    className="fixed inset-x-0 bottom-0 z-40 flex flex-col items-center gap-2 border-t border-white/10 bg-black/90 px-3 pb-4 pt-3 backdrop-blur"
                   >
                     <p className="font-type text-xs tracking-[0.25em] text-paper">
                       TWO FRAUDSTERS · PICK BOTH ({pairPicks.length}/2)

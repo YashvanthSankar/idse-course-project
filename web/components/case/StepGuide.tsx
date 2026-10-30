@@ -4,13 +4,15 @@ import { cn } from "@/lib/cn";
 
 
 /** 1 Investigate · 2 Pin 2 clues · 3 Accuse — highlights where the player is. */
-export function StepGuide({ results, pinned, clues = 2 }: { results: number; pinned: number; clues?: number }) {
+export function StepGuide({ results, pinned, clues = 2, broke = false }: { results: number; pinned: number; clues?: number; broke?: boolean }) {
   const STEPS = ["Investigate", `Pin ${clues} clue${clues === 1 ? "" : "s"}`, "Accuse"];
-  const current = results === 0 ? 0 : pinned < clues ? 1 : 2;
+  // out of budget: nothing left to investigate, so the next step is the accusation
+  const current = broke ? 2 : results === 0 ? 0 : pinned < clues ? 1 : 2;
   return (
     <ol data-testid="step-guide" aria-label="Your progress" className="flex items-center gap-1 text-[13px]">
       {STEPS.map((label, i) => {
-        const done = i < current;
+        // out of budget skips "pin" without doing it: no tick for a step that wasn't done
+        const done = i < current && !(broke && i === 1 && pinned < clues);
         const now = i === current;
         return (
           <li key={label} aria-current={now ? "step" : undefined} className="flex items-center gap-1">
