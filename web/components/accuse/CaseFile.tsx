@@ -210,14 +210,21 @@ function RowsPicker({ caseId, suspect, picked, onChange, onClose }: {
     window.addEventListener("keydown", onKey, true);
     return () => window.removeEventListener("keydown", onKey, true);
   }, [onClose]);
-  const [sort, setSort] = useState<"amount" | "date">("amount");
+  const [sort, setSort] = useState<"amount" | "date" | "repeats">("amount");
   const [filter, setFilter] = useState<{ col: (typeof COLUMNS)[number]; value: string } | null>(null);
   const shown = (r: LedgerRow, c: (typeof COLUMNS)[number]) => (c === "date" ? String(r[c]).slice(0, 10) : String(r[c] ?? ""));
+  const byDate = (a: LedgerRow, b: LedgerRow) => String(a.date).localeCompare(String(b.date)) || Number(a.hour) - Number(b.hour);
+  // "repeats first": the same bill (vendor + amount) lands in adjacent rows, biggest repeat groups on top
+  const bill = (r: LedgerRow) => `${r.vendor}|${Number(r.amount)}`;
+  const repeats = new Map<string, number>();
+  for (const r of rows.data?.rows ?? []) repeats.set(bill(r), (repeats.get(bill(r)) ?? 0) + 1);
   const list: LedgerRow[] = [...(rows.data?.rows ?? [])]
     .filter((r) => !filter || shown(r, filter.col) === filter.value)
     .sort((a, b) =>
-    sort === "amount" ? Number(b.amount) - Number(a.amount) : String(a.date).localeCompare(String(b.date)) || Number(a.hour) - Number(b.hour),
-  );
+      sort === "amount" ? Number(b.amount) - Number(a.amount)
+      : sort === "date" ? byDate(a, b)
+      : repeats.get(bill(b))! - repeats.get(bill(a))! || bill(a).localeCompare(bill(b)) || byDate(a, b),
+    );
   const room = MAX_EXHIBITS - picked.length;
   const unpinned = list.filter((r) => !picked.includes(String(r.txn_id)));
   const pinAll = () => {
@@ -241,12 +248,12 @@ function RowsPicker({ caseId, suspect, picked, onChange, onClose }: {
             <p className="text-xs text-paper/60">Pin the rows that show the trick, and only those. An honest row costs you; up to 3 fraud rows is a full mark (fewer if the fraud left fewer).</p>
             <p className="text-xs text-cyan/80">Tip: tap the 🔍 beside any value (a vendor, an amount, a date) to show only rows that share it, then pin them together.</p>
           </div>
-          <div className="flex items-center gap-2 text-xs">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="text-paper/60">Sort</span>
-            {(["amount", "date"] as const).map((k) => (
+            {(["amount", "date", "repeats"] as const).map((k) => (
               <button key={k} type="button" onClick={() => setSort(k)} aria-pressed={sort === k}
                 className={cn("min-h-9 rounded-sm border px-3", sort === k ? "border-amber text-amber" : "border-line text-paper/70")}>
-                {k === "amount" ? "biggest first" : "by date"}
+                {k === "amount" ? "biggest first" : k === "date" ? "by date" : "repeats first"}
               </button>
             ))}
           </div>

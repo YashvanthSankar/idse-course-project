@@ -1,11 +1,15 @@
 "use client";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Typewriter } from "@/components/fx/Typewriter";
 import { Modal } from "@/components/ui/Modal";
+import { getPlayerSnapshot, subscribePlayer } from "@/lib/player";
+import { totalScore } from "@/lib/progress";
+import { rankFor } from "@/lib/rank";
 import { sfx } from "@/lib/sound";
 import type { CaseMeta } from "@/lib/types";
+import { useProgress } from "@/lib/useProgress";
 import { useReducedEffects } from "@/lib/useReducedEffects";
 import { DIFFICULTY_LABEL } from "@/lib/career";
 import { Portrait } from "./Portrait";
@@ -28,6 +32,11 @@ export function BriefingModal({ meta, onClose, onOpenFiles, closeLabel = "BACK T
   const [typedFor, setTypedFor] = useState<string | null>(null);
   const typed = reduced || (meta !== null && typedFor === meta.case_id);
   const career = meta?.career ?? null;
+  // Addressed to you: your Quick Case rank (the same one the top bar shows) and your name
+  const rank = rankFor(totalScore(useProgress())).title;
+  const stored = useSyncExternalStore(subscribePlayer, getPlayerSnapshot, () => "");
+  const name = stored ? ((JSON.parse(stored) as { name?: string }).name ?? "") : "";
+  const to = career ? (name ? `${name}, Forensic Auditor` : "Forensic Auditor") : name ? `${rank} ${name}` : `${rank} Auditor`;
   const caseNo = career ? `${career.index} of ${career.total}` : meta ? String(meta.level).padStart(2, "0") : "";
 
   return (
@@ -53,7 +62,7 @@ export function BriefingModal({ meta, onClose, onOpenFiles, closeLabel = "BACK T
             </div>
             <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 font-type text-[13px] sm:text-sm">
               <dt className="opacity-60">TO:</dt>
-              <dd>{career ? "Forensic Auditor" : "Rookie Auditor"}</dd>
+              <dd data-testid="memo-to">{to}</dd>
               <dt className="opacity-60">FROM:</dt>
               <dd>R. Desai, Chief Auditor</dd>
               <dt className="opacity-60">RE:</dt>

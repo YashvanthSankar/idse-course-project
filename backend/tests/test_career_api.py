@@ -164,6 +164,15 @@ def test_retire_starts_a_fresh_career(client):
     assert client.get(f"/api/career/{old}").json()["status"] == "retired"
 
 
+def test_the_detectives_name(client):
+    view = client.post("/api/career", json={"player_id": "p1", "name": "  Rao  "}).json()
+    assert view["name"] == "Rao"
+    assert client.post("/api/career", json={"name": "x" * 17}).status_code == 422
+    assert client.post("/api/career").json()["name"] == ""
+    fresh = client.post(f"/api/career/{view['code']}/retire").json()
+    assert fresh["name"] == "Rao"  # starting over keeps your name
+
+
 def test_a_server_restart_rebuilds_the_open_case(app, client, tmp_path):
     code = client.post("/api/career").json()["code"]
     client.post(f"/api/career/{code}/sign", json={"company_id": "lakshmi"})

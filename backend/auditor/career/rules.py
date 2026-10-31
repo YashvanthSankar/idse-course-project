@@ -37,6 +37,7 @@ class CaseRecord(BaseModel):
     forced_cameo: str | None = None
     case_id: str | None = None
     lineup_cameos: list[str] = Field(default_factory=list)
+    lineup: list[str] = Field(default_factory=list)  # person keys behind E1…En, in order
     rating: CaseRating | None = None
     correct: bool | None = None  # every culprit caught
     caught_cameo: bool | None = None  # the Final's last case
@@ -96,6 +97,7 @@ class TrailStop(BaseModel):
 class Career(BaseModel):
     code: str
     player_id: str | None = None
+    name: str = ""  # the detective's name
     created: float
     # Hidden from every view: mixed into every random choice, so the visible code can't be
     # used to work out a career's fraudsters offline. Old careers have none.
@@ -117,6 +119,8 @@ class Career(BaseModel):
     cameo_trail: dict[str, list[TrailStop]] = Field(default_factory=dict)
     final_culprit: str
     tool_counts: dict[str, int] = Field(default_factory=dict)
+    # Person keys of everyone you've caught: they're gone, so they never stand in a lineup again
+    convicted: list[str] = Field(default_factory=list)
     ending: Literal["caught", "escaped"] | None = None
     successor: str | None = None  # the fresh career that replaced this one when it retired
 
@@ -138,11 +142,12 @@ def _seed_parts(career: Career, *parts: object) -> tuple[object, ...]:
     return (career.salt, *parts) if career.salt else parts
 
 
-def new_career(code: str, player_id: str | None = None, salt: str | None = None) -> Career:
+def new_career(code: str, player_id: str | None = None, salt: str | None = None,
+               name: str = "") -> Career:
     salt = secrets.token_hex(16) if salt is None else salt
     rng = _rng(*((salt,) if salt else ()), "career", code)
     culprit = list(CAMEOS)[int(rng.integers(len(CAMEOS)))]  # who it was, all along
-    return Career(code=code, player_id=player_id, created=time.time(), salt=salt,
+    return Career(code=code, player_id=player_id, name=name, created=time.time(), salt=salt,
                   offers=[c.id for c in companies_in("small")], final_culprit=culprit)
 
 

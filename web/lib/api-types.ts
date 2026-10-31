@@ -539,6 +539,11 @@ export interface components {
         CareerCreate: {
             /** Player Id */
             player_id?: string | null;
+            /**
+             * Name
+             * @default
+             */
+            name: string;
         };
         /** CareerVerdict */
         CareerVerdict: {
@@ -559,6 +564,8 @@ export interface components {
         CareerView: {
             /** Code */
             code: string;
+            /** Name */
+            name: string;
             /** Status */
             status: string;
             /** Year */

@@ -79,7 +79,8 @@ export const interrogate = (caseId: string, suspectId: string) =>
   request<{ suspect_id: string; statement: string }>(`/api/cases/${caseId}/interrogate/${suspectId}`);
 
 // ── Career Mode ──────────────────────────────────────────────────────────────────
-export const createCareer = (playerId?: string) => post<CareerView>("/api/career", { player_id: playerId });
+export const createCareer = (playerId?: string, name = "") =>
+  post<CareerView>("/api/career", { player_id: playerId, name });
 export const getCareer = (code: string) => request<CareerView>(`/api/career/${encodeURIComponent(code)}`);
 export const signContract = (code: string, companyId: string, practice = false) =>
   post<CareerView>(`/api/career/${encodeURIComponent(code)}/sign`, { company_id: companyId, practice });

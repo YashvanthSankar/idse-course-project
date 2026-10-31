@@ -40,7 +40,10 @@ export function CareerScreen() {
   const setCode = (next: string | null) => saveCareerCode(next);
 
   const start = useMutation({
-    mutationFn: () => createCareer(loadPlayer().id),
+    mutationFn: () => {
+      const me = loadPlayer();
+      return createCareer(me.id, me.name);
+    },
     onSuccess: (view) => {
       client.setQueryData(["career", view.code], view);
       setCode(view.code);
@@ -171,7 +174,9 @@ function Hub({ code, onLeave, onSwitch }: { code: string; onLeave: () => void; o
           {/* who you are now */}
           <section aria-label="Your career" className="flex flex-wrap items-end justify-between gap-4 border-b border-line/70 pb-5">
             <div>
-              <p className="font-type text-[11px] tracking-[0.4em] text-amber/80">YEAR {view.year} · CAREER {view.code}</p>
+              <p className="font-type text-[11px] tracking-[0.4em] text-amber/80">
+                {view.name ? <span data-testid="career-player">{view.name.toUpperCase()} · </span> : null}YEAR {view.year} · CAREER {view.code}
+              </p>
               <h1 className="mt-1 font-display text-4xl italic text-paper sm:text-5xl">{view.title ?? "Forensic Auditor"}</h1>
               <p className="mt-2 max-w-xl text-lg text-paper/75" data-testid="career-goal">{view.goal}</p>
             </div>
@@ -180,6 +185,7 @@ function Hub({ code, onLeave, onSwitch }: { code: string; onLeave: () => void; o
                 <p className="text-xs uppercase tracking-widest text-muted">Salary</p>
                 <p className="font-display text-3xl italic text-paper" data-testid="career-salary">{formatSalary(view.salary)}</p>
               </div>
+
               <TierChip tier={view.tier} name={view.tier_name} />
             </div>
           </section>

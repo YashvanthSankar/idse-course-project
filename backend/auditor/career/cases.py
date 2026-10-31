@@ -96,7 +96,16 @@ def plan_contract(company: Company, rng: np.random.Generator,
                   final_culprit: str | None = None) -> list[CasePlan]:
     """Five cases (three in the Final), easiest first."""
     spec = TIER_SPECS[company.tier]
-    others = [s for s in company.schemes if s != company.signature] or [company.signature]
+    used: Counter[SchemeId] = Counter()
+    last: tuple[SchemeId, ...] = ()
+
+    def freshest(k: int) -> tuple[SchemeId, ...]:
+        # The least-used schemes so far, never the one the case before used: one method
+        # can't carry a whole contract (ties broken at random)
+        shuffled = [company.schemes[int(j)] for j in rng.permutation(len(company.schemes))]
+        ranked = sorted(shuffled, key=lambda s: (used[s], s in last))
+        return tuple(ranked[:k])
+
     plans = []
     for i, difficulty in enumerate(spec.plan):
         seed = int(rng.integers(2**31))
@@ -106,13 +115,12 @@ def plan_contract(company: Company, rng: np.random.Generator,
             rest = [s for s in company.schemes if s != first]
             second = rest[int(rng.integers(len(rest)))]
             schemes: tuple[SchemeId, ...] = (first, second)
-        elif difficulty == "very_hard":
-            pair = rng.choice(len(company.schemes), size=2, replace=False)
-            schemes = tuple(company.schemes[int(j)] for j in pair)
-        elif difficulty == "easy" or (difficulty == "medium" and i == 2):
-            schemes = (company.signature,)
+        elif i == 0:
+            schemes = (company.signature,)  # the first case is the company's signature fraud
         else:
-            schemes = (others[int(rng.integers(len(others)))],)
+            schemes = freshest(2 if difficulty == "very_hard" else 1)
+        used.update(schemes)
+        last = schemes
         herrings = () if difficulty == "easy" else (
             company.herrings[:1] if difficulty == "medium" else company.herrings)
         forced = final_culprit if company.tier == "final" and i == len(spec.plan) - 1 else None
@@ -159,6 +167,21 @@ def telling_rows(df: pd.DataFrame, culprit: Culprit) -> list[str]:
     else:
         return []
     return sorted(set(rows["txn_id"]) - set(culprit.fraud_txn_ids))
+
+
+def without_convicted(people: list[Person], convicted: list[str],
+                      company_id: str) -> list[Person]:
+    """Drop the people you've already caught, newest catches first, while a full lineup of
+    staff is still left (only a company you keep returning to runs short)."""
+    need = TIER_SPECS[COMPANIES[company_id].tier].suspects
+    staff = sum(1 for p in people if not p.is_head and not p.cameo)
+    gone: set[str] = set()
+    for key in reversed(convicted):
+        if staff - len(gone) <= need:
+            break
+        if any(p.key == key and not p.is_head and not p.cameo for p in people):
+            gone.add(key)
+    return [p for p in people if p.key not in gone]
 
 
 def build_career_case(plan: CasePlan, people: list[Person], code: str, case_id: str,

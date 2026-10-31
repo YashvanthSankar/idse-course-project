@@ -91,9 +91,11 @@ test("prologue → offers → first company → solve case 1 in the browser → 
   test.setTimeout(180_000);
   await page.goto("/career");
   await page.getByRole("button", { name: "SKIP ▶▶" }).click();
+  await page.getByTestId("career-name").fill("Detective Rao");
   await page.getByTestId("start-career").click();
   await expect(page.getByTestId("offer")).toHaveCount(3);
   const code = (await page.getByTestId("career-code").innerText()).trim();
+  await expect(page.getByTestId("career-player")).toContainText("DETECTIVE RAO");
 
   await page.locator("[data-testid=offer][data-company=lakshmi]").getByRole("button", { name: "SIGN" }).click();
   await expect(page.getByTestId("greetings")).toBeVisible();

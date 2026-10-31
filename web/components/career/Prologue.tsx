@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Rain } from "@/components/fx/Rain";
 import { Typewriter } from "@/components/fx/Typewriter";
 import { normaliseCode } from "@/lib/career";
+import { loadPlayer, MAX_NAME, setPlayerName } from "@/lib/player";
 import { sfx } from "@/lib/sound";
 import { useReducedEffects } from "@/lib/useReducedEffects";
 
@@ -56,6 +57,8 @@ export function Prologue({ onStart, onContinue, starting, error, enterCode = fal
   const [typed, setTyped] = useState(-1);
   const [entering, setEntering] = useState(enterCode);
   const [code, setCode] = useState("");
+  // only rendered on the client (CareerScreen waits for localStorage), so the saved name is safe to read here
+  const [name, setName] = useState(() => loadPlayer().name);
   const last = step === PANELS.length;
 
   useEffect(() => {
@@ -179,17 +182,37 @@ export function Prologue({ onStart, onContinue, starting, error, enterCode = fal
               <p className="mt-3 max-w-md text-lg text-paper/75">
                 Three small businesses want an auditor. Pick one. The bigger firms are watching who does well.
               </p>
-              <button
-                onClick={() => {
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!name.trim() || starting) return;
                   sfx.play("stamp");
+                  setPlayerName(name);
                   onStart();
                 }}
-                disabled={starting}
-                data-testid="start-career"
-                className="mt-8 min-h-11 bg-[#ffd319] px-8 py-4 font-pixel text-sm text-[#05060d] shadow-[4px_4px_0_#ff2a6d] disabled:opacity-60"
+                className="mt-8 flex w-full max-w-sm flex-col items-center gap-3"
               >
-                {starting ? "OPENING…" : "OPEN THE ENVELOPES"}
-              </button>
+                <label htmlFor="career-name" className="font-type text-[11px] tracking-[0.4em] text-paper/60">
+                  SIGN YOUR NAME
+                </label>
+                <input
+                  id="career-name"
+                  value={name}
+                  maxLength={MAX_NAME}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your detective name"
+                  data-testid="career-name"
+                  className="h-12 w-full rounded border-2 border-[#1a2238] bg-black/40 px-3 text-center font-type text-xl text-paper outline-none placeholder:text-paper/30 focus:border-[#ffd319]"
+                />
+                <button
+                  type="submit"
+                  disabled={starting || !name.trim()}
+                  data-testid="start-career"
+                  className="min-h-11 bg-[#ffd319] px-8 py-4 font-pixel text-sm text-[#05060d] shadow-[4px_4px_0_#ff2a6d] disabled:opacity-60"
+                >
+                  {starting ? "OPENING…" : "OPEN THE ENVELOPES"}
+                </button>
+              </form>
               {!entering ? (
                 <button onClick={() => setEntering(true)} className="mt-5 min-h-11 text-base text-[#4cc9f0] underline-offset-4 hover:underline">
                   I already have a career code

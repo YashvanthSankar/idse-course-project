@@ -8,7 +8,13 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field, StringConstraints
 
-from auditor.career.cases import CasePlan, build_career_case, intended_cost, telling_rows
+from auditor.career.cases import (
+    CasePlan,
+    build_career_case,
+    intended_cost,
+    telling_rows,
+    without_convicted,
+)
 from auditor.career.catalog import CAMEOS, COMPANIES, TIER_NAMES, TIER_SPECS, Band, Tier
 from auditor.career.people import company_people
 from auditor.career.proof import THEORIES, THEORY_BY_ID, Theory
@@ -75,6 +81,7 @@ class ContractView(BaseModel):
 
 class CareerView(BaseModel):
     code: str
+    name: str
     status: str
     year: int
     tier: Tier
@@ -90,8 +97,13 @@ class CareerView(BaseModel):
     theories: list[Theory]  # the kinds of fraud you can name, and the tools that prove each
 
 
+MAX_NAME = 16  # web/lib/player.ts
+
+
 class CareerCreate(BaseModel):
     player_id: Annotated[str, StringConstraints(max_length=64)] | None = None
+    name: Annotated[str, StringConstraints(strip_whitespace=True, max_length=MAX_NAME)] = ""
+
 
 
 class Sign(BaseModel):
@@ -198,7 +210,7 @@ def view(career: Career) -> CareerView:
                             case_id=c.case_id) for c in k.cases],
             average=average, band_so_far=band)
     return CareerView(
-        code=career.code, status=career.status, year=career.year, tier=career.tier,
+        code=career.code, name=career.name, status=career.status, year=career.year, tier=career.tier,
         tier_name=TIER_NAMES[career.tier], salary=career.salary, title=career.title,
         ending=career.ending, goal=next_goal(career),
         offers=[card(o) for o in career.offers], contract=contract, history=career.history,
@@ -256,7 +268,8 @@ def register_career(app, store: SessionStore, careers: CareerStore,
     @router.post("", response_model=CareerView)
     def create(request: Request, body: CareerCreate | None = None):
         limit(request, "careers")
-        career = new_career(careers.unused_code(), (body or CareerCreate()).player_id)
+        body = body or CareerCreate()
+        career = new_career(careers.unused_code(), body.player_id, name=body.name)
         careers.save(career)
         return view(career)
 
@@ -289,7 +302,7 @@ def register_career(app, store: SessionStore, careers: CareerStore,
             if career.status == "retired" and career.successor:
                 return view(load(career.successor))
             limit(request, "careers")
-            fresh = new_career(careers.unused_code(), career.player_id)
+            fresh = new_career(careers.unused_code(), career.player_id, name=career.name)
             career.status, career.successor = "retired", fresh.code
             careers.save(fresh)
             careers.save(career)
@@ -310,7 +323,8 @@ def register_career(app, store: SessionStore, careers: CareerStore,
                 except KeyError:
                     pass  # restarted server: rebuild the same case from its seed
             contract = career.contract
-            people = company_people(contract.company_id, contract.cameos)
+            people = without_convicted(company_people(contract.company_id, contract.cameos),
+                                       career.convicted, contract.company_id)
             plan = CasePlan(contract.company_id, record.index, record.difficulty,
                             tuple(record.schemes), tuple(record.herrings), record.seed,
                             record.forced_cameo)
@@ -330,6 +344,7 @@ def register_career(app, store: SessionStore, careers: CareerStore,
             store.create(session)
             record.case_id = case_id
             record.lineup_cameos = sorted(set(session.lineup_cameos.values()))
+            record.lineup = [p.key for p in lineup]
             careers.save(career)
         log("case_started", session, payload={"level": bundle.meta.level, "seed": record.seed,
                                               "career": career.code,
@@ -404,6 +419,12 @@ def register_career(app, store: SessionStore, careers: CareerStore,
             if forced:
                 caught_cameo = any(session.lineup_cameos.get(s) == forced for s in accused_ids
                                    if any(c.fraudster_id == s for c in culprits))
+            lineup = career.contract.cases[record_index].lineup
+            for c in culprits:
+                if c.fraudster_id in accused_ids and lineup:
+                    key = lineup[int(c.fraudster_id[1:]) - 1]
+                    if key not in career.convicted:
+                        career.convicted.append(key)
             appraisal = rules(lambda: record_case(
                 career, record_index, rating, [r.tool_id for r in results if r.cost_charged > 0],
                 caught_cameo))
