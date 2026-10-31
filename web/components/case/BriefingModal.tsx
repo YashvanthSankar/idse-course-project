@@ -15,6 +15,15 @@ import { DIFFICULTY_LABEL } from "@/lib/career";
 import { Portrait } from "./Portrait";
 
 /** The Chief's memo plus the suspect line-up, shown before a case opens. */
+/** The saved detective name; damaged storage must never take the briefing down. */
+function nameFrom(stored: string): string {
+  try {
+    return stored ? String((JSON.parse(stored) as { name?: unknown }).name ?? "") : "";
+  } catch {
+    return "";
+  }
+}
+
 export function BriefingModal({ meta, onClose, onOpenFiles, closeLabel = "BACK TO THE DESK" }: {
   meta: CaseMeta | null;
   onClose: () => void;
@@ -35,7 +44,7 @@ export function BriefingModal({ meta, onClose, onOpenFiles, closeLabel = "BACK T
   // Addressed to you: your Quick Case rank (the same one the top bar shows) and your name
   const rank = rankFor(totalScore(useProgress())).title;
   const stored = useSyncExternalStore(subscribePlayer, getPlayerSnapshot, () => "");
-  const name = stored ? ((JSON.parse(stored) as { name?: string }).name ?? "") : "";
+  const name = nameFrom(stored);
   const to = career ? (name ? `${name}, Forensic Auditor` : "Forensic Auditor") : name ? `${rank} ${name}` : `${rank} Auditor`;
   const caseNo = career ? `${career.index} of ${career.total}` : meta ? String(meta.level).padStart(2, "0") : "";
 
