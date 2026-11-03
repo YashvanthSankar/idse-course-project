@@ -61,9 +61,15 @@ against its CRC-32 and stops early. The archive layout, read from the stream:
 license.txt
 csv/keys/keys.tar.gz     66.5 MB  → act_key, section_key, type/purpose/disp keys, court/district/state keys, judge_case_merge_key
 dta/keys/keys.tar.gz    120.7 MB  (Stata copy, skipped)
-csv/cases/cases.tar.gz            → cases_2010.csv, cases_2018.csv, cases_2017.csv, … (one per filing year)
-dta/…                             (Stata copies, skipped)
+csv/cases/cases.tar.gz 1,408.8 MB → cases_2010.csv, cases_2018.csv, cases_2017.csv, … (one per filing year)
+dta/cases/cases.tar.gz 2,433.2 MB  (Stata copy, skipped)
+csv/judges_clean.tar.gz    0.9 MB  judges and their appointment dates
+dta/judges_clean.tar.gz    2.7 MB  (Stata copy)
+csv/acts_sections.tar.gz 567.4 MB  the law and section of every case, keyed by ddl_case_id
 ```
+
+The acts file starts ~4 GB into the stream, so fetching it alone still streams ~4.6 GB
+(~25 min): `uv run python scripts/fetch_ddl.py --want 'csv/acts_sections*' --max-saves 1`.
 
 **Licence: the file in the download is ODbL v1.0 (Open Database License),** not the
 CC BY-NC-SA the website states. Under ODbL we may use the data and publish charts and a model

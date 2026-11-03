@@ -20,10 +20,12 @@ test and a line in the README's decisions table; numbers in docs come from code,
 DDL's metadata says the per-case acts/sections live in a file called `acts_sections`
 ("linked to the case files using ddl_case_id"). It is **not** in `csv/cases/cases.tar.gz` or the
 keys. It comes after the case archives in the Dropbox stream.
-- [ ] Find it: `uv run python scripts/fetch_ddl.py --want '*acts*' --max-saves 1` (prints every
-      entry it skips; needs to stream past ~3 GB first). If it's only a Stata `.dta`, read it
-      with `pd.read_stata(path, iterator=True, chunksize=…)` and keep rows whose `ddl_case_id`
-      starts with `"10-"`.
+- [x] Found and downloaded: `data/raw/ddl/csv/acts_sections.tar.gz` (567 MB, CRC ok; fetch with
+      `uv run python scripts/fetch_ddl.py --want 'csv/acts_sections*' --max-saves 1`, ~25 min).
+- [ ] Turn it into `data/clean/10/acts_sections.parquet`: `build_dataset.py` already handles
+      non-case CSVs inside a tar (keeps rows whose `ddl_case_id` starts with `"10-"`); run it with
+      `--archive data/raw/ddl/csv/acts_sections.tar.gz`. Check the column names first
+      (`tar tzvf …`, then `head` of the CSV) and whether a case can have several acts.
 - [ ] Map its act column through `act_key.csv` → `tareekh.acts.canonical_act` (94.1% coverage
       already measured) and its section through `section_key.csv` (70 MB, also messy: e.g.
       `"!#11bofHindumarriageAt1955"`; write `tareekh/sections.py` the same way as `acts.py`).
