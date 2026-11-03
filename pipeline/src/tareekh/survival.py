@@ -1,7 +1,7 @@
 """The share of cases still open after t days (Kaplan–Meier), using every case.
 
 "Median days among decided cases" is badly biased here: the slow cases are exactly the ones
-still pending at the scrape, so it falls from 1,343 days for 2010 filings to 18 days for 2017's.
+still pending at the scrape, so it falls from 1,366 days for 2010 filings to 17 days for 2017's.
 Kaplan–Meier uses each case for as long as it was watched: a pending case counts as "still
 open" until the cutoff, a transferred one until its transfer, and then drops out of the
 denominator instead of being counted as finished or ignored.

@@ -1,5 +1,6 @@
 "use client";
 import { motion, useMotionValue } from "framer-motion";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Rain } from "@/components/fx/Rain";
@@ -182,6 +183,14 @@ export function TitleScreen() {
             ⚙
           </button>
           <span>© 2026 IDSE<span className="hidden sm:inline"> · NUMPY · PANDAS · SCIPY · SKLEARN</span></span>
+          {/* the course pipeline project: a separate, plain site on the same domain */}
+          <Link
+            href="/model"
+            title="TAREEKH: a model of how long Indian court cases take, from 81 million real records"
+            className="flex h-11 items-center rounded border-2 border-paper/30 px-3 text-paper/85 hover:border-[#4cc9f0] hover:text-[#4cc9f0]"
+          >
+            REAL DATA: COURT CASES →
+          </Link>
         </span>
         <span className="animate-blink-hard text-[#ffd319]">{awake ? "CREDIT 01" : "INSERT COIN"}</span>
       </footer>

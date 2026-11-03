@@ -4,6 +4,8 @@
 
 ### ▶ Play it: **[otlr.vercel.app](https://otlr.vercel.app)**
 
+### 📊 The course pipeline project: **[otlr.vercel.app/model](https://otlr.vercel.app/model)**, TAREEKH, a model of how long Indian court cases take, from 81 million real records ([write-up](pipeline/REPORT.md))
+
 The game runs on Vercel; the Python brain runs on a small always-on VPS (FastAPI under systemd, Caddy for HTTPS) with telemetry in Neon Postgres.
 
 A noir detective web game where you catch corporate fraudsters with **real Python data analysis**.

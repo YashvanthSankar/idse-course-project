@@ -3,49 +3,74 @@
 *"Tareekh pe tareekh"* (date after date). The IDSE (CS3006) end-to-end project: real Indian
 district-court records → cleaning → EDA → a model of how long cases take → `/model` on the site.
 
-- **Why this topic, and the rules the work must follow:** [`../IDEA.md`](../IDEA.md).
-- **This file:** how to run things, what is built, and what we have *measured* so far.
-- **Work still to do:** [`../JEEVA.md`](../JEEVA.md).
+- **The write-up (findings, results, limitations):** [`REPORT.md`](REPORT.md).
+- **Why this topic, and the rules the work follows:** [`../IDEA.md`](../IDEA.md).
+- **This file:** how to run everything, what each piece does, the raw facts measured, and the
+  decisions with their reasons.
+- **What's left:** [`../JEEVA.md`](../JEEVA.md).
 
 ## Run it
 
 ```bash
 cd pipeline
-uv sync                                   # Python 3.12; scikit-learn pinned to the game backend's 1.9.1
-uv run pytest                             # 96 tests
-# 1. download (≈1.6 GB streamed, ~10 min): licence, keys, and the case archive
-uv run python scripts/fetch_ddl.py --want 'license.txt' --want 'csv/keys/*' --want 'csv/cases/*' --max-saves 3
+uv sync                      # Python 3.12; scikit-learn pinned to the game backend's 1.9.1
+uv run pytest                # 131 tests
+# 1. download (Dropbox streams the whole folder; each fetch stops once it has what it asked for)
+uv run python scripts/fetch_ddl.py --want 'license.txt' --want 'csv/keys/*' --want 'csv/cases/*' --max-saves 3   # ~10 min
+uv run python scripts/fetch_ddl.py --want 'csv/acts_sections*' --max-saves 1                                    # ~25 min
 mkdir -p data/raw/ddl/keys && tar xzf data/raw/ddl/csv/keys/keys.tar.gz -C data/raw/ddl/keys
-# 2. parquet for all of India (narrow) and Tamil Nadu (every column): ~1.5 min
+# 2. parquet: all of India (narrow) + Tamil Nadu (every column), then TN's acts/sections: ~2.5 min
 uv run python scripts/build_dataset.py --state 10
+uv run python scripts/build_dataset.py --state 10 --archive data/raw/ddl/csv/acts_sections.tar.gz
 # 3. scrape cutoffs + labels → data/clean/10/{cutoffs,labelled}.parquet: ~1 min
 uv run python scripts/label_cases.py --state 10
-# 4. train + evaluate → artifacts/within_1y/, reports/within_1y.md: ~1.5 min
+# 4. model, analysis, experiments → artifacts/within_1y/, reports/: ~6 min on 2 cores
 uv run python scripts/train_within_1y.py
+uv run python scripts/analyse.py
+uv run python scripts/experiments.py
+# 5. notebooks (read the cleaned data and the reports)
+uv run jupyter nbconvert --to notebook --execute --inplace notebooks/*.ipynb
+# 6. the site package → artifacts/site/ and game/backend/auditor/tareekh/data/
+uv run python scripts/export_site.py
 ```
 
 Raw data goes to `data/raw/ddl/`, cleaned data to `data/clean/`; neither goes into git. The case
 archive is 1.41 GB compressed, 16.16 GB as CSV (one file per filing year, 0.86 to 2.72 GB).
+On a shared laptop, prefix heavy steps with `nice -n 19` and `OMP_NUM_THREADS=2`; training's
+forest uses `--jobs 2` by default.
 
 ## Layout
 
 ```
 pipeline/
+├── REPORT.md                the write-up, stage by stage
 ├── scripts/
-│   ├── fetch_ddl.py         download chosen files from DDL's Dropbox (see "Getting the data")
-│   ├── build_dataset.py     stream the 16 GB archive into parquet in one pass
-│   └── train_within_1y.py   baselines + 3 model families, time split, writes the report
+│   ├── fetch_ddl.py         download chosen files from DDL's Dropbox stream (CRC-checked)
+│   ├── build_dataset.py     stream the 16 GB archive (and the acts file) into parquet
+│   ├── label_cases.py       scrape cutoffs per district + labels
+│   ├── train_within_1y.py   3 baselines × 3 model families × 2 input sets, time split → report
+│   ├── analyse.py           every number for the notebooks and the site → reports/analysis.*
+│   ├── experiments.py       drift, horizons, cutoff rule, weak spots → reports/experiments.*
+│   └── export_site.py       model + inputs + test cases + analytics for /model
 ├── src/tareekh/
-│   ├── acts.py              ~30,000 raw law names → 54 named laws (+ Unknown, Other)
+│   ├── acts.py              29,857 raw law names → 54 laws (+ Unknown, Other)
+│   ├── sections.py          free-text sections → main section (138, 304B, Order 7)
 │   ├── courts.py            116 court names → 14 court levels (+ unclear)
 │   ├── cases.py             decode codes, gender sentinels and impossible dates
-│   ├── outcomes.py          the 52 dispositions → ended / moved / interim / missing …
+│   ├── outcomes.py          52 dispositions → ended / moved / interim / missing …
 │   ├── cutoff.py            when each state/district was scraped
 │   ├── target.py            observed time, ended, and "within H days" labels
-│   └── features.py          filing-day inputs, incl. court congestion
-├── tests/                   96 tests; law and court tests use real strings from the data
-├── artifacts/within_1y/     model.joblib (3 kB) + metadata.json: what the site will load
-└── reports/within_1y.md     generated results (do not edit by hand)
+│   ├── features.py          filing-day inputs: congestion, law and section
+│   ├── modelling.py         the shared modelling table
+│   ├── survival.py          Kaplan–Meier in numpy
+│   ├── clusters.py          k-means on district profiles, k by silhouette
+│   ├── glossary.py          plain-English names for case types and sections
+│   └── plotstyle.py         one look for every chart
+├── notebooks/               01_audit · 02_eda · 03_survival_and_clusters · 04_model (executed)
+├── tests/                   131 tests; cleaning tests use real strings from the data
+├── artifacts/within_1y/     the served model (6 kB) + metadata
+├── artifacts/site/          what /model loads (also copied into the game backend)
+└── reports/                 generated: within_1y.md, analysis.md, experiments.md, figures/
 ```
 
 ## Getting the data
@@ -76,7 +101,7 @@ CC BY-NC-SA the website states. Under ODbL we may use the data and publish chart
 built from it with attribution; a database we derive from it and share must also be ODbL.
 Credit on the site: *"Contains data from Development Data Lab's judicial data, ODbL v1.0."*
 
-## Measured so far (2026-11-03)
+## Measured (raw facts, 2026-11-03)
 
 ### The law names (`act_key.csv`)
 - **29,857 distinct raw law names** across 76.8 million case–law rows.
@@ -150,30 +175,30 @@ A first version of the one-year label was biased: 2018 filings came out 92.6% "w
 because only fast cases could be known. Fixed by requiring full follow-up (filed ≥1 year before
 the cutoff). Eligible: 405k (2015), 446k (2016), 549k (2017) cases; 36%, 44%, 50% within a year.
 
-### The model (full tables: [`reports/within_1y.md`](reports/within_1y.md))
+### The model (full tables: [`reports/within_1y.md`](reports/within_1y.md), write-up: [`REPORT.md`](REPORT.md))
 Test = 549,273 cases filed in 2017, never seen during training or model choice.
 
 | | AUC | Brier | log loss |
 |---|---|---|---|
-| rate per case type (baseline) | 0.828 | 0.163 | 0.502 |
 | rate per case type × district (lookup baseline) | 0.844 | 0.163 | 0.492 |
-| **logistic regression (served; chosen on 2016)** | 0.842 | **0.158** | **0.483** |
-| linear SVM, calibrated | 0.843 | 0.157 | 0.481 |
-| random forest | **0.847** | 0.159 | 0.488 |
+| logistic regression, filing basics only | 0.842 | 0.158 | 0.483 |
+| **logistic regression + law and section (served)** | **0.873** | **0.138** | **0.427** |
 
-What it means, honestly:
-- **Case type carries most of the signal** (permutation importance 0.35 vs ≤0.02 for anything
-  else). The models give better *probabilities* than a lookup table, but rank cases about as
-  well. The site must say so.
-- **Courts got faster year on year** (36% → 44% → 50%), so a model trained on 2015-16
-  under-predicts 2017 by 2-4 points in most bands. The random forest given every input per split
-  learned 2015's exact congestion levels and did worse on 2016 (AUC 0.79): drift, not noise.
-- Congestion features (pending cases and last year's clearance in the district's courts of
-  that level on the filing day) helped a little (2016 log loss 0.500 → 0.495).
-- Missing and likely to help: **the law and section** the case was filed under (the per-case
-  `acts_sections` file; see JEEVA.md).
+Without the law and section the models barely beat a lookup table; with them the model is clearly
+better and well calibrated. Within a single case type it ranks poorly (AUC 0.49–0.62 for civil
+types), and courts got faster each year, so 2017 is slightly under-predicted.
 
-## Decisions so far
+## The /model site
+
+- `scripts/export_site.py` writes `artifacts/site/` and copies it to
+  `game/backend/auditor/tareekh/data/`, which `game/backend/auditor/tareekh/routes.py` serves at
+  `/api/model/options | predict | sample | analytics`.
+- Pages: `game/web/app/model/` (try the model, analytics, about), components in
+  `game/web/components/model/`. A separate plain light site; the game's effects are off there.
+- After retraining: rerun `export_site.py`, run the backend tests (`test_tareekh_api.py` checks
+  the site scores a case exactly as the pipeline does), then deploy backend first, then the web.
+
+## Decisions
 
 | Decision | Why |
 |---|---|
@@ -187,3 +212,8 @@ What it means, honestly:
 | Train 2015-16, test 2017 | Early years are incomplete; a later test year is the honest test of a forecast |
 | Served model = best 2016 log loss (logistic regression) | Chosen before looking at 2017; the forest's better 2017 AUC doesn't change that |
 | No gender, no hearing purpose, no later dates as inputs | Fairness rule in IDEA.md; the rest leak the future |
+| Law and section as inputs, first section only | Known at filing; the first section says what the case is about |
+| Served model = logistic regression + law (best 2016 log loss) | Chosen before looking at 2017; it is also the one whose explanations are exact |
+| Site inputs = 40 common real kinds of case | A visitor can't know case-type codes; the kinds cover 59% of 2017 filings |
+| Congestion on the site = values at the end of the data | A visitor can't know them; the page says which date they come from |
+| k-means groups shown as a summary only | Best silhouette 0.19: no clear structure to name |

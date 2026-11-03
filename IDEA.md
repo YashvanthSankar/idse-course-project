@@ -4,12 +4,15 @@
 
 - **Topic confirmed:** court-case duration. Crop prices, a scam-message detector and JoSAA
   cutoffs were considered and dropped (generic, or outside our domain knowledge).
-- **Data inspected:** the DDL keys and all 4,281,327 cases filed in 2010 have been downloaded and
-  audited. Measured facts, the download method and decisions are in
-  [`pipeline/README.md`](pipeline/README.md); remaining work is in [`JEEVA.md`](JEEVA.md).
+- **Built:** the full pipeline (download → cleaning → labels → EDA → models → experiments) and the
+  `/model` site served by the game backend. Write-up: [`pipeline/REPORT.md`](pipeline/REPORT.md);
+  how to run and every decision: [`pipeline/README.md`](pipeline/README.md); what's left (deploy,
+  rubric check, glossary check): [`JEEVA.md`](JEEVA.md).
 - **Licence in the actual download is ODbL v1.0**, not CC BY-NC-SA as the website says.
-- **Observation cutoff:** there is no scrape date in the data; it differs by state (most courts
-  Jan–Feb 2019). `pipeline/src/tareekh/cutoff.py` estimates it from the data.
+- **Observation cutoff:** no scrape date in the data; estimated per district (most courts
+  Jan–Feb 2019) by `pipeline/src/tareekh/cutoff.py`.
+- **Result:** "disposed of within a year?" on unseen 2017 Tamil Nadu filings: AUC 0.873, Brier
+  0.138, vs 0.844 / 0.163 for a case-type × district lookup table.
 
 The original context below is unchanged.
 

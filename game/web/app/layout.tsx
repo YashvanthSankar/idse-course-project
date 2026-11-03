@@ -1,8 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bebas_Neue, Inter, JetBrains_Mono, Playfair_Display, Press_Start_2P, Special_Elite, VT323 } from "next/font/google";
-import { FilmGrain } from "@/components/fx/FilmGrain";
 import { Suspense } from "react";
-import { Vignette } from "@/components/fx/Vignette";
+import { GameFx } from "@/components/fx/GameFx";
 import { Providers } from "@/components/providers/Providers";
 import "./globals.css";
 
@@ -31,9 +30,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-dvh bg-ink-950 text-text">
         <Providers>{children}</Providers>
         <Suspense fallback={null}>
-          <Vignette />
+          <GameFx />
         </Suspense>
-        <FilmGrain />
       </body>
     </html>
   );
