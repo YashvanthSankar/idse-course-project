@@ -1,7 +1,7 @@
 {
   "baselines": {},
   "selection": {
-    "overall rate": {
+    "baseline: overall rate": {
       "n": 445639,
       "positive_rate": 0.4345984081285525,
       "auc": 0.5,
@@ -10,7 +10,7 @@
       "accuracy": 0.5654015918714476,
       "f1": 0.0
     },
-    "rate per case type": {
+    "baseline: rate per case type": {
       "n": 445639,
       "positive_rate": 0.4345984081285525,
       "auc": 0.8125799268392235,
@@ -19,7 +19,7 @@
       "accuracy": 0.7782151023586356,
       "f1": 0.7052856316458036
     },
-    "rate per case type x district": {
+    "baseline: rate per case type x district": {
       "n": 445639,
       "positive_rate": 0.4345984081285525,
       "auc": 0.8151171617085966,
@@ -28,7 +28,7 @@
       "accuracy": 0.7317873884467023,
       "f1": 0.6100624416852077
     },
-    "logistic regression (C=0.1)": {
+    "filing basics | logistic regression (C=0.1)": {
       "n": 445639,
       "positive_rate": 0.4345984081285525,
       "auc": 0.8324763135580457,
@@ -37,7 +37,7 @@
       "accuracy": 0.7732245158076381,
       "f1": 0.6969751487238534
     },
-    "logistic regression (C=1.0)": {
+    "filing basics | logistic regression (C=1.0)": {
       "n": 445639,
       "positive_rate": 0.4345984081285525,
       "auc": 0.8322056396464385,
@@ -46,16 +46,7 @@
       "accuracy": 0.7730921216500352,
       "f1": 0.6968409628512582
     },
-    "logistic regression (C=10.0)": {
-      "n": 445639,
-      "positive_rate": 0.4345984081285525,
-      "auc": 0.8322442622886894,
-      "brier": 0.1631173362644386,
-      "log_loss": 0.49549006321615263,
-      "accuracy": 0.7732491994641403,
-      "f1": 0.697286788032749
-    },
-    "linear SVM (calibrated) (C=0.01)": {
+    "filing basics | linear SVM (calibrated) (C=0.01)": {
       "n": 445639,
       "positive_rate": 0.4345984081285525,
       "auc": 0.8239367217986463,
@@ -64,7 +55,7 @@
       "accuracy": 0.6689719705860573,
       "f1": 0.4007166099959782
     },
-    "linear SVM (calibrated) (C=0.1)": {
+    "filing basics | linear SVM (calibrated) (C=0.1)": {
       "n": 445639,
       "positive_rate": 0.4345984081285525,
       "auc": 0.8192982000658197,
@@ -73,7 +64,7 @@
       "accuracy": 0.6581380893503486,
       "f1": 0.36775770553985465
     },
-    "random forest (min_samples_leaf=300, max_features=sqrt)": {
+    "filing basics | random forest (min_samples_leaf=300, max_features=sqrt)": {
       "n": 445639,
       "positive_rate": 0.4345984081285525,
       "auc": 0.8281315659109412,
@@ -82,27 +73,72 @@
       "accuracy": 0.7369664683746261,
       "f1": 0.618473215855016
     },
-    "random forest (min_samples_leaf=300, max_features=None)": {
+    "filing basics | random forest (min_samples_leaf=300, max_features=None)": {
       "n": 445639,
       "positive_rate": 0.4345984081285525,
       "auc": 0.7927084863133254,
       "brier": 0.18673560117671217,
-      "log_loss": 0.5508783811768374,
+      "log_loss": 0.5508783811768373,
       "accuracy": 0.7189563750030854,
       "f1": 0.6017602879546191
     },
-    "random forest (min_samples_leaf=1000, max_features=None)": {
+    "+ law and section | logistic regression (C=0.1)": {
       "n": 445639,
       "positive_rate": 0.4345984081285525,
-      "auc": 0.786707542483032,
-      "brier": 0.18642198676378346,
-      "log_loss": 0.5504262970447408,
-      "accuracy": 0.7303288087442975,
-      "f1": 0.6244711234993031
+      "auc": 0.8710727211693359,
+      "brier": 0.13763590225533914,
+      "log_loss": 0.4312503813718392,
+      "accuracy": 0.8134992673441956,
+      "f1": 0.7517711008900305
+    },
+    "+ law and section | logistic regression (C=1.0)": {
+      "n": 445639,
+      "positive_rate": 0.4345984081285525,
+      "auc": 0.8707913229548612,
+      "brier": 0.13764010991353987,
+      "log_loss": 0.4312082216328414,
+      "accuracy": 0.814004160318105,
+      "f1": 0.7530015465899034
+    },
+    "+ law and section | linear SVM (calibrated) (C=0.01)": {
+      "n": 445639,
+      "positive_rate": 0.4345984081285525,
+      "auc": 0.8612813958474212,
+      "brier": 0.1725509862308515,
+      "log_loss": 0.527033308674155,
+      "accuracy": 0.7662031375171383,
+      "f1": 0.6463266019667946
+    },
+    "+ law and section | linear SVM (calibrated) (C=0.1)": {
+      "n": 445639,
+      "positive_rate": 0.4345984081285525,
+      "auc": 0.8564838492378128,
+      "brier": 0.18204796203535928,
+      "log_loss": 0.5485184676724575,
+      "accuracy": 0.7395178608694482,
+      "f1": 0.588252820805681
+    },
+    "+ law and section | random forest (min_samples_leaf=300, max_features=sqrt)": {
+      "n": 445639,
+      "positive_rate": 0.4345984081285525,
+      "auc": 0.8717630526327695,
+      "brier": 0.14974046428206422,
+      "log_loss": 0.4665975661225584,
+      "accuracy": 0.805474835012196,
+      "f1": 0.7325319494239539
+    },
+    "+ law and section | random forest (min_samples_leaf=300, max_features=None)": {
+      "n": 445639,
+      "positive_rate": 0.4345984081285525,
+      "auc": 0.8491177486984787,
+      "brier": 0.15328121728807975,
+      "log_loss": 0.4690155890853785,
+      "accuracy": 0.7893115279407772,
+      "f1": 0.7129988231518134
     }
   },
   "test": {
-    "overall rate": {
+    "baseline: overall rate": {
       "n": 549273,
       "positive_rate": 0.4947594365643314,
       "auc": 0.5,
@@ -111,7 +147,7 @@
       "accuracy": 0.5052405634356686,
       "f1": 0.0
     },
-    "rate per case type": {
+    "baseline: rate per case type": {
       "n": 549273,
       "positive_rate": 0.4947594365643314,
       "auc": 0.8275325764732949,
@@ -120,7 +156,7 @@
       "accuracy": 0.77996733864581,
       "f1": 0.7441259786507005
     },
-    "rate per case type x district": {
+    "baseline: rate per case type x district": {
       "n": 549273,
       "positive_rate": 0.4947594365643314,
       "auc": 0.8438723226948928,
@@ -129,7 +165,7 @@
       "accuracy": 0.759301840796835,
       "f1": 0.7140641862738525
     },
-    "logistic regression (C=0.1)": {
+    "filing basics | logistic regression (C=0.1)": {
       "n": 549273,
       "positive_rate": 0.4947594365643314,
       "auc": 0.8416777607054421,
@@ -138,7 +174,7 @@
       "accuracy": 0.779661479810586,
       "f1": 0.7535031691460414
     },
-    "linear SVM (calibrated) (C=0.01)": {
+    "filing basics | linear SVM (calibrated) (C=0.01)": {
       "n": 549273,
       "positive_rate": 0.4947594365643314,
       "auc": 0.8432959184183682,
@@ -147,109 +183,155 @@
       "accuracy": 0.7815785592956508,
       "f1": 0.7550386615567122
     },
-    "random forest (min_samples_leaf=300, max_features=sqrt)": {
+    "filing basics | random forest (min_samples_leaf=300, max_features=sqrt)": {
       "n": 549273,
       "positive_rate": 0.4947594365643314,
       "auc": 0.8469967119263755,
       "brier": 0.15852613395989457,
-      "log_loss": 0.4875809777408799,
+      "log_loss": 0.48758097774088,
       "accuracy": 0.7772200708937086,
       "f1": 0.7519505713364835
+    },
+    "+ law and section | logistic regression (C=1.0)": {
+      "n": 549273,
+      "positive_rate": 0.4947594365643314,
+      "auc": 0.873490921928626,
+      "brier": 0.1375529990614636,
+      "log_loss": 0.4273953243473786,
+      "accuracy": 0.8085578573860357,
+      "f1": 0.7855033086105467
+    },
+    "+ law and section | linear SVM (calibrated) (C=0.01)": {
+      "n": 549273,
+      "positive_rate": 0.4947594365643314,
+      "auc": 0.8726228678525545,
+      "brier": 0.13736062055187787,
+      "log_loss": 0.42851369858820454,
+      "accuracy": 0.8105659662863458,
+      "f1": 0.7875664805381734
+    },
+    "+ law and section | random forest (min_samples_leaf=300, max_features=sqrt)": {
+      "n": 549273,
+      "positive_rate": 0.4947594365643314,
+      "auc": 0.8744064853889965,
+      "brier": 0.13774659595755076,
+      "log_loss": 0.4279440428751112,
+      "accuracy": 0.806791886730278,
+      "f1": 0.7808731705705507
     }
   },
   "served": {
-    "family": "logistic regression",
-    "params": "C=0.1",
+    "name": "+ law and section | logistic regression (C=1.0)",
     "calibration_2017": [
       {
         "predicted": "0.0-0.1",
-        "cases": 33020,
-        "mean_predicted": 0.06613647941012206,
-        "observed": 0.08940036341611145
+        "cases": 71727,
+        "mean_predicted": 0.057105978210379285,
+        "observed": 0.10623614538458322
       },
       {
         "predicted": "0.1-0.2",
-        "cases": 96500,
-        "mean_predicted": 0.15816096127022317,
-        "observed": 0.1881761658031088
+        "cases": 97336,
+        "mean_predicted": 0.15493898544620277,
+        "observed": 0.19233377167748827
       },
       {
         "predicted": "0.2-0.3",
-        "cases": 122045,
-        "mean_predicted": 0.2443681984996846,
-        "observed": 0.2802982506452538
+        "cases": 77890,
+        "mean_predicted": 0.2462122942818385,
+        "observed": 0.26692771857748104
       },
       {
         "predicted": "0.3-0.4",
-        "cases": 52230,
-        "mean_predicted": 0.34511779445585017,
-        "observed": 0.3687344438062416
+        "cases": 54450,
+        "mean_predicted": 0.3481754815042446,
+        "observed": 0.35871441689623507
       },
       {
         "predicted": "0.4-0.5",
-        "cases": 26252,
-        "mean_predicted": 0.44638083708769405,
-        "observed": 0.4647264970287978
+        "cases": 29392,
+        "mean_predicted": 0.44370198430393404,
+        "observed": 0.4270890038105607
       },
       {
         "predicted": "0.5-0.6",
-        "cases": 18381,
-        "mean_predicted": 0.5518503447095989,
-        "observed": 0.6000217616016539
+        "cases": 21384,
+        "mean_predicted": 0.5499421362928111,
+        "observed": 0.5580808080808081
       },
       {
         "predicted": "0.6-0.7",
-        "cases": 27404,
-        "mean_predicted": 0.6507102158512831,
-        "observed": 0.7275580207269012
+        "cases": 17825,
+        "mean_predicted": 0.6477018038275716,
+        "observed": 0.6721458625525947
       },
       {
         "predicted": "0.7-0.8",
-        "cases": 58852,
-        "mean_predicted": 0.7528905951014058,
-        "observed": 0.7890301094270373
+        "cases": 20722,
+        "mean_predicted": 0.7554774975956488,
+        "observed": 0.8035903870282791
       },
       {
         "predicted": "0.8-0.9",
-        "cases": 41637,
-        "mean_predicted": 0.8527847987204062,
-        "observed": 0.8869755265749213
+        "cases": 29448,
+        "mean_predicted": 0.8502276258051232,
+        "observed": 0.8718079326270035
       },
       {
         "predicted": "0.9-1.0",
-        "cases": 72952,
-        "mean_predicted": 0.9697866582347949,
-        "observed": 0.9683764667178418
+        "cases": 129099,
+        "mean_predicted": 0.9705828463559278,
+        "observed": 0.9783267105089892
       }
     ],
     "permutation_importance_2017": {
       "district": {
-        "mean": 0.007686849913965288,
-        "std": 8.643695441109769e-05
+        "mean": 0.007729337087058419,
+        "std": 6.558346066246543e-05
       },
       "court_level": {
-        "mean": 0.009155970980911773,
-        "std": 0.0005450380229673811
+        "mean": 0.0071115245050898945,
+        "std": 0.00019089319689124078
       },
       "case_type": {
-        "mean": 0.3487685300879651,
-        "std": 0.00077873389310877
+        "mean": 0.31030412175942007,
+        "std": 0.0011335503292288418
       },
       "filing_month": {
-        "mean": 0.0008068834386279478,
-        "std": 0.00012588234441560014
+        "mean": 0.0004449900746017292,
+        "std": 8.150713667033848e-05
+      },
+      "law": {
+        "mean": 0.062441839313156534,
+        "std": 0.0010687863662392392
+      },
+      "law_section": {
+        "mean": 0.09718996827816263,
+        "std": 0.0019923345746244237
+      },
+      "ipc_bailable": {
+        "mean": 0.0020584097263106247,
+        "std": 0.0002503728257401872
+      },
+      "criminal": {
+        "mean": 0.0004942205038592032,
+        "std": 0.00010313802717783526
       },
       "log_prev_year_filings": {
-        "mean": 0.023110459079394925,
-        "std": 0.00020162435652491955
+        "mean": 0.018560701063513207,
+        "std": 0.00030512074654008304
       },
       "log_pending_at_filing": {
-        "mean": 0.0002612309662663644,
-        "std": 6.055966650994143e-05
+        "mean": 0.003860938439704087,
+        "std": 0.0003044781189224424
       },
       "clearance_last_year": {
-        "mean": 0.014230425821787648,
-        "std": 0.00033944619901063607
+        "mean": 0.004588315372846004,
+        "std": 0.00030743394166680277
+      },
+      "n_ipc_sections": {
+        "mean": 0.0047358723023016025,
+        "std": 0.00028752158952695075
       }
     }
   }

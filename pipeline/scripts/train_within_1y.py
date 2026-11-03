@@ -8,12 +8,17 @@ Protocol (decided before looking at test results):
   on 2015+2016, report once on 2017, a later year the models never saw.
 - Baselines the models must beat: the overall rate, the rate per case type, and the rate per
   case type x district (a lookup table, which is what "college predictor"-style sites do).
+- Two input sets: "filing basics" (district, court level, case type, month, congestion) and
+  "+ law and section" (what the case was filed under, from the acts_sections file), so the
+  report shows what the law adds.
 - Models: logistic regression, linear SVM (calibrated to give probabilities), random forest.
-  Each family gets a small grid; the family with the best 2016 log loss is the one served.
+  Each family gets a small grid; the (input set, family, settings) with the best 2016 log loss
+  is the one served.
 
-    uv run python scripts/train_within_1y.py
+    uv run python scripts/train_within_1y.py            # --jobs 2 by default (shared laptop)
 """
 
+import argparse
 import itertools
 import json
 import sys
@@ -37,9 +42,16 @@ from sklearn.svm import LinearSVC
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from tareekh.features import CATEGORICAL, FEATURES, NUMERIC, build, type_vocabulary
+from tareekh.features import (
+    FEATURE_SETS,
+    add_law,
+    build,
+    decode_acts,
+    section_vocabulary,
+    type_vocabulary,
+)
 
-LABELLED = ROOT / "data" / "clean" / "10" / "labelled.parquet"
+CLEAN = ROOT / "data" / "clean" / "10"
 KEYS = ROOT / "data" / "raw" / "ddl" / "keys"
 ARTIFACT = ROOT / "artifacts" / "within_1y"
 REPORT = ROOT / "reports"
@@ -67,54 +79,56 @@ def lookup(train: pd.DataFrame, test: pd.DataFrame, keys: list[str], prior: int 
     return joined["rate"].fillna(overall).to_numpy()
 
 
-def one_hot() -> ColumnTransformer:
-    return ColumnTransformer([
-        ("cat", OneHotEncoder(handle_unknown="ignore"), CATEGORICAL),
-        ("num", StandardScaler(), NUMERIC),
-    ])
+def one_hot(cats: list[str], nums: list[str]) -> ColumnTransformer:
+    return ColumnTransformer([("cat", OneHotEncoder(handle_unknown="ignore"), cats),
+                              ("num", StandardScaler(), nums)])
 
 
-def ordinal() -> ColumnTransformer:
-    return ColumnTransformer([
-        ("cat", OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1), CATEGORICAL),
-        ("num", "passthrough", NUMERIC),
-    ])
+def ordinal(cats: list[str], nums: list[str]) -> ColumnTransformer:
+    encoder = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
+    return ColumnTransformer([("cat", encoder, cats), ("num", "passthrough", nums)])
 
 
-CANDIDATES = {
-    "logistic regression": [
-        {"C": c, "make": lambda c=c: Pipeline([
-            ("prep", one_hot()), ("model", LogisticRegression(C=c, max_iter=2000))])}
-        for c in (0.1, 1.0, 10.0)],
-    "linear SVM (calibrated)": [
-        {"C": c, "make": lambda c=c: Pipeline([
-            ("prep", one_hot()),
-            ("model", CalibratedClassifierCV(LinearSVC(C=c, dual=False), method="sigmoid",
-                                             cv=3))])}
-        for c in (0.01, 0.1)],
-    # max_features=None lets every split consider case type and district together (with "sqrt"
-    # only 2-3 of the inputs are tried per split, and the forest lost to a lookup table)
-    "random forest": [
-        {"min_samples_leaf": leaf, "max_features": mf, "make": lambda leaf=leaf, mf=mf: Pipeline([
-            ("prep", ordinal()),
-            ("model", RandomForestClassifier(n_estimators=100, min_samples_leaf=leaf,
-                                             max_features=mf, n_jobs=-1,
-                                             random_state=SEED))])}
-        for leaf, mf in ((300, "sqrt"), (300, None), (1000, None))],
-}
+def candidates(jobs: int) -> dict[str, list[dict]]:
+    """Each entry: printable settings + make(cats, nums) -> an unfitted pipeline."""
+    return {
+        "logistic regression": [
+            {"settings": f"C={c}", "make": lambda cats, nums, c=c: Pipeline([
+                ("prep", one_hot(cats, nums)),
+                ("model", LogisticRegression(C=c, max_iter=3000))])}
+            for c in (0.1, 1.0)],
+        "linear SVM (calibrated)": [
+            {"settings": f"C={c}", "make": lambda cats, nums, c=c: Pipeline([
+                ("prep", one_hot(cats, nums)),
+                ("model", CalibratedClassifierCV(LinearSVC(C=c), method="sigmoid", cv=3))])}
+            for c in (0.01, 0.1)],
+        # With max_features=None every split may combine case type and district, but the forest
+        # then memorises one year's congestion levels and does worse on the next (measured)
+        "random forest": [
+            {"settings": f"min_samples_leaf={leaf}, max_features={mf}",
+             "make": lambda cats, nums, leaf=leaf, mf=mf: Pipeline([
+                 ("prep", ordinal(cats, nums)),
+                 ("model", RandomForestClassifier(n_estimators=100, min_samples_leaf=leaf,
+                                                  max_features=mf, n_jobs=jobs,
+                                                  random_state=SEED))])}
+            for leaf, mf in ((300, "sqrt"), (300, None))],
+    }
+
+
+def key_csv(name: str) -> pd.DataFrame:
+    return pd.read_csv(KEYS / name, dtype=str, keep_default_na=False)
 
 
 def district_names() -> dict[str, str]:
-    key = pd.read_csv(KEYS / "cases_district_key.csv", dtype=str, keep_default_na=False)
+    key = key_csv("cases_district_key.csv")
     key = key[key["state_code"] == "10"].sort_values("year")
     return dict(zip(key["dist_code"], key["district_name"], strict=True))
 
 
 def calibration_table(y: np.ndarray, p: np.ndarray, bins: int = 10) -> list[dict]:
-    edges = np.linspace(0, 1, bins + 1)
     rows = []
-    for lo, hi in itertools.pairwise(edges):
-        m = (p >= lo) & (p < hi if hi < 1 else p <= hi)
+    for lo, hi in itertools.pairwise(np.linspace(0, 1, bins + 1)):
+        m = (p >= lo) & ((p < hi) if hi < 1 else (p <= hi))
         if m.sum():
             rows.append({"predicted": f"{lo:.1f}-{hi:.1f}", "cases": int(m.sum()),
                          "mean_predicted": float(p[m].mean()), "observed": float(y[m].mean())})
@@ -169,24 +183,38 @@ def write_markdown(results: dict, metadata: dict, path: Path) -> None:
     path.write_text("\n".join(lines))
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    parser.add_argument("--jobs", type=int, default=2, help="CPU cores for the forest")
+    args = parser.parse_args(argv)
     started = time.monotonic()
-    labelled = pd.read_parquet(LABELLED)
+
+    labelled = pd.read_parquet(CLEAN / "labelled.parquet")
     # unusable rows (bad dates) are left out of everything, congestion counts included: a case
     # "decided before filing" has no trustworthy end date and would otherwise count as pending
     labelled = labelled[labelled["unusable"] == ""]
-    train_types = labelled.loc[labelled["filing_year"].isin([2015, 2016]), "type"]
-    vocabulary = type_vocabulary(train_types)
-    frame = build(labelled, district_names(), vocabulary)
+    train_rows = labelled["filing_year"].isin([2015, 2016])
+    case_types = type_vocabulary(labelled.loc[train_rows, "type"])
+    frame = build(labelled, district_names(), case_types)
+
+    acts = decode_acts(pd.read_parquet(CLEAN / "acts_sections.parquet"),
+                       key_csv("act_key.csv"), key_csv("section_key.csv"))
+    in_train = acts["ddl_case_id"].isin(labelled.loc[train_rows, "ddl_case_id"])
+    sections = section_vocabulary(acts.loc[in_train, "law"], acts.loc[in_train, "section"])
+    frame = add_law(frame, labelled, acts, sections)
     frame = frame[frame["within_1y"].notna() & frame["filing_year"].between(2015, 2017)]
+
     fit_part, choose_part = frame[frame.filing_year == 2015], frame[frame.filing_year == 2016]
     final_train, test = frame[frame.filing_year <= 2016], frame[frame.filing_year == 2017]
+    law_coverage = float((test["law"] != "not recorded").mean())
     print(f"rows: train-for-selection {len(fit_part):,}, selection {len(choose_part):,}, "
-          f"final train {len(final_train):,}, test {len(test):,}", flush=True)
+          f"final train {len(final_train):,}, test {len(test):,}; "
+          f"law recorded for {law_coverage:.1%} of test cases", flush=True)
 
     results: dict = {"baselines": {}, "selection": {}, "test": {}}
-    for name, keys in [("overall rate", None), ("rate per case type", ["case_type"]),
-                       ("rate per case type x district", ["case_type", "district"])]:
+    for name, keys in [("baseline: overall rate", None),
+                       ("baseline: rate per case type", ["case_type"]),
+                       ("baseline: rate per case type x district", ["case_type", "district"])]:
         if keys is None:
             p_choose = np.full(len(choose_part), fit_part["within_1y"].mean())
             p_test = np.full(len(test), final_train["within_1y"].mean())
@@ -196,40 +224,47 @@ def main() -> int:
         results["selection"][name] = metrics(y_of(choose_part), p_choose)
         results["test"][name] = metrics(y_of(test), p_test)
 
-    best: dict[str, dict] = {}
-    for family, grid in CANDIDATES.items():
-        for params in grid:
-            t = time.monotonic()
-            model = params["make"]().fit(fit_part[FEATURES], y_of(fit_part))
-            score = metrics(y_of(choose_part), model.predict_proba(choose_part[FEATURES])[:, 1])
-            label = ", ".join(f"{k}={v}" for k, v in params.items() if k != "make")
-            results["selection"][f"{family} ({label})"] = score
-            print(f"  {family} ({label}): 2016 log loss {score['log_loss']:.4f}, "
-                  f"AUC {score['auc']:.4f} ({time.monotonic() - t:.0f}s)", flush=True)
-            if family not in best or score["log_loss"] < best[family]["score"]["log_loss"]:
-                best[family] = {"params": params, "label": label, "score": score}
+    best: dict[tuple[str, str], dict] = {}
+    for set_name, (cats, nums) in FEATURE_SETS.items():
+        cols = cats + nums
+        for family, grid in candidates(args.jobs).items():
+            for option in grid:
+                t = time.monotonic()
+                model = option["make"](cats, nums).fit(fit_part[cols], y_of(fit_part))
+                score = metrics(y_of(choose_part), model.predict_proba(choose_part[cols])[:, 1])
+                name = f"{set_name} | {family} ({option['settings']})"
+                results["selection"][name] = score
+                print(f"  {name}: 2016 log loss {score['log_loss']:.4f}, AUC {score['auc']:.4f} "
+                      f"({time.monotonic() - t:.0f}s)", flush=True)
+                key = (set_name, family)
+                if key not in best or score["log_loss"] < best[key]["score"]["log_loss"]:
+                    best[key] = {"option": option, "score": score, "name": name}
 
-    served_family = min(best, key=lambda f: best[f]["score"]["log_loss"])
-    final_models = {}
-    for family, choice in best.items():
-        model = choice["params"]["make"]().fit(final_train[FEATURES], y_of(final_train))
-        p = model.predict_proba(test[FEATURES])[:, 1]
-        results["test"][f"{family} ({choice['label']})"] = metrics(y_of(test), p)
-        final_models[family] = (model, p)
-        print(f"  final {family}: 2017 AUC {results['test'][f'{family} ({choice['label']})']['auc']:.4f}",
+    served_key = min(best, key=lambda k: best[k]["score"]["log_loss"])
+    final: dict[tuple[str, str], tuple] = {}
+    for key, choice in best.items():
+        cats, nums = FEATURE_SETS[key[0]]
+        model = choice["option"]["make"](cats, nums).fit(final_train[cats + nums],
+                                                        y_of(final_train))
+        p = model.predict_proba(test[cats + nums])[:, 1]
+        results["test"][choice["name"]] = metrics(y_of(test), p)
+        final[key] = (model, p)
+        print(f"  final {choice['name']}: 2017 AUC {results['test'][choice['name']]['auc']:.4f}",
               flush=True)
 
-    model, p_test = final_models[served_family]
+    model, p_test = final[served_key]
+    cats, nums = FEATURE_SETS[served_key[0]]
     sample = test.sample(min(50_000, len(test)), random_state=SEED)
-    importance = permutation_importance(model, sample[FEATURES], y_of(sample),
+    importance = permutation_importance(model, sample[cats + nums], y_of(sample),
                                         scoring="neg_log_loss", n_repeats=3,
                                         random_state=SEED, n_jobs=1)
     results["served"] = {
-        "family": served_family, "params": best[served_family]["label"],
+        "name": best[served_key]["name"],
         "calibration_2017": calibration_table(y_of(test), p_test),
         "permutation_importance_2017": {
             f: {"mean": float(m), "std": float(s)} for f, m, s in
-            zip(FEATURES, importance.importances_mean, importance.importances_std, strict=True)},
+            zip(cats + nums, importance.importances_mean, importance.importances_std,
+                strict=True)},
     }
 
     ARTIFACT.mkdir(parents=True, exist_ok=True)
@@ -238,19 +273,19 @@ def main() -> int:
         "question": "Disposed of within 365 days of filing (Tamil Nadu district courts)",
         "data": "Development Data Lab judicial data (eCourts, 2010-2018), ODbL v1.0",
         "trained_on_filing_years": [2015, 2016], "tested_on_filing_year": 2017,
-        "features": FEATURES, "case_types": vocabulary,
-        "districts": sorted(frame["district"].unique()),
-        "court_levels": sorted(frame["court_level"].unique()),
-        "model": f"{served_family} ({best[served_family]['label']})",
+        "categorical": cats, "numeric": nums,
+        "options": {c: sorted(frame[c].astype(str).unique()) for c in cats},
+        "model": best[served_key]["name"],
         "scikit_learn": sklearn.__version__,
-        "test_metrics": results["test"][f"{served_family} ({best[served_family]['label']})"],
+        "test_metrics": results["test"][best[served_key]["name"]],
+        "law_recorded_share_2017": law_coverage,
         "model_bytes": (ARTIFACT / "model.joblib").stat().st_size,
     }
     (ARTIFACT / "metadata.json").write_text(json.dumps(metadata, indent=2))
     REPORT.mkdir(exist_ok=True)
     (REPORT / "within_1y_results.json").write_text(json.dumps(results, indent=2, default=float))
     write_markdown(results, metadata, REPORT / "within_1y.md")
-    print(f"served: {served_family}; model file {metadata['model_bytes'] / 1e6:.1f} MB; "
+    print(f"served: {metadata['model']}; model file {metadata['model_bytes'] / 1e3:.0f} kB; "
           f"{time.monotonic() - started:.0f}s total")
     return 0
 
