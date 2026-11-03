@@ -4,9 +4,9 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 const TABS = [
-  { href: "/model", label: "Try the model" },
-  { href: "/model/analytics", label: "Analytics" },
-  { href: "/model/about", label: "About the model" },
+  { href: "/model", label: "Check a case" },
+  { href: "/model/analytics", label: "What the data shows" },
+  { href: "/model/about", label: "How it works" },
 ] as const;
 
 export const REPO = "https://github.com/YashvanthSankar/idse-course-project/tree/main/pipeline";
@@ -19,7 +19,7 @@ export function ModelShell({ children }: { children: ReactNode }) {
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <Link href="/model" className="mr-auto">
             <span className="block text-lg font-bold tracking-tight">TAREEKH</span>
-            <span className="block text-xs text-[var(--m-ink-2)]">How long does a court case take? · Tamil Nadu district courts</span>
+            <span className="block text-xs text-[var(--m-ink-2)]">How long do court cases take? Real data from Tamil Nadu</span>
           </Link>
           <nav aria-label="Model pages" className="flex gap-1 text-sm">
             {TABS.map((t) => {

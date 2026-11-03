@@ -89,6 +89,10 @@ def predict_row(row: dict) -> tuple[float, list[dict]]:
     return probability, effects
 
 
+KIND_FIELDS = ("id", "title", "law_detail", "case_type_name", "court_level", "cases_2017",
+               "within_1y_2017", "topic", "variant", "timing")
+
+
 class PredictIn(BaseModel):
     district: str = Field(max_length=60)
     kind: str = Field(max_length=10)
@@ -129,11 +133,10 @@ def register_tareekh(app, limit: Callable[..., None] = lambda *_a, **_k: None) -
     def options(request: Request):
         limit(request, "model", 240)
         inputs = _json("inputs")
-        keep = ("id", "title", "law_detail", "case_type_name", "court_level", "cases_2017",
-                "within_1y_2017")
         return {"question": inputs["question"], "model": inputs["model"],
                 "districts": inputs["districts"], "months": inputs["months"],
-                "kinds": [{k: kind[k] for k in keep} for kind in inputs["kinds"]],
+                "topics": inputs["topics"],
+                "kinds": [{k: kind[k] for k in KIND_FIELDS} for kind in inputs["kinds"]],
                 "kinds_cover_2017": inputs["kinds_cover_2017"],
                 "test": {k: _json("metadata")["test_metrics"][k] for k in ("n", "auc", "accuracy")},
                 "notice": NOTICE, "credit": CREDIT}
@@ -148,10 +151,9 @@ def register_tareekh(app, limit: Callable[..., None] = lambda *_a, **_k: None) -
         curve = curves.get(kind["case_type"])
         return {
             "probability": probability,
-            "kind": {k: kind[k] for k in ("id", "title", "law_detail", "case_type_name",
-                                          "court_level", "cases_2017", "within_1y_2017")},
+            "kind": {k: kind[k] for k in KIND_FIELDS},
             "district": body.district, "filing_month": body.filing_month,
-            "effects": effects[:5], **context,
+            "effects": effects, **context,
             "still_open": None if curve is None else {"label": curve["label"],
                                                      "months": curve["still_open"],
                                                      "median_days": curve["median_days"]},
@@ -167,7 +169,7 @@ def register_tareekh(app, limit: Callable[..., None] = lambda *_a, **_k: None) -
         probability, effects = predict_row(case)
         return {"case": {k: case[k] for k in ("id", "title", "law_detail", "case_type_name",
                                               "court_level", "district", "filing_month",
-                                              "filed")},
+                                              "filed", "topic", "variant")},
                 "probability": probability, "effects": effects[:5],
                 "actual": {"within_1y": bool(case["within_1y"]), "ended": case["ended"],
                            "observed_days": case["observed_days"]},

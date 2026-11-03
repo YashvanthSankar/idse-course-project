@@ -79,3 +79,89 @@ def case_type_name(code: str) -> str:
 
 def section_name(law: str, section: str) -> str | None:
     return SECTIONS.get((law, section))
+
+
+# The site's first question, "what is the case about?", in everyday words. Each kind of case
+# (case type + court + law + section) belongs to the first topic whose test matches.
+TOPICS = [
+    {"id": "cheque", "icon": "💳", "title": "Cheque bounce",
+     "about": "A cheque someone gave you bounced"},
+    {"id": "accident", "icon": "🚗", "title": "Road accident compensation",
+     "about": "Claiming money after a road accident"},
+    {"id": "traffic", "icon": "🚦", "title": "Drunk driving or traffic offence",
+     "about": "Charged with a driving or vehicle offence"},
+    {"id": "rash", "icon": "🚑", "title": "Rash driving that hurt someone",
+     "about": "A careless driver injured someone"},
+    {"id": "divorce", "icon": "💔", "title": "Divorce", "about": "Ending a Hindu marriage"},
+    {"id": "theft", "icon": "👜", "title": "Theft", "about": "Something was stolen"},
+    {"id": "threats", "icon": "⚠️", "title": "Threats or intimidation",
+     "about": "Someone threatened or intimidated a person"},
+    {"id": "bail", "icon": "🔓", "title": "Bail", "about": "Asking a court to release someone"},
+    {"id": "liquor", "icon": "🥃", "title": "Liquor offence",
+     "about": "Selling or carrying liquor illegally"},
+    {"id": "civil", "icon": "🏠", "title": "Property or money dispute",
+     "about": "Suing someone over land, money or a deal"},
+    {"id": "execution", "icon": "📜", "title": "Enforcing a court order",
+     "about": "Getting a court's decision carried out"},
+    {"id": "appeal", "icon": "⚖️", "title": "Civil appeal",
+     "about": "Challenging a civil court's decision"},
+    {"id": "other", "icon": "🗂️", "title": "Other criminal case",
+     "about": "Other police and criminal cases"},
+]
+
+# How each topic reads in a sentence ("cheque-bounce cases")
+TOPIC_NOUN = {
+    "cheque": "cheque-bounce cases", "accident": "accident-compensation claims",
+    "traffic": "traffic-offence cases", "rash": "rash-driving injury cases",
+    "divorce": "divorce cases", "theft": "theft cases", "threats": "intimidation cases",
+    "bail": "bail applications", "liquor": "liquor cases", "civil": "civil suits",
+    "execution": "cases enforcing a court order", "appeal": "civil appeals",
+    "other": "criminal cases of this kind",
+}
+
+COURT_PLAIN = {
+    "Magistrate court": "magistrate court",
+    "District / sessions judge": "district court",
+    "Sub court (subordinate judge)": "sub court",
+    "Munsif court": "munsif court",
+    "Small cause court": "small causes court",
+}
+
+CASE_TYPE_PLAIN = {
+    "stc": "quick summary trial", "cc": "full criminal trial", "mcop": "claim petition",
+    "crlmp": "petition", "os": "civil suit", "ep": "execution petition",
+    "hmop": "marriage petition", "as": "appeal",
+}
+
+
+def topic_of(case_type: str, law: str, law_section: str) -> str:
+    section = law_section.split(" s.", 1)[1] if " s." in law_section else ""
+    if law == "Negotiable Instruments Act":
+        return "cheque"
+    if law == "Motor Vehicles Act":
+        return "accident" if case_type == "mcop" else "traffic"
+    if case_type == "crlmp":
+        return "bail"
+    if law == "Indian Penal Code" and section in {"279", "338", "337", "304A"}:
+        return "rash"
+    if law == "Hindu Marriage Act":
+        return "divorce"
+    if law == "Indian Penal Code" and section in {"379", "380"}:
+        return "theft"
+    if law == "Indian Penal Code" and section == "506":
+        return "threats"
+    if law.startswith("Prohibition"):
+        return "liquor"
+    if case_type == "os":
+        return "civil"
+    if case_type == "ep":
+        return "execution"
+    if case_type == "as":
+        return "appeal"
+    return "other"
+
+
+def variant_label(case_type: str, court_level: str) -> str:
+    """How a variant within a topic reads: "full criminal trial · magistrate court"."""
+    return (f"{CASE_TYPE_PLAIN.get(case_type, case_type_name(case_type).lower())} · "
+            f"{COURT_PLAIN.get(court_level, court_level.lower())}")

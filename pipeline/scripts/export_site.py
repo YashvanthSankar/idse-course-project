@@ -28,8 +28,17 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from tareekh.courts import court_level
-from tareekh.glossary import CASE_TYPES, case_type_name, section_name
+from tareekh.glossary import (
+    CASE_TYPES,
+    TOPIC_NOUN,
+    TOPICS,
+    case_type_name,
+    section_name,
+    topic_of,
+    variant_label,
+)
 from tareekh.modelling import CLEAN, district_names, modelling_data
+from tareekh.survival import kaplan_meier, median_days, still_open_at
 
 ARTIFACT = ROOT / "artifacts" / "within_1y"
 SITE = ROOT / "artifacts" / "site"
@@ -38,6 +47,7 @@ REPORT = ROOT / "reports"
 SEED = 0
 N_KINDS = 40
 N_TEST_CASES = 300
+MILESTONES = [3, 6, 12, 24, 36, 48]  # months shown as "still open after …"
 
 
 def kind_label(case_type: str, court: str, law: str, law_section: str) -> dict:
@@ -52,6 +62,15 @@ def kind_label(case_type: str, court: str, law: str, law_section: str) -> dict:
         title, detail = law if law != "not recorded" else "Law not recorded", "other sections"
     return {"title": title, "law_detail": detail, "case_type_name": case_type_name(case_type),
             "court_level": court}
+
+
+def timing(observed_days: pd.Series, ended: pd.Series) -> dict:
+    """Kaplan-Meier: median days to finish, and the share still open at each milestone."""
+    curve = kaplan_meier(observed_days, ended)
+    return {"cases": int(observed_days.notna().sum()), "median_days": median_days(curve),
+            "still_open": dict(zip([str(m) for m in MILESTONES],
+                                   still_open_at(curve, np.array(MILESTONES) * 30.44)
+                                   .round(4).tolist(), strict=True))}
 
 
 def group_slices(prep, cats: list[str], nums: list[str]) -> dict[str, slice]:
@@ -126,6 +145,31 @@ def main() -> int:
              for i, (_, row) in enumerate(kinds.iterrows())]
     covered = sum(k["cases_2017"] for k in kinds) / len(test)
 
+    # how long each kind and each topic usually takes (all usable filings 2015-2018)
+    recent = frame[frame["filing_year"].between(2015, 2018)].join(
+        labelled[["observed_days", "ended"]], how="left")
+    recent["topic"] = [topic_of(c, law, ls) for c, law, ls in
+                       zip(recent["case_type"], recent["law"], recent["law_section"], strict=True)]
+    keyed = recent.set_index(combo).sort_index()
+    for kind in kinds:
+        part = keyed.loc[tuple(kind[c] for c in combo)]
+        kind["timing"] = timing(part["observed_days"], part["ended"])
+        kind["topic"] = topic_of(kind["case_type"], kind["law"], kind["law_section"])
+        kind["variant"] = variant_label(kind["case_type"], kind["court_level"])
+    eligible = recent[recent["within_1y"].notna() & (recent["filing_year"] <= 2017)]
+    topics = []
+    for topic in TOPICS:
+        members = [k for k in kinds if k["topic"] == topic["id"]]
+        if not members:
+            continue
+        part = recent[recent["topic"] == topic["id"]]
+        topics.append({**topic, "noun": TOPIC_NOUN[topic["id"]],
+                       "default_kind": max(members, key=lambda k: k["cases_2017"])["id"],
+                       "kinds": [k["id"] for k in sorted(members, key=lambda k: -k["cases_2017"])],
+                       "timing": timing(part["observed_days"], part["ended"]),
+                       "within_1y": float(eligible.loc[eligible["topic"] == topic["id"],
+                                                       "within_1y"].mean())})
+
     filings_2018 = (frame[frame["filing_year"] == 2018].groupby(["district", "case_type"])
                     .size().rename("n").reset_index())
     filings_2018["log_prev_year_filings"] = np.log1p(filings_2018["n"])
@@ -139,7 +183,7 @@ def main() -> int:
         "data": metadata["data"],
         "districts": sorted(test["district"].unique()),
         "months": [str(m) for m in range(1, 13)],
-        "kinds": kinds, "kinds_cover_2017": covered,
+        "kinds": kinds, "kinds_cover_2017": covered, "topics": topics,
         "congestion": latest_congestion(labelled, names),
         "prev_year_filings": filings_2018[["district", "case_type", "log_prev_year_filings"]]
         .to_dict("records"),
@@ -162,6 +206,8 @@ def main() -> int:
             "id": f"t{len(test_cases)}",
             **{c: (row[c] if c in cats else float(row[c])) for c in cats + nums},
             **kind_label(row["case_type"], row["court_level"], row["law"], row["law_section"]),
+            "topic": topic_of(row["case_type"], row["law"], row["law_section"]),
+            "variant": variant_label(row["case_type"], row["court_level"]),
             "filed": str(picked_lab.at[idx, "date_of_filing"].date()),
             "within_1y": int(row["within_1y"]),
             "ended": bool(picked_lab.at[idx, "ended"]),
@@ -177,6 +223,7 @@ def main() -> int:
                      "monthly_decisions": analysis["national"]["monthly_decisions"],
                      "states": [s for s in analysis["national"]["states"]
                                 if s["pending_2010_filings"] is not None and s["cases"] > 100_000]},
+        "topics": topics,
         "tamil_nadu": {k: tn[k] for k in ("cases", "cleaning", "survivorship",
                                           "still_open_curves", "within_1y_by_year",
                                           "within_1y_by_district", "within_1y_by_type",

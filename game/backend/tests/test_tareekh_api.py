@@ -32,6 +32,9 @@ def test_options_list_districts_kinds_and_the_notice(client):
     assert "Chennai" in opts["districts"] and len(opts["districts"]) == 33
     assert len(opts["kinds"]) == 40 and opts["months"] == [str(m) for m in range(1, 13)]
     assert any(k["title"] == "Cheque bounce" for k in opts["kinds"])
+    topics = {t["id"]: t for t in opts["topics"]}
+    assert len(topics) == 13 and topics["cheque"]["default_kind"] in {k["id"] for k in opts["kinds"]}
+    assert all(k["topic"] in topics for k in opts["kinds"])
     assert "not legal advice" in opts["notice"] and "ODbL" in opts["credit"]
     assert opts["test"]["n"] == 549_273 and 0.8 < opts["test"]["accuracy"] < 0.82
 
@@ -45,7 +48,8 @@ def test_predict_returns_a_probability_with_effects_and_context(client):
     body = res.json()
     assert 0 < body["probability"] < 1
     assert body["court_found"] and body["court"]["pending"] > 0
-    assert len(body["effects"]) == 5 and all(math.isfinite(e["effect"]) for e in body["effects"])
+    assert len(body["effects"]) == 12 and all(math.isfinite(e["effect"]) for e in body["effects"])
+    assert body["kind"]["topic"] == "cheque" and body["kind"]["timing"]["still_open"]["12"] > 0.5
     assert body["still_open"]["months"]["12"] > 0
 
 

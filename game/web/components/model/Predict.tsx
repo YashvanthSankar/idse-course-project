@@ -1,283 +1,293 @@
 "use client";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import { duration, getOptions, getSample, MONTHS, pct, predict, type Effect, type Kind, type Prediction, type Sample } from "@/lib/model";
-import { LineChart } from "./Charts";
+import { useState } from "react";
+import { duration, getOptions, getSample, inTen, outOf10, predict, type Effect, type Kind, type Options, type Prediction, type Sample, type Topic } from "@/lib/model";
 
-const EXAMPLES = [
-  { title: "Cheque bounce", district: "Chennai" },
-  { title: "Accident compensation claim", district: "Madurai" },
-  { title: "Divorce", district: "Coimbatore" },
-  { title: "Theft", district: "Kancheepuram" },
-  { title: "Drunk driving", district: "Salem" },
-  { title: "Anticipatory bail", district: "Tiruchirappalli" },
+/** "Check a case": two plain questions (what is it about? where?) and a plain answer. */
+
+const MONTH = 6; // the filing month barely matters (measured), so the page doesn't ask
+
+const MILESTONES: [string, string][] = [
+  ["6", "6 months"],
+  ["12", "1 year"],
+  ["24", "2 years"],
+  ["36", "3 years"],
 ];
 
-const select =
-  "w-full rounded-md border border-[var(--m-line)] bg-[var(--m-card)] px-3 py-2 text-sm text-[var(--m-ink)] focus:outline-2 focus:outline-[var(--m-s1)]";
+const COURT_PLAIN: Record<string, string> = {
+  "Magistrate court": "magistrate courts",
+  "District / sessions judge": "district courts",
+  "Sub court (subordinate judge)": "sub courts",
+  "Munsif court": "munsif courts",
+  "Small cause court": "small causes courts",
+};
 
-function kindLabel(k: Kind) {
-  return `${k.title} — ${k.case_type_name.split(" (")[0]} · ${k.court_level}`;
+function usuallyTakes(timing: Kind["timing"]): { headline: string; detail: string } {
+  if (timing.median_days === null) {
+    return { headline: "more than 4 years", detail: "More than half of these cases were still not finished 4 years after they were filed." };
+  }
+  if (timing.median_days <= 1) return { headline: "a day or two", detail: "Half of these cases were finished within a day or two of being filed." };
+  return { headline: `about ${duration(timing.median_days)}`, detail: "Half of these cases had finished by then; the other half took longer." };
+}
+
+function Dots({ filled }: { filled: number }) {
+  return (
+    <span className="flex gap-1" aria-hidden>
+      {Array.from({ length: 10 }, (_, i) => (
+        <span key={i} className={`inline-block h-6 w-6 rounded-full ${i < filled ? "bg-[var(--m-s1)]" : "bg-[var(--m-line)]"}`} />
+      ))}
+    </span>
+  );
 }
 
 export function Predict() {
   const options = useQuery({ queryKey: ["model-options"], queryFn: getOptions, staleTime: Infinity });
-  const kinds = options.data?.kinds ?? [];
+  if (options.isError)
+    return (
+      <p className="rounded-xl border border-[var(--m-line)] bg-[var(--m-card)] p-5 text-[var(--m-critical)]">
+        Couldn&apos;t reach the model server. Please reload the page in a minute.
+      </p>
+    );
+  if (!options.data) return <p className="text-[var(--m-ink-2)]">Loading…</p>;
+  return <Checker opts={options.data} />;
+}
+
+function Checker({ opts }: { opts: Options }) {
+  const kinds = Object.fromEntries(opts.kinds.map((k) => [k.id, k]));
+  const [topicId, setTopicId] = useState(opts.topics[0].id);
+  const topic = opts.topics.find((t) => t.id === topicId) ?? opts.topics[0];
+  const [variant, setVariant] = useState<Record<string, string>>({});
+  const kindId = variant[topic.id] ?? topic.default_kind;
   const [district, setDistrict] = useState("Chennai");
-  const [kindId, setKindId] = useState<string | null>(null);
-  const [month, setMonth] = useState(6);
-  const [compareWith, setCompareWith] = useState("");
-  const kind = kindId ?? kinds.find((k) => k.title === "Cheque bounce")?.id ?? kinds[0]?.id ?? null;
+  const [other, setOther] = useState("");
 
-  const result = useQuery({
-    queryKey: ["model-predict", district, kind, month],
-    queryFn: () => predict(district, kind!, month),
-    enabled: !!kind,
-  });
+  const result = useQuery({ queryKey: ["model-predict", district, kindId], queryFn: () => predict(district, kindId, MONTH) });
   const compare = useQuery({
-    queryKey: ["model-predict", compareWith, kind, month],
-    queryFn: () => predict(compareWith, kind!, month),
-    enabled: !!kind && !!compareWith,
+    queryKey: ["model-predict", other, kindId],
+    queryFn: () => predict(other, kindId, MONTH),
+    enabled: !!other,
   });
-
-  if (options.isError) return <p className="text-[var(--m-critical)]">Couldn&apos;t reach the model. Try again in a minute.</p>;
-  if (!options.data) return <p className="text-[var(--m-ink-2)]">Loading the model…</p>;
-  const opts = options.data;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <section>
-        <h1 className="text-2xl font-bold tracking-tight">Will a case be disposed of within a year?</h1>
-        <p className="mt-1 max-w-3xl text-[var(--m-ink-2)]">
-          Pick a district and a kind of case. The model was trained on Tamil Nadu district-court cases filed in 2015–2016 and tested on{" "}
-          {opts.test.n.toLocaleString("en-IN")} cases filed in 2017 that it had never seen.
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">How long will a court case take?</h1>
+        <p className="mt-2 max-w-2xl text-lg text-[var(--m-ink-2)]">
+          Answered from 3.6 million real cases in Tamil Nadu&apos;s district courts. Pick what the case is about and where it was filed.
         </p>
-        <div className="mt-3 flex flex-wrap gap-2" aria-label="Examples">
-          {EXAMPLES.map((ex) => {
-            const k = kinds.find((x) => x.title === ex.title);
-            if (!k) return null;
+      </section>
+
+      <section aria-labelledby="q1">
+        <h2 id="q1" className="mb-3 text-lg font-semibold">
+          <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--m-s1)] text-sm text-white">1</span>
+          What is the case about?
+        </h2>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4" role="radiogroup" aria-label="What is the case about?">
+          {opts.topics.map((t) => {
+            const on = t.id === topic.id;
             return (
               <button
-                key={ex.title}
+                key={t.id}
                 type="button"
-                onClick={() => {
-                  setKindId(k.id);
-                  setDistrict(ex.district);
-                }}
-                className="rounded-full border border-[var(--m-line)] bg-[var(--m-card)] px-3 py-1 text-sm text-[var(--m-ink)] hover:border-[var(--m-s1)]"
+                role="radio"
+                aria-checked={on}
+                onClick={() => setTopicId(t.id)}
+                data-testid={`topic-${t.id}`}
+                className={`rounded-xl border-2 p-3 text-left transition-colors ${on ? "border-[var(--m-s1)] bg-[var(--m-blue-100)]" : "border-[var(--m-line)] bg-[var(--m-card)] hover:border-[var(--m-blue-200)]"}`}
               >
-                {ex.title} · {ex.district}
+                <span className="block text-2xl" aria-hidden>
+                  {t.icon}
+                </span>
+                <span className="mt-1 block font-semibold leading-tight">{t.title}</span>
+                <span className="mt-0.5 block text-sm leading-snug text-[var(--m-ink-2)]">{t.about}</span>
               </button>
             );
           })}
         </div>
+        {topic.kinds.length > 1 && (
+          <label className="mt-3 flex flex-wrap items-center gap-2 text-sm text-[var(--m-ink-2)]">
+            Most {topic.noun} go through this court and procedure. Change it if you know yours:
+            <select
+              className="rounded-md border border-[var(--m-line)] bg-[var(--m-card)] px-2 py-1 text-sm text-[var(--m-ink)]"
+              value={kindId}
+              onChange={(e) => setVariant({ ...variant, [topic.id]: e.target.value })}
+              data-testid="model-variant"
+            >
+              {topic.kinds.map((id) => (
+                <option key={id} value={id}>
+                  {kinds[id].variant}
+                  {kinds[id].title !== topic.title ? ` (${kinds[id].title})` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </section>
 
-      <section className="grid gap-4 rounded-xl border border-[var(--m-line)] bg-[var(--m-card)] p-4 sm:grid-cols-[2fr_1fr_1fr]">
-        <label className="text-sm">
-          <span className="mb-1 block font-medium">Kind of case</span>
-          <select className={select} value={kind ?? ""} onChange={(e) => setKindId(e.target.value)} data-testid="model-kind">
-            {kinds.map((k) => (
-              <option key={k.id} value={k.id}>
-                {kindLabel(k)}
-              </option>
-            ))}
-          </select>
-          <span className="mt-1 block text-xs text-[var(--m-ink-3)]">
-            The {kinds.length} most common real kinds of case, covering {pct(opts.kinds_cover_2017)} of 2017 filings.
-          </span>
-        </label>
-        <label className="text-sm">
-          <span className="mb-1 block font-medium">District</span>
-          <select className={select} value={district} onChange={(e) => setDistrict(e.target.value)} data-testid="model-district">
-            {opts.districts.map((d) => (
-              <option key={d}>{d}</option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm">
-          <span className="mb-1 block font-medium">Month filed</span>
-          <select className={select} value={month} onChange={(e) => setMonth(Number(e.target.value))}>
-            {MONTHS.map((m, i) => (
-              <option key={m} value={i + 1}>
-                {m}
-              </option>
-            ))}
-          </select>
-        </label>
+      <section aria-labelledby="q2">
+        <h2 id="q2" className="mb-3 text-lg font-semibold">
+          <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--m-s1)] text-sm text-white">2</span>
+          Which district?
+        </h2>
+        <select
+          className="w-full max-w-xs rounded-lg border-2 border-[var(--m-line)] bg-[var(--m-card)] px-3 py-2 text-base"
+          value={district}
+          onChange={(e) => setDistrict(e.target.value)}
+          data-testid="model-district"
+        >
+          {opts.districts.map((d) => (
+            <option key={d}>{d}</option>
+          ))}
+        </select>
       </section>
 
-      {result.isError && <p className="text-[var(--m-critical)]">{(result.error as Error).message}</p>}
+      {result.isError && <p className="text-[var(--m-critical)]">Couldn&apos;t get an answer. Please try again.</p>}
       {result.data && (
-        <Result
-          r={result.data}
-          compare={compare.data}
-          compareWith={compareWith}
-          setCompareWith={setCompareWith}
-          districts={opts.districts}
-        />
+        <Answer r={result.data} topic={topic} other={other} setOther={setOther} compare={compare.data} districts={opts.districts} />
       )}
 
-      <RealCase test={opts.test} />
+      <RealCase opts={opts} />
 
-      <p className="rounded-lg bg-[var(--m-blue-100)] px-4 py-3 text-sm text-[var(--m-ink)]">{opts.notice}</p>
+      <p className="text-sm text-[var(--m-ink-3)]">{opts.notice}</p>
     </div>
   );
 }
 
-function outOfTen(p: number) {
-  return Math.round(p * 10);
+/** The model's effects grouped into the three things a person understands. */
+function reasons(r: Prediction, topic: Topic): string[] {
+  const sum = (inputs: string[]) => r.effects.filter((e: Effect) => inputs.includes(e.input)).reduce((a, e) => a + e.effect, 0);
+  const kind = sum(["case_type", "law", "law_section", "ipc_bailable", "criminal", "n_ipc_sections", "court_level"]);
+  const place = sum(["district"]);
+  const busy = sum(["log_pending_at_filing", "clearance_last_year", "log_prev_year_filings"]);
+  const noun = topic.noun[0].toUpperCase() + topic.noun.slice(1);
+  const out = [
+    kind < -0.3 ? `${noun} are one of the slower kinds of case.` : kind > 0.3 ? `${noun} are one of the quicker kinds of case.` : `${noun} move at about the average pace.`,
+    place < -0.15
+      ? `Courts in ${r.district} are slower than the Tamil Nadu average.`
+      : place > 0.15
+        ? `Courts in ${r.district} are quicker than the Tamil Nadu average.`
+        : `Courts in ${r.district} are close to the Tamil Nadu average.`,
+  ];
+  if (r.court) {
+    const courts = COURT_PLAIN[r.kind.court_level] ?? "courts";
+    out.push(
+      `${r.district}'s ${courts} had ${r.court.pending.toLocaleString("en-IN")} cases waiting at the end of the data` +
+        (busy < -0.15 ? ", which slows new cases down." : busy > 0.15 ? ", and they were clearing them fairly quickly." : "."),
+    );
+  }
+  return out;
 }
 
-function Result({
+function Answer({
   r,
+  topic,
+  other,
+  setOther,
   compare,
-  compareWith,
-  setCompareWith,
   districts,
 }: {
   r: Prediction;
+  topic: Topic;
+  other: string;
+  setOther: (d: string) => void;
   compare?: Prediction;
-  compareWith: string;
-  setCompareWith: (d: string) => void;
   districts: string[];
 }) {
-  const curve = r.still_open;
+  const takes = usuallyTakes(r.kind.timing);
+  const n = outOf10(r.probability);
   return (
-    <section className="grid gap-4 lg:grid-cols-[1.1fr_1fr]" aria-live="polite">
-      <div className="rounded-xl border border-[var(--m-line)] bg-[var(--m-card)] p-5">
-        <p className="text-sm text-[var(--m-ink-2)]">
-          {r.kind.title} · {r.kind.court_level} · {r.district}
-        </p>
-        <p className="mt-2 text-5xl font-bold tabular-nums" data-testid="model-probability">
-          {pct(r.probability)}
-        </p>
-        <p className="mt-1 text-[var(--m-ink)]">
-          chance of being disposed of within a year. Out of 10 cases like this, about <b>{outOfTen(r.probability)}</b> would be.
-        </p>
-        <p className="mt-3 text-sm text-[var(--m-ink-2)]">
-          Across Tamil Nadu, {r.kind.cases_2017.toLocaleString("en-IN")} cases of this kind were filed in 2017;{" "}
-          {pct(r.kind.within_1y_2017)} were disposed of within a year.
-        </p>
-        {r.court && (
+    <section className="overflow-hidden rounded-2xl border border-[var(--m-line)] bg-[var(--m-card)]" aria-live="polite" data-testid="model-answer">
+      <div className="border-b border-[var(--m-line)] bg-[var(--m-blue-100)] px-5 py-3 text-sm font-medium">
+        {topic.icon} {topic.title} · {r.district}
+      </div>
+      <div className="grid gap-6 p-5 sm:grid-cols-2">
+        <div>
+          <p className="text-sm uppercase tracking-wide text-[var(--m-ink-3)]">Cases like this usually take</p>
+          <p className="mt-1 text-4xl font-bold" data-testid="model-takes">
+            {takes.headline}
+          </p>
+          <p className="mt-2 text-[var(--m-ink-2)]">{takes.detail}</p>
+        </div>
+        <div>
+          <p className="text-sm uppercase tracking-wide text-[var(--m-ink-3)]">Chance it&apos;s over within a year</p>
+          <p className="mt-1 text-4xl font-bold" data-testid="model-probability">
+            {inTen(r.probability)}
+          </p>
+          <div className="mt-2">
+            <Dots filled={n} />
+          </div>
           <p className="mt-2 text-sm text-[var(--m-ink-2)]">
-            At the end of the data ({r.court.cutoff}), {r.district}&apos;s {r.kind.court_level.toLowerCase()}s had{" "}
-            {r.court.pending.toLocaleString("en-IN")} cases waiting and had disposed of {r.court.disposed_last_year.toLocaleString("en-IN")} in
-            the year before.
+            For a case like this filed in {r.district}. &ldquo;Over&rdquo; means the court closed it: a judgment, a settlement or a dismissal.
           </p>
-        )}
-        {!r.court_found && (
-          <p className="mt-2 text-sm text-[var(--m-critical)]">
-            {r.district} has no {r.kind.court_level.toLowerCase()} in the data, so Tamil Nadu&apos;s typical court workload was used.
-          </p>
-        )}
-
-        <div className="mt-4 border-t border-[var(--m-line)] pt-3">
-          <label className="text-sm">
-            <span className="mr-2 text-[var(--m-ink-2)]">Compare with another district:</span>
-            <select className="rounded-md border border-[var(--m-line)] bg-[var(--m-card)] px-2 py-1 text-sm" value={compareWith} onChange={(e) => setCompareWith(e.target.value)} data-testid="model-compare">
-              <option value="">choose…</option>
-              {districts
-                .filter((d) => d !== r.district)
-                .map((d) => (
-                  <option key={d}>{d}</option>
-                ))}
-            </select>
-          </label>
-          {compare && compareWith && (
-            <p className="mt-2 text-sm" data-testid="model-compare-result">
-              Same case in <b>{compare.district}</b>: <b>{pct(compare.probability)}</b> ({compare.probability >= r.probability ? "+" : ""}
-              {Math.round((compare.probability - r.probability) * 100)} points)
-            </p>
-          )}
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="rounded-xl border border-[var(--m-line)] bg-[var(--m-card)] p-5">
-          <h2 className="text-sm font-semibold">What moved the estimate</h2>
-          <p className="mb-3 text-xs text-[var(--m-ink-3)]">Compared with an average 2017 case. Blue to the right: faster. Red to the left: slower.</p>
-          <Effects effects={r.effects} caseTypeName={r.kind.case_type_name.split(" (")[0]} />
-          <p className="mt-3 text-xs text-[var(--m-ink-3)]">
-            The kind of case matters most. Between cases of the same kind, the model can only roughly tell which will be quicker.
-          </p>
+      <div className="border-t border-[var(--m-line)] px-5 py-4">
+        <p className="mb-2 text-sm font-semibold">Still not over after…</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {MILESTONES.map(([m, label]) => {
+            const open = r.kind.timing.still_open[m] ?? 0;
+            return (
+              <div key={m} className="rounded-lg bg-[var(--m-surface)] p-3">
+                <p className="text-xs text-[var(--m-ink-3)]">{label}</p>
+                <p className="text-lg font-semibold">{inTen(open)}</p>
+                <div className="mt-1 h-1.5 rounded-full bg-[var(--m-line)]">
+                  <div className="h-1.5 rounded-full bg-[var(--m-s1)]" style={{ width: `${open * 100}%` }} />
+                </div>
+              </div>
+            );
+          })}
         </div>
-        {curve && (
-          <div className="rounded-xl border border-[var(--m-line)] bg-[var(--m-card)] p-5">
-            <h2 className="text-sm font-semibold">Still open after N months: {curve.label.split(" (")[0].toLowerCase()}s in Tamil Nadu</h2>
-            <p className="mb-2 text-xs text-[var(--m-ink-3)]">
-              All such cases filed 2015–2018 (Kaplan–Meier).
-              {curve.median_days ? ` Half had ended after ${duration(curve.median_days)}.` : " Fewer than half had ended by the end of the data."}
-            </p>
-            <LineChart
-              height={230}
-              width={420}
-              series={[{ name: curve.label, color: "var(--m-s1)", points: Object.entries(curve.months).map(([m, v]) => [Number(m), v]) }]}
-              xFormat={(m) => `${m} m`}
-              yFormat={(v) => pct(v)}
-              yMax={1}
-            />
-          </div>
+        <p className="mt-2 text-xs text-[var(--m-ink-3)]">Across Tamil Nadu, for {r.kind.timing.cases.toLocaleString("en-IN")} such cases filed in 2015–2018.</p>
+      </div>
+
+      <div className="border-t border-[var(--m-line)] px-5 py-4">
+        <p className="mb-2 text-sm font-semibold">Why</p>
+        <ul className="space-y-1 text-[var(--m-ink)]" data-testid="model-reasons">
+          {reasons(r, topic).map((s) => (
+            <li key={s} className="flex gap-2">
+              <span aria-hidden className="text-[var(--m-s1)]">
+                •
+              </span>
+              {s}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="border-t border-[var(--m-line)] px-5 py-4">
+        <label className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="font-semibold">Is it quicker somewhere else?</span>
+          <select
+            className="rounded-md border border-[var(--m-line)] bg-[var(--m-card)] px-2 py-1"
+            value={other}
+            onChange={(e) => setOther(e.target.value)}
+            data-testid="model-compare"
+          >
+            <option value="">pick a district</option>
+            {districts
+              .filter((d) => d !== r.district)
+              .map((d) => (
+                <option key={d}>{d}</option>
+              ))}
+          </select>
+        </label>
+        {compare && other && (
+          <p className="mt-2" data-testid="model-compare-result">
+            In <b>{compare.district}</b>: <b>{inTen(compare.probability)}</b> are over within a year, compared with {inTen(r.probability)} in {r.district}.
+          </p>
         )}
       </div>
     </section>
   );
 }
 
-const SHORT: Record<string, string> = {
-  log_prev_year_filings: "Similar cases last year",
-  log_pending_at_filing: "Cases already waiting",
-  clearance_last_year: "How fast courts cleared cases",
-  n_ipc_sections: "IPC sections charged",
-};
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-/** "Section: s.138", "Case type: Calendar case", not the full stored value. */
-function shortLabel(e: Effect, caseTypeName?: string): string {
-  if (SHORT[e.input]) return SHORT[e.input];
-  const value = e.value ?? "";
-  if (e.input === "law_section") return `Section: ${value.includes(" s.") ? `s.${value.split(" s.")[1]}` : "other"}`;
-  if (e.input === "case_type") return `Case type: ${caseTypeName ?? value.toUpperCase()}`;
-  if (e.input === "filing_month") return `Month: ${MONTHS[Number(value) - 1] ?? value}`;
-  if (e.input === "law") return `Law: ${value.replace(" (state liquor laws)", "")}`;
-  return `${e.label}: ${value}`;
-}
-
-function Effects({ effects, caseTypeName }: { effects: Effect[]; caseTypeName: string }) {
-  const max = Math.max(...effects.map((e) => Math.abs(e.effect)), 0.01);
-  return (
-    <ul className="space-y-[2px]">
-      {effects.map((e) => {
-        const w = (Math.abs(e.effect) / max) * 50;
-        return (
-          <li key={e.input} className="group relative grid grid-cols-[minmax(9rem,15rem)_1fr] items-center gap-2 py-[3px] text-sm">
-            <span className="truncate text-[var(--m-ink-2)]" title={`${e.label}${e.value ? `: ${e.value}` : ""}`}>
-              {shortLabel(e, caseTypeName)}
-            </span>
-            <span className="relative h-4">
-              <span className="absolute left-1/2 top-0 h-4 w-px bg-[var(--m-line)]" />
-              <span
-                className={`absolute top-0 h-4 ${e.effect >= 0 ? "rounded-r-[4px]" : "rounded-l-[4px]"}`}
-                style={{
-                  width: `${w}%`,
-                  left: e.effect >= 0 ? "50%" : `${50 - w}%`,
-                  background: e.effect >= 0 ? "var(--m-s1)" : "var(--m-red)",
-                }}
-              />
-            </span>
-            <span role="tooltip" className="pointer-events-none absolute right-0 top-full z-10 hidden rounded-md border border-[var(--m-line)] bg-[var(--m-card)] px-2 py-1 text-xs shadow-sm group-hover:block">
-              {e.effect >= 0 ? "faster" : "slower"} than average · {e.effect >= 0 ? "+" : ""}
-              {e.effect.toFixed(2)} log-odds
-            </span>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-function RealCase({ test }: { test: { n: number; accuracy: number } }) {
+function RealCase({ opts }: { opts: Options }) {
   const [tally, setTally] = useState({ checked: 0, right: 0 });
   const [last, setLast] = useState<Sample | null>(null);
+  const topics = Object.fromEntries(opts.topics.map((t) => [t.id, t]));
   const draw = useMutation({
     mutationFn: getSample,
     onSuccess: (s) => {
@@ -285,53 +295,55 @@ function RealCase({ test }: { test: { n: number; accuracy: number } }) {
       setTally((t) => ({ checked: t.checked + 1, right: t.right + Number(s.probability >= 0.5 === s.actual.within_1y) }));
     },
   });
-  const verdict = useMemo(() => {
-    if (!last) return null;
-    const a = last.actual;
-    const when = a.observed_days === 0 ? "on the day it was filed" : `after ${duration(a.observed_days)}`;
-    if (a.ended) return `It was disposed of ${when}${a.within_1y ? ", within a year" : ", so not within a year"}.`;
-    return `It was still open after ${duration(a.observed_days)}, so not within a year.`;
-  }, [last]);
+  const t = last ? (topics[last.case.topic] ?? null) : null;
+  const right = last ? last.probability >= 0.5 === last.actual.within_1y : false;
+  const [y, m] = last ? last.case.filed.split("-").map(Number) : [0, 0];
   return (
-    <section className="rounded-xl border border-[var(--m-line)] bg-[var(--m-card)] p-5">
+    <section className="rounded-2xl border border-[var(--m-line)] bg-[var(--m-card)] p-5">
       <div className="flex flex-wrap items-center gap-3">
         <div className="mr-auto">
-          <h2 className="font-semibold">Test it on a real past case</h2>
-          <p className="text-sm text-[var(--m-ink-2)]">A random 2017 case the model never saw. You see what it predicted, then what really happened.</p>
+          <h2 className="text-lg font-semibold">Can the model guess right?</h2>
+          <p className="text-[var(--m-ink-2)]">See its guess for a real case from 2017 that it never saw, then what really happened.</p>
         </div>
         <button
           type="button"
           onClick={() => draw.mutate()}
           disabled={draw.isPending}
-          className="rounded-md bg-[var(--m-s1)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
+          className="rounded-lg bg-[var(--m-s1)] px-5 py-2.5 font-medium text-white hover:opacity-90 disabled:opacity-60"
           data-testid="model-sample"
         >
-          {last ? "Show me another" : "Show me a real case"}
+          {last ? "Another case" : "Show me a real case"}
         </button>
       </div>
       {last && (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2" data-testid="model-sample-result">
-          <div className="rounded-lg bg-[var(--m-surface)] p-3 text-sm">
-            <p className="font-medium">
-              {last.case.title} · {last.case.court_level}
-            </p>
-            <p className="text-[var(--m-ink-2)]">
-              {last.case.district} · filed {last.case.filed}
-            </p>
-            <p className="mt-2">
-              The model said: <b>{pct(last.probability)}</b> chance within a year.
+        <div className="mt-4 grid gap-3 sm:grid-cols-3" data-testid="model-sample-result">
+          <div className="rounded-lg bg-[var(--m-surface)] p-3">
+            <p className="text-xs uppercase tracking-wide text-[var(--m-ink-3)]">The case</p>
+            <p className="mt-1 font-medium">{t ? `${t.icon} ${t.title}` : last.case.title}</p>
+            <p className="text-sm text-[var(--m-ink-2)]">
+              {last.case.district}, filed {MONTH_NAMES[m - 1]} {y}
             </p>
           </div>
-          <div className="rounded-lg bg-[var(--m-surface)] p-3 text-sm">
-            <p>{verdict}</p>
-            <p className={`mt-2 font-medium ${last.probability >= 0.5 === last.actual.within_1y ? "text-[var(--m-good)]" : "text-[var(--m-critical)]"}`}>
-              {last.probability >= 0.5 === last.actual.within_1y ? "✓ The model's lean was right" : "✗ The model's lean was wrong"}
-            </p>
-            <p className="mt-1 text-xs text-[var(--m-ink-3)]">
-              This visit: right on {tally.right} of {tally.checked}. On all {test.n.toLocaleString("en-IN")} test cases its lean is right{" "}
-              {pct(test.accuracy)} of the time.
-            </p>
+          <div className="rounded-lg bg-[var(--m-surface)] p-3">
+            <p className="text-xs uppercase tracking-wide text-[var(--m-ink-3)]">The model guessed</p>
+            <p className="mt-1 font-medium">{last.probability >= 0.5 ? "Probably over within a year" : "Probably not over within a year"}</p>
+            <p className="text-sm text-[var(--m-ink-2)]">Chance: {inTen(last.probability)}</p>
           </div>
+          <div className="rounded-lg bg-[var(--m-surface)] p-3">
+            <p className="text-xs uppercase tracking-wide text-[var(--m-ink-3)]">What really happened</p>
+            <p className="mt-1 font-medium">
+              {last.actual.ended
+                ? last.actual.observed_days === 0
+                  ? "Over the day it was filed"
+                  : `Over after ${duration(last.actual.observed_days)}`
+                : `Still not over after ${duration(last.actual.observed_days)}`}
+            </p>
+            <p className={`text-sm font-semibold ${right ? "text-[var(--m-good)]" : "text-[var(--m-critical)]"}`}>{right ? "✓ The model was right" : "✗ The model was wrong"}</p>
+          </div>
+          <p className="text-sm text-[var(--m-ink-3)] sm:col-span-3">
+            Right {tally.right} of {tally.checked} times on this visit. Across all {opts.test.n.toLocaleString("en-IN")} cases it was tested on, it was
+            right about {outOf10(opts.test.accuracy)} times in 10.
+          </p>
         </div>
       )}
     </section>

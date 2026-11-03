@@ -74,7 +74,7 @@ export function BarList({
   return (
     <ul className="space-y-[2px]" role="list">
       {sorted.map((r) => (
-        <li key={r.label} className="group relative grid grid-cols-[minmax(7rem,14rem)_1fr] items-center gap-3 rounded py-[3px] hover:bg-[var(--m-surface)]">
+        <li key={r.label} className="group/bar relative grid grid-cols-[minmax(7rem,17rem)_1fr] items-center gap-3 rounded py-[3px] hover:bg-[var(--m-surface)]">
           <span className="truncate text-right text-sm text-[var(--m-ink-2)]" title={r.label}>
             {r.label}
           </span>
@@ -87,7 +87,7 @@ export function BarList({
           </span>
           <span
             role="tooltip"
-            className="pointer-events-none absolute left-1/3 top-full z-10 hidden rounded-md border border-[var(--m-line)] bg-[var(--m-card)] px-2 py-1 text-xs text-[var(--m-ink)] shadow-sm group-hover:block"
+            className="pointer-events-none absolute left-1/3 top-full z-10 hidden rounded-md border border-[var(--m-line)] bg-[var(--m-card)] px-2 py-1 text-xs text-[var(--m-ink)] shadow-sm group-hover/bar:block"
           >
             <b>{r.label}</b>: {format(r.value)}
             {r.detail ? <span className="text-[var(--m-ink-2)]"> · {r.detail}</span> : null}
@@ -121,6 +121,7 @@ export function LineChart({
   height = 260,
   width = 640,
   marker,
+  xTicks: xTickValues,
 }: {
   series: Series[];
   xFormat: (x: number) => string;
@@ -130,6 +131,8 @@ export function LineChart({
   /** drawing width; use a smaller one for charts shown small, so text stays readable */
   width?: number;
   marker?: { x: number; label: string };
+  /** where to put x labels (defaults to about seven of the data's x values) */
+  xTicks?: number[];
 }) {
   const id = useId();
   const W = width, H = height, L = 52, R = 12, T = 10, B = 28;
@@ -140,7 +143,7 @@ export function LineChart({
   const sx = (x: number) => L + ((x - x0) / (x1 - x0 || 1)) * (W - L - R);
   const sy = (y: number) => T + (1 - y / (top || 1)) * (H - T - B);
   const [hover, setHover] = useState<number | null>(null);
-  const xTicks = xs.length <= 8 ? xs : xs.filter((_, i) => i % Math.ceil(xs.length / 7) === 0);
+  const xTicks = xTickValues ?? (xs.length <= 8 ? xs : xs.filter((_, i) => i % Math.ceil(xs.length / 7) === 0));
 
   function move(e: React.PointerEvent<SVGSVGElement>) {
     const box = e.currentTarget.getBoundingClientRect();
@@ -272,7 +275,7 @@ export function CalibrationChart({ points }: { points: { predicted: number; obse
           predicted {Math.round(points[hover].predicted * 100)}% → happened {Math.round(points[hover].observed * 100)}% ({points[hover].cases.toLocaleString("en-IN")} cases)
         </div>
       )}
-      <p className="mt-1 text-center text-xs text-[var(--m-ink-3)]">predicted chance (across) vs share that really was disposed of within a year (up)</p>
+      <p className="mt-1 text-center text-xs text-[var(--m-ink-3)]">predicted chance (across) vs the share that really was over within a year (up)</p>
     </div>
   );
 }

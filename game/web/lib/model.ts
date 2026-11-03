@@ -1,6 +1,8 @@
 /** Client for /api/model: TAREEKH, the course pipeline project's court-case model. */
 import { API_URL, ApiError } from "./api";
 
+export type Timing = { cases: number; median_days: number | null; still_open: Record<string, number> };
+
 export type Kind = {
   id: string;
   title: string;
@@ -9,6 +11,21 @@ export type Kind = {
   court_level: string;
   cases_2017: number;
   within_1y_2017: number;
+  topic: string;
+  variant: string;
+  timing: Timing;
+};
+
+export type Topic = {
+  id: string;
+  icon: string;
+  title: string;
+  about: string;
+  noun: string;
+  default_kind: string;
+  kinds: string[];
+  timing: Timing;
+  within_1y: number;
 };
 
 export type Options = {
@@ -16,6 +33,7 @@ export type Options = {
   model: string;
   districts: string[];
   months: string[];
+  topics: Topic[];
   kinds: Kind[];
   kinds_cover_2017: number;
   test: { n: number; auc: number; accuracy: number };
@@ -39,7 +57,7 @@ export type Prediction = {
 };
 
 export type Sample = {
-  case: Omit<Kind, "cases_2017" | "within_1y_2017"> & { district: string; filing_month: string; filed: string };
+  case: Omit<Kind, "cases_2017" | "within_1y_2017" | "timing"> & { district: string; filing_month: string; filed: string };
   probability: number;
   effects: Effect[];
   actual: { within_1y: boolean; ended: boolean; observed_days: number };
@@ -51,6 +69,7 @@ export type Curve = { label: string; cases: number; median_days: number | null; 
 export type Rate = { mean: number; size: number };
 
 export type Analytics = {
+  topics: Topic[];
   national: {
     cases: number;
     monthly_decisions: Record<string, number>;
@@ -131,4 +150,15 @@ export function duration(days: number): string {
   const rest = months % 12;
   if (!years) return `${months} month${months === 1 ? "" : "s"}`;
   return `${years} year${years === 1 ? "" : "s"}${rest ? ` ${rest} month${rest === 1 ? "" : "s"}` : ""}`;
+}
+
+/** "8 in 10" style: people read counts out of ten more reliably than percentages. */
+export const outOf10 = (p: number) => Math.min(10, Math.max(0, Math.round(p * 10)));
+
+/** "3 in 10", but "almost all" / "fewer than 1 in 10" at the ends, where rounding would say
+ *  "10 in 10" or "0 in 10" for 95% or 4%. */
+export function inTen(p: number): string {
+  if (p >= 0.95) return "almost all";
+  if (p < 0.05) return "fewer than 1 in 10";
+  return `${outOf10(p)} in 10`;
 }

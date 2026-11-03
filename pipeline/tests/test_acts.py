@@ -56,3 +56,16 @@ def test_squash_ignores_case_spacing_punctuation_and_years():
 def test_coverage_weights_by_case_rows():
     cov = coverage(["The Indian Penal Code", ".", "Oaths Act"], [8, 1, 1])
     assert cov == {"named": 0.8, "unknown": 0.1, "other": 0.1}
+
+
+def test_every_kind_on_the_site_gets_a_plain_topic():
+    from tareekh.glossary import TOPICS, topic_of
+    ids = {t["id"] for t in TOPICS}
+    assert topic_of("cc", "Negotiable Instruments Act", "Negotiable Instruments Act s.138") == "cheque"
+    assert topic_of("mcop", "Motor Vehicles Act", "Motor Vehicles Act s.166") == "accident"
+    assert topic_of("stc", "Motor Vehicles Act", "Motor Vehicles Act s.185") == "traffic"
+    assert topic_of("crlmp", "Indian Penal Code", "Indian Penal Code s.506") == "bail"
+    assert topic_of("cc", "Indian Penal Code", "Indian Penal Code s.506") == "threats"
+    assert topic_of("os", "Code of Civil Procedure", "Code of Civil Procedure s.Order 7") == "civil"
+    assert topic_of("stc", "not recorded", "not recorded (other section)") == "other"
+    assert topic_of("cc", "Indian Penal Code", "Indian Penal Code s.304") in ids

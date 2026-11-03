@@ -3,44 +3,47 @@ import { expect, test } from "@playwright/test";
 // /model: TAREEKH, the course pipeline project's model, served next to the game. Needs the real
 // backend (API_URL) because it scores with the exported scikit-learn model.
 
-test("try the model: an example, a comparison and a real past case", async ({ page }) => {
+test("check a case: pick what it's about and where, read a plain answer", async ({ page }) => {
   await page.goto("/model");
-  await expect(page.getByRole("heading", { name: "Will a case be disposed of within a year?" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "How long will a court case take?" })).toBeVisible();
   // the game's mood effects are off on this separate site
   await expect(page.locator("[data-fx=grain]")).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Accident compensation claim · Madurai" }).click();
-  await expect(page.getByTestId("model-district")).toHaveValue("Madurai");
-  const probability = page.getByTestId("model-probability");
-  await expect(probability).toHaveText(/^\d{1,3}%$/);
-  await expect(page.getByText("What moved the estimate")).toBeVisible();
-  await expect(page.getByText(/Still open after N months/)).toBeVisible();
+  await page.getByTestId("topic-accident").click();
+  await expect(page.getByTestId("topic-accident")).toHaveAttribute("aria-checked", "true");
+  await page.getByTestId("model-district").selectOption("Madurai");
+  const answer = page.getByTestId("model-answer");
+  await expect(answer).toContainText("Road accident compensation · Madurai");
+  await expect(page.getByTestId("model-takes")).toHaveText(/about \d|more than 4 years|a day or two/);
+  await expect(page.getByTestId("model-probability")).toHaveText(/^(\d in 10|almost all|fewer than 1 in 10)$/);
+  await expect(answer).toContainText("Still not over after");
+  await expect(page.getByTestId("model-reasons").locator("li")).toHaveCount(3);
+  // no jargon in the answer
+  await expect(answer).not.toContainText(/log-odds|AUC|Kaplan|disposed/);
 
   await page.getByTestId("model-compare").selectOption("Chennai");
-  await expect(page.getByTestId("model-compare-result")).toContainText("Same case in Chennai");
+  await expect(page.getByTestId("model-compare-result")).toContainText("In Chennai");
 
   await page.getByTestId("model-sample").click();
   const sample = page.getByTestId("model-sample-result");
-  await expect(sample).toContainText("The model said");
-  await expect(sample).toContainText(/model's lean was (right|wrong)/);
-  await expect(sample).toContainText("right on");
+  await expect(sample).toContainText("The model guessed");
+  await expect(sample).toContainText(/The model was (right|wrong)/);
   await expect(page.getByText("not legal advice").first()).toBeVisible();
 });
 
-test("analytics and about pages render the pipeline's numbers", async ({ page }) => {
+test("what the data shows, and how it works", async ({ page }) => {
   await page.goto("/model/analytics");
   await expect(page.getByRole("heading", { name: "What 81 million court cases show" })).toBeVisible();
-  await expect(page.getByText("80.9 M")).toBeVisible();
-  await expect(page.getByText(/When the data was collected/)).toBeVisible();
-  await expect(page.getByText("Is a predicted 70% really 70%?")).toBeVisible();
+  await expect(page.getByText("1. What the case is about changes everything")).toBeVisible();
   // every chart has a table view
   await page.getByText("Show the numbers").first().click();
-  await expect(page.getByRole("cell", { name: "2016-01" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: /Bail/ })).toBeVisible();
 
-  await page.getByRole("link", { name: "About the model" }).click();
+  await page.getByRole("link", { name: "How it works" }).first().click();
   await expect(page).toHaveURL(/\/model\/about$/);
+  await expect(page.getByRole("heading", { name: "In short" })).toBeVisible();
+  await page.getByText("For the technical reader").click();
   await expect(page.getByText(/AUC 0\.8\d\d/)).toBeVisible();
-  await expect(page.getByText("ODbL v1.0").first()).toBeVisible();
 });
 
 test("the title screen links to the model", async ({ page }) => {
