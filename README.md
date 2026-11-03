@@ -9,7 +9,7 @@ The game runs on Vercel; the Python brain runs on a small always-on VPS (FastAPI
 A noir detective web game where you catch corporate fraudsters with **real Python data analysis**.
 Built for **IDSE (Introduction to Data Science for Engineers)**.
 
-![Title screen](docs/screenshots/01-title.jpg)
+![Title screen](game/docs/screenshots/01-title.jpg)
 
 ---
 
@@ -25,8 +25,8 @@ Mumbai, 2 AM, monsoon. You're a rookie forensic auditor. Each case is a company 
 
 | | |
 |---|---|
-| ![Investigation](docs/screenshots/04-investigation.jpg) | ![Corkboard](docs/screenshots/06-corkboard.jpg) |
-| ![Verdict](docs/screenshots/07-verdict.jpg) | ![Under the hood](docs/screenshots/05-under-the-hood.jpg) |
+| ![Investigation](game/docs/screenshots/04-investigation.jpg) | ![Corkboard](game/docs/screenshots/06-corkboard.jpg) |
+| ![Verdict](game/docs/screenshots/07-verdict.jpg) | ![Under the hood](game/docs/screenshots/05-under-the-hood.jpg) |
 
 ---
 
@@ -57,7 +57,7 @@ the Final**. Each contract is a year at one company: five cases, easy to hard, w
 company "culture" that shapes its honest data. Every case gets a **0–100 rating** (verdict, evidence, tool
 judgment, efficiency); the year's average decides your appraisal, your raise (₹6 LPA → ₹5 Cr) and your next
 offers. Very large firms hide **two fraudsters** in one ledger. Three old colleagues follow you from your first
-job, always innocent — until the Final. Full design: [docs/CAREER.md](docs/CAREER.md).
+job, always innocent — until the Final. Full design: [game/docs/CAREER.md](game/docs/CAREER.md).
 
 ---
 
@@ -69,8 +69,8 @@ with pandas, live.
 
 | | |
 |---|---|
-| ![Live leaderboard](docs/screenshots/09-class-leaderboard.jpg) | ![Class autopsy](docs/screenshots/10-class-autopsy.jpg) |
-| ![Detective card](docs/screenshots/11-detective-card.jpg) | ![Case report PDF](docs/screenshots/12-case-report.jpg) |
+| ![Live leaderboard](game/docs/screenshots/09-class-leaderboard.jpg) | ![Class autopsy](game/docs/screenshots/10-class-autopsy.jpg) |
+| ![Detective card](game/docs/screenshots/11-detective-card.jpg) | ![Case report PDF](game/docs/screenshots/12-case-report.jpg) |
 
 - **Autopsy slides**: solve rate, tool usage, Pearson r for "does more analysis pay off?", chi-square
   for "which tool predicts success?". Each slide shows the Python that produced it.
@@ -99,9 +99,9 @@ with pandas, live.
 | Case Report | `seaborn` + `matplotlib` PDF |
 
 ### 📓 Notebooks (the full analysis)
-- [`01_case_generator.ipynb`](notebooks/01_case_generator.ipynb): building a believable company, and why Benford's law appears
-- [`02_detection_tools.ipynb`](notebooks/02_detection_tools.ipynb): every tool derived by hand, plus the fairness proof
-- [`03_class_autopsy.ipynb`](notebooks/03_class_autopsy.ipynb): telemetry, logistic regression, chi-square, KMeans + elbow/silhouette
+- [`01_case_generator.ipynb`](game/notebooks/01_case_generator.ipynb): building a believable company, and why Benford's law appears
+- [`02_detection_tools.ipynb`](game/notebooks/02_detection_tools.ipynb): every tool derived by hand, plus the fairness proof
+- [`03_class_autopsy.ipynb`](game/notebooks/03_class_autopsy.ipynb): telemetry, logistic regression, chi-square, KMeans + elbow/silhouette
 
 ---
 
@@ -115,11 +115,12 @@ with pandas, live.
 ```
 
 ```
-idse-game/
-├── backend/     Python package `auditor`: case engine, 9 tools, scoring, rooms, autopsy (200+ tests)
-├── web/         Next.js game: title, office, investigation, corkboard, verdict, class mode
-├── notebooks/   the three narrated notebooks
-└── docs/        IDEA · DESIGN · PLAN · TODO · DEMO
+idse-course-project/
+├── game/                the game (live at otlr.vercel.app)
+│   ├── backend/         Python package `auditor`: case engine, 9 tools, scoring, rooms, autopsy (390+ tests)
+│   ├── web/             Next.js game: title, office, investigation, corkboard, verdict, class mode
+│   ├── notebooks/       the three narrated notebooks
+│   └── docs/            IDEA · DESIGN · PLAN · TODO · DEMO
 ```
 
 ---
@@ -128,14 +129,14 @@ idse-game/
 
 **1 · Backend** (Python 3.12 via [uv](https://docs.astral.sh/uv/))
 ```bash
-cd backend
+cd game/backend
 uv sync
 uv run uvicorn auditor.api:app --host 0.0.0.0 --port 8000
 ```
 
 **2 · Game** (Node 20+, pnpm)
 ```bash
-cd web
+cd game/web
 pnpm install
 pnpm dev --port 3200          # open http://localhost:3200
 ```
@@ -144,11 +145,11 @@ For Class Mode, phones on the same Wi-Fi join via the QR code on the host screen
 
 **Tests**
 ```bash
-cd backend && uv run pytest              # engine, tools, fairness, API, rooms, autopsy
-cd web && pnpm test && pnpm exec playwright test
+cd game/backend && uv run pytest              # engine, tools, fairness, API, rooms, autopsy
+cd game/web && pnpm test && pnpm exec playwright test
 ```
 
 ---
 
 ## 📚 Docs
-[IDEA](docs/IDEA.md) · [DESIGN](docs/DESIGN.md) · [CAREER](docs/CAREER.md) · [CAREER HANDOVER](docs/CAREER_HANDOVER.md) · [PLAN](docs/PLAN.md) · [TODO](docs/TODO.md) · [DEMO script](docs/DEMO.md)
+[IDEA](game/docs/IDEA.md) · [DESIGN](game/docs/DESIGN.md) · [CAREER](game/docs/CAREER.md) · [CAREER HANDOVER](game/docs/CAREER_HANDOVER.md) · [PLAN](game/docs/PLAN.md) · [TODO](game/docs/TODO.md) · [DEMO script](game/docs/DEMO.md)
