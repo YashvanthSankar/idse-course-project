@@ -121,6 +121,9 @@ idse-course-project/
 │   ├── web/             Next.js game: title, office, investigation, corkboard, verdict, class mode
 │   ├── notebooks/       the three narrated notebooks
 │   └── docs/            IDEA · DESIGN · PLAN · TODO · DEMO
+├── pipeline/            TAREEKH: how long Indian court cases take (EDA, cleaning, model; served at /model)
+├── IDEA.md              shared context for both parts
+└── JEEVA.md             pipeline work still to do
 ```
 
 ---

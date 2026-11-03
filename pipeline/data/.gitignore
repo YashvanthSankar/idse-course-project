@@ -1,0 +1,5 @@
+# raw downloads and cleaned files stay on our laptops
+raw/*
+clean/*
+!raw/.gitkeep
+!clean/.gitkeep
