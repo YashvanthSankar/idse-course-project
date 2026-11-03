@@ -1,4 +1,4 @@
-"""Reduce the free-text "judge position" (157 values in Tamil Nadu alone, with place names
+"""Reduce the free-text "judge position" (116 values in Tamil Nadu alone, with place names
 and typos: "special court for the exclusive trail of ec act cases", "district musif",
 "subardinate court", "judicial mgistrate") to the level of court that heard the case.
 

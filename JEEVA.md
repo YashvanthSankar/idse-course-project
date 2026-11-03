@@ -38,7 +38,7 @@ keys. It comes after the case archives in the Dropbox stream.
 Put them in `pipeline/notebooks/`, reading `data/clean/…` parquet. Show the raw mess *before*
 the clean result.
 - [ ] `01_audit.ipynb`: missing values per column; impossible dates (year 0001 / 7201,
-      `5000-01-01`, 23,497 decided-before-filing in TN); 29,857 law spellings → 56 laws; 157 court
+      `5000-01-01`, 23,497 decided-before-filing in TN); 29,857 law spellings → 54 laws; 116 court
       names → 14 levels; gender "unclear" shares; the two disagreeing outcome fields.
 - [ ] `02_eda.ipynb`:
   - monthly decisions per state with the scrape cliff marked (the most striking chart);

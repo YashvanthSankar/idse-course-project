@@ -42,17 +42,9 @@ from sklearn.svm import LinearSVC
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from tareekh.features import (
-    FEATURE_SETS,
-    add_law,
-    build,
-    decode_acts,
-    section_vocabulary,
-    type_vocabulary,
-)
+from tareekh.features import FEATURE_SETS
+from tareekh.modelling import modelling_data
 
-CLEAN = ROOT / "data" / "clean" / "10"
-KEYS = ROOT / "data" / "raw" / "ddl" / "keys"
 ARTIFACT = ROOT / "artifacts" / "within_1y"
 REPORT = ROOT / "reports"
 SEED = 0
@@ -113,16 +105,6 @@ def candidates(jobs: int) -> dict[str, list[dict]]:
                                                   random_state=SEED))])}
             for leaf, mf in ((300, "sqrt"), (300, None))],
     }
-
-
-def key_csv(name: str) -> pd.DataFrame:
-    return pd.read_csv(KEYS / name, dtype=str, keep_default_na=False)
-
-
-def district_names() -> dict[str, str]:
-    key = key_csv("cases_district_key.csv")
-    key = key[key["state_code"] == "10"].sort_values("year")
-    return dict(zip(key["dist_code"], key["district_name"], strict=True))
 
 
 def calibration_table(y: np.ndarray, p: np.ndarray, bins: int = 10) -> list[dict]:
@@ -189,19 +171,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     started = time.monotonic()
 
-    labelled = pd.read_parquet(CLEAN / "labelled.parquet")
-    # unusable rows (bad dates) are left out of everything, congestion counts included: a case
-    # "decided before filing" has no trustworthy end date and would otherwise count as pending
-    labelled = labelled[labelled["unusable"] == ""]
-    train_rows = labelled["filing_year"].isin([2015, 2016])
-    case_types = type_vocabulary(labelled.loc[train_rows, "type"])
-    frame = build(labelled, district_names(), case_types)
-
-    acts = decode_acts(pd.read_parquet(CLEAN / "acts_sections.parquet"),
-                       key_csv("act_key.csv"), key_csv("section_key.csv"))
-    in_train = acts["ddl_case_id"].isin(labelled.loc[train_rows, "ddl_case_id"])
-    sections = section_vocabulary(acts.loc[in_train, "law"], acts.loc[in_train, "section"])
-    frame = add_law(frame, labelled, acts, sections)
+    data = modelling_data()
+    frame = data.frame
     frame = frame[frame["within_1y"].notna() & frame["filing_year"].between(2015, 2017)]
 
     fit_part, choose_part = frame[frame.filing_year == 2015], frame[frame.filing_year == 2016]

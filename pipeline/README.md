@@ -36,8 +36,8 @@ pipeline/
 │   ├── build_dataset.py     stream the 16 GB archive into parquet in one pass
 │   └── train_within_1y.py   baselines + 3 model families, time split, writes the report
 ├── src/tareekh/
-│   ├── acts.py              ~30,000 raw law names → 56 canonical laws
-│   ├── courts.py            157 court names → 14 court levels
+│   ├── acts.py              ~30,000 raw law names → 54 named laws (+ Unknown, Other)
+│   ├── courts.py            116 court names → 14 court levels (+ unclear)
 │   ├── cases.py             decode codes, gender sentinels and impossible dates
 │   ├── outcomes.py          the 52 dispositions → ended / moved / interim / missing …
 │   ├── cutoff.py            when each state/district was scraped
@@ -88,7 +88,7 @@ Credit on the site: *"Contains data from Development Data Lab's judicial data, O
   largest totals are approximate.
 - Clear data-entry errors: tens of thousands of district cases tagged as the *AICTE Act*, the
   *Andhra Pradesh Legislative Council Act*, the *AIIMS Act* (a wrong pick from a dropdown).
-- **`acts.py` maps 94.1% of rows to one of 56 canonical laws**, 2.0% to *Unknown* (junk) and
+- **`acts.py` maps 94.1% of rows to one of 54 named laws**, 2.0% to *Unknown* (junk) and
   leaves 4.0% as *Other* rather than guess. Rules run on a "squashed" name (letters only) and go
   from specific to general ("Dowry Prohibition Act … IPC" is a dowry case).
 - Also messy: **11,500 distinct raw case types**, **15,690 hearing-purpose strings**. DDL already
