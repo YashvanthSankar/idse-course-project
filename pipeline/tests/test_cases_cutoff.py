@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from tareekh.cases import decode
-from tareekh.cutoff import cliff, cutoffs
+from tareekh.cutoff import cliff, cutoffs, with_fallback
 
 
 def write_keys(tmp_path):
@@ -114,3 +114,12 @@ def test_cutoffs_per_group():
     b = pd.DataFrame({"state_code": "09", "date_of_decision": steady_then_scraped("2020-02")})
     out = cutoffs(pd.concat([a, b]), by="state_code")
     assert out["27"] == pd.Timestamp("2019-02-28") and out["09"] == pd.Timestamp("2020-02-29")
+
+
+def test_a_district_far_from_its_state_falls_back_to_the_state():
+    local = pd.Series({("10", "01"): pd.Timestamp("2019-01-31"),
+                       ("10", "02"): pd.Timestamp("2012-12-31"),  # a dip, not a scrape
+                       ("10", "03"): pd.NaT})
+    state = pd.Series({"10": pd.Timestamp("2019-01-31")})
+    out = with_fallback(local, state, parent_of=lambda key: key[0])
+    assert (out == pd.Timestamp("2019-01-31")).all()

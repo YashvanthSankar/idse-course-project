@@ -17,10 +17,12 @@ Rules (each is a decision we defend):
    2010 cases "disposition var missing" but the date says the case was decided).
 4. Unusable: filed after the cutoff, decided before filing, an impossible decision date
    paired with an ending, or no cutoff for the court. These are counted, not guessed.
-5. "Ended within H days?" is 1 if it ended by day H, 0 if it was still open after H days
-   (ended later, or was watched past H without ending), and **unknown** if we stopped watching
-   it before day H without seeing it end. Unknowns are left out of training and evaluation
-   for that horizon; treating them as 0 would make courts look slower, as 1 faster.
+5. "Ended within H days?" is only defined for cases **filed at least H days before their
+   court's cutoff**: every one of them had the full H days to end. Without that rule, recent
+   filings that ended fast are labelled 1 while their slow neighbours are still unknown, and
+   the label is biased towards "fast" (measured: 92.6% "within a year" for 2018 filings).
+   Among eligible cases it is 1 if the case ended by day H, 0 if it was still open after H days,
+   and unknown only if it moved to another court before day H.
 """
 
 import numpy as np
@@ -54,6 +56,7 @@ def label(df: pd.DataFrame, cutoff: pd.Series) -> pd.DataFrame:
     reason[(reason == "") & group.eq("interim")] = "bail or interim order"
     out["unusable"] = reason
 
+    out["cutoff"] = cutoff
     stop = cutoff.where(~(ends | moved), decided)
     out["observed_days"] = (stop - filed).dt.days.astype("float")
     out["ended"] = ends
@@ -66,8 +69,9 @@ def label(df: pd.DataFrame, cutoff: pd.Series) -> pd.DataFrame:
 def within(labelled: pd.DataFrame, horizon_days: int) -> pd.Series:
     """1.0 = ended within the horizon, 0.0 = still open after it, NaN = can't know."""
     days, ended = labelled["observed_days"], labelled["ended"]
+    full_follow_up = (labelled["cutoff"] - labelled["date_of_filing"]).dt.days >= horizon_days
     result = pd.Series(np.nan, index=labelled.index)
     result[ended & (days <= horizon_days)] = 1.0
     result[days > horizon_days] = 0.0
-    result[labelled["unusable"] != ""] = np.nan
+    result[(labelled["unusable"] != "") | ~full_follow_up] = np.nan
     return result

@@ -66,10 +66,17 @@ def test_within_a_year_is_yes_no_or_unknown():
         case(decided="2015-06-01"),                            # ended in 151 days -> 1
         case(decided="2017-01-01"),                            # ended after 2 years -> 0
         case(filed="2010-01-01", disp="disposition var missing"),  # open 9 years -> 0
-        case(filed="2018-09-01", disp="disposition var missing"),  # watched 180 days -> ?
+        case(filed="2018-09-01", disp="disposition var missing"),  # filed < 1y before cutoff
         case(decided="2015-03-01", disp="transferred"),        # left after 59 days -> ?
         case(decided="2015-08-01", filed="2014-01-01", disp="transferred"),  # open >1y -> 0
     )
     assert within(df, 365).tolist()[:3] == [1.0, 0.0, 0.0]
     assert np.isnan(within(df, 365).iloc[3]) and np.isnan(within(df, 365).iloc[4])
     assert within(df, 365).iloc[5] == 0.0
+
+
+def test_late_filings_get_no_label_even_if_they_ended_fast():
+    # filed 6 months before the cutoff: its slow neighbours can't be labelled, so neither can it
+    df = run(case(filed="2018-09-01", decided="2018-09-20"))
+    assert df.iloc[0].ended and np.isnan(within(df, 365).iloc[0])
+    assert within(df, 90).iloc[0] == 1.0  # but it had the full 90 days

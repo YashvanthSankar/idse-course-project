@@ -51,3 +51,15 @@ def cutoffs(df: pd.DataFrame, by: str | list[str], date_col: str = "date_of_deci
             **kwargs) -> pd.Series:
     """The cliff for each group (e.g. by="state_code", or ["state_code", "dist_code"])."""
     return df.groupby(by)[date_col].apply(lambda s: cliff(s, **kwargs))
+
+
+def with_fallback(local: pd.Series, regional: pd.Series, parent_of, max_gap_days: int = 92
+                  ) -> pd.Series:
+    """Use each local (e.g. district) cutoff unless it is missing or more than `max_gap_days`
+    away from its region's (state's) cutoff: then a dip in a small district, not a scrape, made
+    the cliff, and the region's cutoff is the better estimate. `parent_of` maps a local key to
+    its region key."""
+    parent = pd.Series([parent_of(k) for k in local.index], index=local.index)
+    region = parent.map(regional)
+    far = (local - region).abs() > pd.Timedelta(days=max_gap_days)
+    return local.where(local.notna() & ~far, region)
