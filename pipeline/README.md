@@ -193,7 +193,7 @@ types), and courts got faster each year, so 2017 is slightly under-predicted.
 - `scripts/export_site.py` writes `artifacts/site/` and copies it to
   `game/backend/auditor/tareekh/data/`, which `game/backend/auditor/tareekh/routes.py` serves at
   `/api/model/options | predict | sample | analytics`.
-- Pages: `game/web/app/model/` (try the model, analytics, about), components in
+- Pages: `game/web/app/model/` (check a case, what the data shows, how it works), components in
   `game/web/components/model/`. A separate plain light site; the game's effects are off there.
 - After retraining: rerun `export_site.py`, run the backend tests (`test_tareekh_api.py` checks
   the site scores a case exactly as the pipeline does), then deploy backend first, then the web.

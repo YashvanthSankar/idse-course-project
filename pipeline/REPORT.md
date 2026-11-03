@@ -153,9 +153,12 @@ loss: **logistic regression with the law inputs** (6 kB).
 - The game's FastAPI backend serves `/api/model/options | predict | sample | analytics`
   (`game/backend/auditor/tareekh/`); 9 API tests, including one that checks the site scores a test
   case exactly as the pipeline does and one that checks the explanations add up to the model's log-odds.
-- The Next.js site serves `/model` (try the model: examples, compare districts, explanations,
-  still-open curve, *test it on a real past case* with a running tally), `/model/analytics` and
-  `/model/about` (model card). It is a separate plain site from the game; e2e tests cover it.
+- The Next.js site serves `/model` in plain language: pick one of 13 everyday topics (cheque
+  bounce, road accident compensation, divorce…) and a district, and read "usually takes about …",
+  "N in 10 are over within a year", milestones, plain reasons, a district comparison and the
+  model's guess on real 2017 cases. `/model/analytics` tells five stories from the data;
+  `/model/about` explains the method, with the technical charts folded away. It is a separate
+  plain site from the game; e2e tests cover it.
 
 ## Limitations
 
