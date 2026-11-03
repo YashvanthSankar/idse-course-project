@@ -11,30 +11,41 @@ district-court records → cleaning → EDA → a model of how long cases take �
 
 ```bash
 cd pipeline
-uv sync                      # Python 3.12; scikit-learn pinned to the game backend's 1.9.1
-uv run pytest                # cleaning, cutoff and download tests
+uv sync                                   # Python 3.12; scikit-learn pinned to the game backend's 1.9.1
+uv run pytest                             # 96 tests
+# 1. download (≈1.6 GB streamed, ~10 min): licence, keys, and the case archive
 uv run python scripts/fetch_ddl.py --want 'license.txt' --want 'csv/keys/*' --want 'csv/cases/*' --max-saves 3
+mkdir -p data/raw/ddl/keys && tar xzf data/raw/ddl/csv/keys/keys.tar.gz -C data/raw/ddl/keys
+# 2. parquet for all of India (narrow) and Tamil Nadu (every column): ~1.5 min
+uv run python scripts/build_dataset.py --state 10
+# 3. scrape cutoffs + labels → data/clean/10/{cutoffs,labelled}.parquet: ~1 min
+uv run python scripts/label_cases.py --state 10
+# 4. train + evaluate → artifacts/within_1y/, reports/within_1y.md: ~1.5 min
+uv run python scripts/train_within_1y.py
 ```
 
-Raw data goes to `data/raw/ddl/` and never into git. The case archive is large
-(`cases.tar.gz` holds one CSV per filing year; `cases_2010.csv` alone is 857 MB, 2017 and 2018
-are about 2.6–2.7 GB each).
+Raw data goes to `data/raw/ddl/`, cleaned data to `data/clean/`; neither goes into git. The case
+archive is 1.41 GB compressed, 16.16 GB as CSV (one file per filing year, 0.86 to 2.72 GB).
 
 ## Layout
 
 ```
 pipeline/
-├── scripts/fetch_ddl.py   download chosen files from DDL's Dropbox (see "Getting the data")
+├── scripts/
+│   ├── fetch_ddl.py         download chosen files from DDL's Dropbox (see "Getting the data")
+│   ├── build_dataset.py     stream the 16 GB archive into parquet in one pass
+│   └── train_within_1y.py   baselines + 3 model families, time split, writes the report
 ├── src/tareekh/
-│   ├── acts.py            ~30,000 raw law names → 56 canonical laws
-│   ├── cases.py           load a yearly case file: decode codes, gender sentinels, bad dates
-│   └── cutoff.py          estimate when each state/district was scraped
-├── tests/                 54 tests; law-name tests use real spellings from the data
-├── data/raw/              downloads (git-ignored)
-├── data/clean/            cleaned parquet (git-ignored)
-├── notebooks/             EDA and modelling notebooks (to do)
-├── artifacts/             exported model + metadata for the site (to do)
-└── reports/               figures and write-up (to do)
+│   ├── acts.py              ~30,000 raw law names → 56 canonical laws
+│   ├── courts.py            157 court names → 14 court levels
+│   ├── cases.py             decode codes, gender sentinels and impossible dates
+│   ├── outcomes.py          the 52 dispositions → ended / moved / interim / missing …
+│   ├── cutoff.py            when each state/district was scraped
+│   ├── target.py            observed time, ended, and "within H days" labels
+│   └── features.py          filing-day inputs, incl. court congestion
+├── tests/                   96 tests; law and court tests use real strings from the data
+├── artifacts/within_1y/     model.joblib (3 kB) + metadata.json: what the site will load
+└── reports/within_1y.md     generated results (do not edit by hand)
 ```
 
 ## Getting the data
@@ -106,6 +117,56 @@ version's output on real data (Tamil Nadu: July 2020 vs its districts' Jan–Feb
 was replaced; the tests now cover both traps plus vacation dips.
 **Run it on all filing years together**, not on a single cohort.
 
+### All years, all India (2026-11-03)
+- **80,935,944 cases** filed 2010-2018: 4.28 M (2010) rising to 13.72 M (2018).
+  **Tamil Nadu: 3,640,055.**
+- **Scrape dates, from all filing years together:** almost every state was scraped in
+  **January-February 2019**; a few later (Kerala, Gujarat March 2019; West Bengal, Chandigarh
+  early 2020). Tamil Nadu's monthly decisions: ~45-85k a month in 2018, 32k in Jan 2019, 13k in
+  Feb, 4.5k in March, so the scrape ran *during* February. We use "the last month with at least
+  half a normal month" (TN districts: Dec 2018 to Feb 2019) so partly scraped months don't make
+  decided cases look pending.
+
+### Early years are incomplete (survivorship)
+The same 592 Tamil Nadu courts present from 2010 record 171k cases filed in 2010 and 622k in
+2018 (×3.6), and same-day decisions rise from 0.7% of cases to 18%. Courts didn't get 3.6×
+busier: cases that finished quickly *before* a court went digital were mostly never entered.
+Early cohorts therefore look much slower than they were (6% of 2010 filings "within a year" vs
+50% of 2017's). **Models use 2015-2017 filings only.**
+
+### Labelling (Tamil Nadu)
+Cutoff per district (with state fallback) → `tareekh.target.label` → `within(…, 365)`.
+Of 3,640,055 cases: 23,497 decided before filing, 1,554 bail orders and 41 impossible decision
+dates are unusable (an earlier run without the state fallback also marked 89,880 as "filed after
+the cutoff" because one district's dip gave it a 2012 cutoff); outcome groups: decided 33%, pending /
+no disposition 26%, dismissed 19%, **moved 14%**, disposed (manner unknown) 5%, settled 3%.
+A first version of the one-year label was biased: 2018 filings came out 92.6% "within a year"
+because only fast cases could be known. Fixed by requiring full follow-up (filed ≥1 year before
+the cutoff). Eligible: 405k (2015), 446k (2016), 549k (2017) cases; 36%, 44%, 50% within a year.
+
+### The model (full tables: [`reports/within_1y.md`](reports/within_1y.md))
+Test = 549,273 cases filed in 2017, never seen during training or model choice.
+
+| | AUC | Brier | log loss |
+|---|---|---|---|
+| rate per case type (baseline) | 0.828 | 0.163 | 0.502 |
+| rate per case type × district (lookup baseline) | 0.844 | 0.163 | 0.492 |
+| **logistic regression (served; chosen on 2016)** | 0.842 | **0.158** | **0.483** |
+| linear SVM, calibrated | 0.843 | 0.157 | 0.481 |
+| random forest | **0.847** | 0.159 | 0.488 |
+
+What it means, honestly:
+- **Case type carries most of the signal** (permutation importance 0.35 vs ≤0.02 for anything
+  else). The models give better *probabilities* than a lookup table, but rank cases about as
+  well. The site must say so.
+- **Courts got faster year on year** (36% → 44% → 50%), so a model trained on 2015-16
+  under-predicts 2017 by 2-4 points in most bands. The random forest given every input per split
+  learned 2015's exact congestion levels and did worse on 2016 (AUC 0.79): drift, not noise.
+- Congestion features (pending cases and last year's clearance in the district's courts of
+  that level on the filing day) helped a little (2016 log loss 0.500 → 0.495).
+- Missing and likely to help: **the law and section** the case was filed under (the per-case
+  `acts_sections` file; see JEEVA.md).
+
 ## Decisions so far
 
 | Decision | Why |
@@ -114,4 +175,9 @@ was replaced; the tests now cover both traps plus vacation dips.
 | National aggregates for the analytics page only | Pending share by state is a striking chart and is cheap; the model stays one state |
 | Dates outside 1950–2022 are blanked, not "fixed" | We can't know the intended date; we count them instead |
 | Unmatched law names stay "Other" | A wrong canonical law is worse than an honest "Other" |
-| Target and model choice wait for the cutoff on all years | The cutoff decides which cases can be labelled at all |
+| Cutoff = last month with ≥ half a normal month of decisions | February 2019 was only partly scraped |
+| Moved cases (transfer, committal, remand, Lok Adalat referral) are censored, not "ended" | They left this court; they didn't finish |
+| One-year label only for cases filed ≥1 year before the cutoff | Otherwise recent filings are biased towards "fast" |
+| Train 2015-16, test 2017 | Early years are incomplete; a later test year is the honest test of a forecast |
+| Served model = best 2016 log loss (logistic regression) | Chosen before looking at 2017; the forest's better 2017 AUC doesn't change that |
+| No gender, no hearing purpose, no later dates as inputs | Fairness rule in IDEA.md; the rest leak the future |
