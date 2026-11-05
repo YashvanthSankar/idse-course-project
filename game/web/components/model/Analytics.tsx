@@ -1,6 +1,7 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { useState } from "react";
 import { duration, getAnalytics, outOf10, pct, type Analytics as Data } from "@/lib/model";
 import { BarList, Figure, LineChart, SERIES, Table } from "./Charts";
 
@@ -32,7 +33,9 @@ export function Analytics() {
 }
 
 function Stories({ a }: { a: Data }) {
+  const [districtSearch, setDistrictSearch] = useState("");
   const tn = a.tamil_nadu;
+  const filteredDistricts = tn.within_1y_by_district.filter((d) => d.district.toLowerCase().includes(districtSearch.toLowerCase()));
   const all = tn.still_open_curves["all cases"];
   const served = a.model.test[a.model.served];
   const topics = [...a.topics].sort((x, y) => y.within_1y - x.within_1y);
@@ -44,7 +47,8 @@ function Stories({ a }: { a: Data }) {
 
   return (
     <div className="space-y-8">
-      <section>
+      <section className="story-hero">
+        <p className="model-eyebrow">02 / EXPLORE THE DATA</p>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">What 81 million court cases show</h1>
         <p className="mt-2 max-w-2xl text-lg text-[var(--m-ink-2)]">
           Every case filed in India&apos;s district courts from 2010 to 2018, and 3.6 million of them from Tamil Nadu looked at closely.
@@ -58,11 +62,13 @@ function Stories({ a }: { a: Data }) {
       </section>
 
       <Figure
+        compact
         title="1. What the case is about changes everything"
         note="Share of cases that were over within a year, Tamil Nadu, filed 2015–2017. Bail applications and traffic fines end in days; cheque bounces, accident claims and appeals drag on for years."
         table={<Table head={["case", "over within a year", "usually takes"]} rows={topics.map((t) => [`${t.icon} ${t.title}`, pct(t.within_1y), t.timing.median_days === null ? "more than 4 years" : duration(t.timing.median_days)])} />}
       >
         <BarList
+          interactive
           rows={topics.map((t) => ({
             label: `${t.icon} ${t.title}`,
             value: t.within_1y,
@@ -74,6 +80,7 @@ function Stories({ a }: { a: Data }) {
       </Figure>
 
       <Figure
+        compact
         title="2. How long cases stay open"
         note={`The share of cases still not over, from the day they are filed. Across all Tamil Nadu cases, half are over after ${all.median_days ? duration(all.median_days) : "—"}.`}
         table={
@@ -87,6 +94,7 @@ function Stories({ a }: { a: Data }) {
         }
       >
         <LineChart
+          interactive
           series={curves}
           xFormat={(m) => (m === 0 ? "filed" : m % 12 === 0 ? `${m / 12} year${m === 12 ? "" : "s"}` : `${m} months`)}
           xTicks={[0, 12, 24, 36, 48]}
@@ -96,20 +104,24 @@ function Stories({ a }: { a: Data }) {
         />
       </Figure>
 
+      <div className="district-search"><label htmlFor="district-search">Find a district</label><input id="district-search" type="search" placeholder="Try Chennai or Madurai" value={districtSearch} onChange={(e) => setDistrictSearch(e.target.value)} /><span>{filteredDistricts.length} {filteredDistricts.length === 1 ? "district" : "districts"}</span></div>
       <Figure
+        compact
         title="3. Where the case is filed matters too"
         note="Share of cases over within a year, by district (Tamil Nadu, filed 2015–2017). The same kinds of case move at very different speeds in different districts."
-        table={<Table head={["district", "over within a year", "cases"]} rows={tn.within_1y_by_district.map((d) => [d.district, pct(d.mean), d.size.toLocaleString("en-IN")])} />}
+        table={<Table head={["district", "over within a year", "cases"]} rows={filteredDistricts.map((d) => [d.district, pct(d.mean), d.size.toLocaleString("en-IN")])} />}
       >
-        <BarList rows={tn.within_1y_by_district.map((d) => ({ label: d.district, value: d.mean, detail: `${d.size.toLocaleString("en-IN")} cases` }))} format={(v) => pct(v)} max={1} />
+        {filteredDistricts.length === 0 && <p className="text-sm text-[var(--m-ink-2)]">No districts match your search.</p>}
+        <BarList interactive itemLabel="district" rows={filteredDistricts.map((d) => ({ label: d.district, value: d.mean, detail: `${d.size.toLocaleString("en-IN")} cases` }))} format={(v) => pct(v)} max={1} />
       </Figure>
 
       <Figure
+        compact
         title="4. Across India, some states have huge backlogs"
         note="Of the cases filed in 2010, the share still not over when the data was collected in early 2019, nine years later. Tamil Nadu is highlighted."
         table={<Table head={["state", "still not over"]} rows={a.national.states.map((s) => [s.state, pct(s.pending_2010_filings, 1)])} />}
       >
-        <BarList rows={a.national.states.map((s) => ({ label: s.state, value: s.pending_2010_filings, highlight: s.state === "Tamil Nadu", detail: `${s.cases.toLocaleString("en-IN")} cases` }))} format={(v) => pct(v)} />
+        <BarList interactive itemLabel="state" metricLabel="of 2010 filings still open when the data was collected" rows={a.national.states.map((s) => ({ label: s.state, value: s.pending_2010_filings, highlight: s.state === "Tamil Nadu", detail: `${s.cases.toLocaleString("en-IN")} cases` }))} format={(v) => pct(v)} />
       </Figure>
 
       <section className="rounded-2xl border border-[var(--m-line)] bg-[var(--m-card)] p-5">

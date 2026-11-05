@@ -21,10 +21,13 @@ export function About() {
   const served = a ? a.model.test[a.model.served] : null;
   return (
     <div className="space-y-5">
-      <section>
+      <section className="story-hero">
+        <p className="model-eyebrow">03 / BEHIND THE MODEL</p>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">How it works</h1>
         <p className="mt-2 max-w-2xl text-lg text-[var(--m-ink-2)]">An IDSE (CS3006) course project: real, messy government data taken all the way to a working model.</p>
       </section>
+
+      <div className="method-steps" aria-label="Pipeline stages"><span><b>01</b> Gather</span><span><b>02</b> Clean</span><span><b>03</b> Learn</span><span><b>04</b> Test</span></div>
 
       <Card title="In short">
         <ol className="list-decimal space-y-1 pl-5">

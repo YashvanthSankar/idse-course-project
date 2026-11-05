@@ -4,53 +4,33 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 const TABS = [
-  { href: "/model", label: "Check a case" },
-  { href: "/model/analytics", label: "What the data shows" },
+  { href: "/model", label: "Home" },
+  { href: "/model/explore", label: "Explore cases" },
+  { href: "/model/analytics", label: "Explore the data" },
   { href: "/model/about", label: "How it works" },
 ] as const;
-
 export const REPO = "https://github.com/YashvanthSankar/idse-course-project/tree/main/pipeline";
 
 export function ModelShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   return (
     <div data-site="model" className="min-h-dvh">
-      <header className="border-b border-[var(--m-line)] bg-[var(--m-card)]">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
-          <Link href="/model" className="mr-auto">
-            <span className="block text-lg font-bold tracking-tight">TAREEKH</span>
-            <span className="block text-xs text-[var(--m-ink-2)]">How long do court cases take? Real data from Tamil Nadu</span>
-          </Link>
-          <nav aria-label="Model pages" className="flex gap-1 text-sm">
+      <header className="model-header">
+        <div className="model-header-inner">
+          <Link href="/model" className="model-brand"><span className="model-brand-mark"><span /></span><span>TAREEKH<small>THE COURT DATA PROJECT</small></span></Link>
+          <nav aria-label="Model pages" className="model-nav">
             {TABS.map((t) => {
               const active = t.href === "/model" ? path === "/model" : path?.startsWith(t.href);
-              return (
-                <Link
-                  key={t.href}
-                  href={t.href}
-                  aria-current={active ? "page" : undefined}
-                  className={`rounded-md px-3 py-1.5 ${active ? "bg-[var(--m-blue-100)] font-medium text-[var(--m-ink)]" : "text-[var(--m-ink-2)] hover:bg-[var(--m-surface)]"}`}
-                >
-                  {t.label}
-                </Link>
-              );
+              return <Link key={t.href} href={t.href} aria-current={active ? "page" : undefined}>{t.label}</Link>;
             })}
           </nav>
+          <a className="model-code-link" href={REPO} target="_blank" rel="noreferrer">View project <span aria-hidden>↗</span></a>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
-      <footer className="mx-auto max-w-5xl px-4 pb-8 text-xs text-[var(--m-ink-3)]">
-        <p>
-          An IDSE (CS3006) course project. Contains data from Development Data Lab&apos;s judicial data, ODbL v1.0. A historical
-          estimate, not legal advice. ·{" "}
-          <a className="underline" href={REPO} target="_blank" rel="noreferrer">
-            Code and method
-          </a>{" "}
-          ·{" "}
-          <Link className="underline" href="/">
-            OUTLIER, the game
-          </Link>
-        </p>
+      <main className="model-main mx-auto max-w-6xl px-5 sm:px-8">{children}</main>
+      <footer className="model-footer mx-auto max-w-6xl px-5 sm:px-8">
+        <div><strong>TAREEKH</strong><p>An IDSE course project exploring the stories in court data.</p></div>
+        <p>Contains data from Development Data Lab&apos;s judicial data, ODbL v1.0.<br />A historical estimate, not legal advice. · <a href={REPO} target="_blank" rel="noreferrer">Code and method ↗</a> · <Link href="/">OUTLIER game ↗</Link></p>
       </footer>
     </div>
   );

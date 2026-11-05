@@ -69,15 +69,15 @@ function Checker({ opts }: { opts: Options }) {
   });
 
   return (
-    <div className="space-y-8">
-      <section>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">How long will a court case take?</h1>
-        <p className="mt-2 max-w-2xl text-lg text-[var(--m-ink-2)]">
-          Answered from 3.6 million real cases in Tamil Nadu&apos;s district courts. Pick what the case is about and where it was filed.
-        </p>
+    <div className="model-checker space-y-8">
+      <section className="explorer-intro">
+        <p className="model-eyebrow">01 / INTERACTIVE CASE EXPLORER</p>
+        <h1>Explore a case type.</h1>
+        <p>Choose a case type and district to see how historical outcomes change. Compare districts and explore real cases below.</p>
+        <span className="model-live"><i /> LIVE MODEL</span>
       </section>
 
-      <section aria-labelledby="q1">
+      <section aria-labelledby="q1" className="model-input-section">
         <h2 id="q1" className="mb-3 text-lg font-semibold">
           <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--m-s1)] text-sm text-white">1</span>
           What is the case about?
@@ -124,7 +124,7 @@ function Checker({ opts }: { opts: Options }) {
         )}
       </section>
 
-      <section aria-labelledby="q2">
+      <section aria-labelledby="q2" className="model-input-section">
         <h2 id="q2" className="mb-3 text-lg font-semibold">
           <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-[var(--m-s1)] text-sm text-white">2</span>
           Which district?

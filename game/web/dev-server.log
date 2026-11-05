@@ -1,0 +1,135 @@
+▲ Next.js 16.4.3 (Turbopack)
+- Local:         http://localhost:3200
+- Network:       http://192.168.56.1:3200
+✓ Ready in 1111ms
+✓ Running next.config.ts took 109ms
+- Cache Components enabled
+- Partial Prefetching enabled
+
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\C:\\Users\\subun\\OneDrive\\Desktop\\idse-course-project\\game\\web\\node_modules\\.pnpm\\motion-dom@14.7.1\\node_modules\\motion-dom\\dist\\es\\utils\\supports\\memo.mjs").
+○ Compiling / ...
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\C:\\Users\\subun\\OneDrive\\Desktop\\idse-course-project\\game\\web\\dev-server.log").
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\C:\\Users\\subun\\OneDrive\\Desktop\\idse-course-project\\game\\web\\node_modules\\.pnpm\\motion-dom@14.7.1\\node_modules\\motion-dom\\dist\\es\\value\\types\\int.mjs.map").
+ GET / 200 in 1052ms (next.js: 508ms, application-code: 544ms)
+ GET / 200 in 201ms (next.js: 5ms, application-code: 196ms)
+ GET /model 200 in 205ms (next.js: 29ms, application-code: 176ms)
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\C:\\Users\\subun\\OneDrive\\Desktop\\idse-course-project\\game\\web\\node_modules\\.pnpm\\next@16.4.3_@babel+core@7.2_6238933863c4e01214c46ab1f4f5d71e\\node_modules\\next\\dist\\lib\\get-package-version.d.ts").
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\C:\\Users\\subun\\OneDrive\\Desktop\\idse-course-project\\game\\web\\node_modules\\.pnpm\\next@16.4.3_@babel+core@7.2_6238933863c4e01214c46ab1f4f5d71e\\node_modules\\next\\dist\\lib\\url.d.ts").
+ GET /model 200 in 76ms (next.js: 4ms, application-code: 72ms)
+ GET /model 200 in 94ms (next.js: 4ms, application-code: 90ms)
+ GET /model 200 in 143ms (next.js: 5ms, application-code: 138ms)
+ GET /model 200 in 63ms (next.js: 3ms, application-code: 60ms)
+ GET /model 200 in 80ms (next.js: 3ms, application-code: 77ms)
+✓ Compiled in 340ms
+ GET /model 200 in 244ms (next.js: 5ms, application-code: 238ms)
+ GET /model 200 in 229ms (next.js: 23ms, application-code: 207ms)
+ GET /model 200 in 101ms (next.js: 4ms, application-code: 96ms)
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\C:\\Users\\subun\\OneDrive\\Desktop\\idse-course-project\\game\\web\\node_modules\\.pnpm\\three@0.165.0\\node_modules\\three\\src\\objects\\LineSegments.js").
+  Turbopack has seen frequent file updates and is waiting for the filesystem to settle (0.5s elapsed so far; last modified: "\\\\?\\C:\\Users\\subun\\OneDrive\\Desktop\\idse-course-project\\game\\web\\node_modules").
+✓ Compiled in 210ms
+✓ Compiled in 431ms
+ GET / 200 in 163ms (next.js: 4ms, application-code: 159ms)
+ GET / 200 in 169ms (next.js: 5ms, application-code: 164ms)
+ GET /model 200 in 192ms (next.js: 6ms, application-code: 186ms)
+ GET /model/analytics 200 in 161ms (next.js: 27ms, application-code: 135ms)
+✓ Compiled in 166ms
+ GET /model 200 in 469ms (next.js: 7ms, application-code: 462ms)
+ GET /model 200 in 540ms (next.js: 12ms, application-code: 528ms)
+ GET /model/analytics 200 in 279ms (next.js: 4ms, application-code: 275ms)
+ GET /model 200 in 252ms (next.js: 4ms, application-code: 249ms)
+ GET /model/about 200 in 130ms (next.js: 38ms, application-code: 92ms)
+ GET / 200 in 151ms (next.js: 4ms, application-code: 147ms)
+ GET /model 200 in 49ms (next.js: 5ms, application-code: 45ms)
+ GET / 200 in 129ms (next.js: 3ms, application-code: 126ms)
+ GET / 200 in 126ms (next.js: 2ms, application-code: 124ms)
+ GET /model 200 in 88ms (next.js: 5ms, application-code: 83ms)
+✓ Compiled in 1479ms
+ GET /model 200 in 496ms (next.js: 9ms, application-code: 486ms)
+ GET /model 200 in 461ms (next.js: 6ms, application-code: 455ms)
+ GET /model 200 in 273ms (next.js: 4ms, application-code: 268ms)
+ GET /model/analytics 200 in 241ms (next.js: 23ms, application-code: 218ms)
+ GET / 200 in 129ms (next.js: 3ms, application-code: 126ms)
+ GET / 200 in 128ms (next.js: 2ms, application-code: 125ms)
+ GET /model 200 in 74ms (next.js: 3ms, application-code: 70ms)
+ GET /model/analytics 200 in 81ms (next.js: 4ms, application-code: 77ms)
+ GET /model/about 200 in 54ms (next.js: 6ms, application-code: 48ms)
+ GET / 200 in 172ms (next.js: 3ms, application-code: 169ms)
+ GET /model 200 in 57ms (next.js: 3ms, application-code: 53ms)
+ GET /model/analytics 200 in 74ms (next.js: 2ms, application-code: 72ms)
+ GET /model 200 in 54ms (next.js: 3ms, application-code: 50ms)
+ GET /model 200 in 161ms (next.js: 13ms, application-code: 148ms)
+✓ Compiled in 577ms
+ GET /model 200 in 187ms (next.js: 11ms, application-code: 176ms)
+ GET /model 200 in 561ms (next.js: 19ms, application-code: 542ms)
+ GET /model 200 in 10ms
+ GET /model 200 in 457ms (next.js: 4ms, application-code: 452ms)
+ GET /model 200 in 283ms (next.js: 141ms, application-code: 142ms)
+ GET /model 200 in 454ms (next.js: 3ms, application-code: 452ms)
+ GET /model 200 in 425ms (next.js: 3ms, application-code: 422ms)
+ GET / 200 in 152ms (next.js: 3ms, application-code: 149ms)
+ GET / 200 in 126ms (next.js: 3ms, application-code: 123ms)
+ GET /model 200 in 100ms (next.js: 2ms, application-code: 97ms)
+ GET /model/analytics 200 in 126ms (next.js: 7ms, application-code: 119ms)
+ GET /model/about 200 in 136ms (next.js: 77ms, application-code: 59ms)
+ GET / 200 in 166ms (next.js: 4ms, application-code: 162ms)
+ GET /model 200 in 70ms (next.js: 5ms, application-code: 65ms)
+ GET / 200 in 129ms (next.js: 2ms, application-code: 126ms)
+ GET / 200 in 148ms (next.js: 2ms, application-code: 145ms)
+ GET /model 200 in 132ms (next.js: 4ms, application-code: 128ms)
+ GET /model/explore 200 in 147ms (next.js: 49ms, application-code: 99ms)
+ GET /model 200 in 259ms (next.js: 11ms, application-code: 248ms)
+ GET /model/explore 200 in 96ms (next.js: 5ms, application-code: 91ms)
+ GET /model/analytics 200 in 160ms (next.js: 9ms, application-code: 152ms)
+ GET /model/about 200 in 126ms (next.js: 7ms, application-code: 119ms)
+ GET /model/analytics 200 in 125ms (next.js: 4ms, application-code: 121ms)
+✓ Compiled in 281ms
+ GET / 200 in 160ms (next.js: 3ms, application-code: 158ms)
+ GET / 200 in 164ms (next.js: 2ms, application-code: 162ms)
+ GET /model 200 in 95ms (next.js: 3ms, application-code: 92ms)
+ GET /model/explore 200 in 65ms (next.js: 4ms, application-code: 61ms)
+ GET /model/analytics 200 in 103ms (next.js: 5ms, application-code: 98ms)
+ GET /model/about 200 in 67ms (next.js: 7ms, application-code: 60ms)
+ GET / 200 in 197ms (next.js: 3ms, application-code: 194ms)
+ GET /model 200 in 57ms (next.js: 4ms, application-code: 53ms)
+ GET /model/analytics 200 in 70ms (next.js: 4ms, application-code: 66ms)
+ GET /model/analytics 200 in 171ms (next.js: 4ms, application-code: 167ms)
+ GET /model 200 in 132ms (next.js: 14ms, application-code: 118ms)
+ GET /model/explore 200 in 127ms (next.js: 6ms, application-code: 121ms)
+ GET /model/analytics 200 in 136ms (next.js: 10ms, application-code: 126ms)
+ GET /model/about 200 in 128ms (next.js: 6ms, application-code: 122ms)
+ GET /model 200 in 441ms (next.js: 12ms, application-code: 429ms)
+✓ Compiled in 345ms
+ GET /model 200 in 54ms (next.js: 5ms, application-code: 49ms)
+ GET /model 200 in 235ms (next.js: 7ms, application-code: 228ms)
+ GET /model 200 in 223ms (next.js: 7ms, application-code: 217ms)
+✓ Compiled in 378ms
+ GET /model/explore 200 in 88ms (next.js: 12ms, application-code: 76ms)
+ GET /model/analytics 200 in 79ms (next.js: 4ms, application-code: 75ms)
+ GET / 200 in 183ms (next.js: 4ms, application-code: 179ms)
+ GET / 200 in 211ms (next.js: 3ms, application-code: 209ms)
+ GET /model/analytics 200 in 117ms (next.js: 9ms, application-code: 109ms)
+ GET / 200 in 186ms (next.js: 3ms, application-code: 182ms)
+ GET / 200 in 189ms (next.js: 3ms, application-code: 186ms)
+ GET /model/analytics 200 in 99ms (next.js: 3ms, application-code: 96ms)
+ GET /model/about 200 in 79ms (next.js: 10ms, application-code: 69ms)
+ GET /model/analytics 200 in 126ms (next.js: 4ms, application-code: 122ms)
+ GET /model 200 in 235ms (next.js: 5ms, application-code: 230ms)
+ GET /model/explore 200 in 109ms (next.js: 6ms, application-code: 103ms)
+ GET /model/explore 200 in 139ms (next.js: 5ms, application-code: 134ms)
+ GET /model/analytics 200 in 167ms (next.js: 5ms, application-code: 161ms)
+ GET /model/about 200 in 123ms (next.js: 4ms, application-code: 119ms)
+ GET /model/explore 200 in 117ms (next.js: 5ms, application-code: 112ms)
+✓ Compiled in 84ms
+ GET /model 200 in 156ms (next.js: 14ms, application-code: 142ms)
+ GET /model 200 in 280ms (next.js: 9ms, application-code: 271ms)
+ GET /model/explore 200 in 139ms (next.js: 9ms, application-code: 130ms)
+ GET /model/analytics 200 in 118ms (next.js: 9ms, application-code: 108ms)
+ GET /model/about 200 in 113ms (next.js: 8ms, application-code: 106ms)
+✓ Compiled in 215ms
+ GET / 200 in 73ms (next.js: 1.9ms, application-code: 71ms)
+ GET / 200 in 84ms (next.js: 2ms, application-code: 82ms)
+ GET /model/analytics 200 in 52ms (next.js: 4ms, application-code: 48ms)
+ GET /model/about 200 in 43ms (next.js: 5ms, application-code: 38ms)
+ GET /model/about 200 in 735ms (next.js: 19ms, application-code: 716ms)
+ GET /model/explore 200 in 833ms (next.js: 8ms, application-code: 824ms)
+ GET /model/analytics 200 in 304ms (next.js: 21ms, application-code: 283ms)

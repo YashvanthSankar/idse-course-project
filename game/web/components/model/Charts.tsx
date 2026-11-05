@@ -6,14 +6,17 @@ import { useId, useMemo, useState, type ReactNode } from "react";
 
 export const SERIES = ["var(--m-s1)", "var(--m-s2)", "var(--m-s3)", "var(--m-s4)", "var(--m-s5)", "var(--m-s6)"];
 
-export function Figure({ title, note, children, table }: { title: string; note?: ReactNode; children: ReactNode; table?: ReactNode }) {
+export function Figure({ title, note, children, table, compact = false }: { title: string; note?: ReactNode; children: ReactNode; table?: ReactNode; compact?: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  const chartId = useId();
   return (
-    <figure className="rounded-xl border border-[var(--m-line)] bg-[var(--m-card)] p-5">
+    <figure className={`rounded-xl border border-[var(--m-line)] bg-[var(--m-card)] p-5 ${compact ? "resizable-figure" : ""}`} data-expanded={compact ? expanded : undefined}>
       <figcaption className="mb-3">
         <h3 className="text-base font-semibold text-[var(--m-ink)]">{title}</h3>
         {note && <p className="mt-1 text-sm text-[var(--m-ink-2)]">{note}</p>}
       </figcaption>
-      {children}
+      {compact && <button type="button" className="chart-size-button" aria-expanded={expanded} aria-controls={chartId} onClick={() => setExpanded(!expanded)}>{expanded ? "− Show compact chart" : "+ Expand chart"}</button>}
+      <div id={chartId} className={compact ? "resizable-figure-content" : undefined}>{children}</div>
       {table && (
         <details className="mt-3 text-sm text-[var(--m-ink-2)]">
           <summary className="cursor-pointer select-none">Show the numbers</summary>
@@ -60,6 +63,9 @@ export function BarList({
   max,
   min = 0,
   sort = true,
+  interactive = false,
+  itemLabel = "case type",
+  metricLabel = "over within a year",
 }: {
   rows: BarRow[];
   format: (v: number) => string;
@@ -68,9 +74,26 @@ export function BarList({
   min?: number;
   /** false keeps the given order (years, stages) */
   sort?: boolean;
+  interactive?: boolean;
+  itemLabel?: string;
+  metricLabel?: string;
 }) {
   const top = (max ?? Math.max(...rows.map((r) => r.value), 0) * 1.08) || 1;
-  const sorted = sort ? [...rows].sort((a, b) => b.value - a.value) : rows;
+  const [order, setOrder] = useState<"high" | "low">("high");
+  const [selected, setSelected] = useState<string | null>(null);
+  const sorted = sort ? [...rows].sort((a, b) => order === "high" ? b.value - a.value : a.value - b.value) : rows;
+  const active = rows.find((r) => r.label === selected);
+  if (interactive) return (
+    <div className="chart-explorer">
+      <div className="chart-toolbar"><span>SELECT A BAR TO EXPLORE</span><button type="button" onClick={() => setOrder(order === "high" ? "low" : "high")}>Sort: {order === "high" ? "highest first ↓" : "lowest first ↑"}</button></div>
+      <div className="interactive-bars" role="group" aria-label="Select a chart bar">
+        {sorted.map((r) => <button type="button" key={r.label} className="interactive-bar" aria-pressed={selected === r.label} onClick={() => setSelected(r.label)}>
+          <span className="interactive-bar-label">{r.label}</span><span className="interactive-bar-track"><span style={{width: `${Math.max(((r.value - min) / (top - min)) * 100, .5)}%`, background: r.highlight ? "var(--m-s2)" : undefined}} /></span><strong>{format(r.value)}</strong>
+        </button>)}
+      </div>
+      <div className="chart-insight" aria-live="polite">{active ? <><span>SELECTED {itemLabel.toUpperCase()}</span><strong>{active.label}</strong><p><b>{format(active.value)}</b> {metricLabel}{active.detail ? ` · ${active.detail}` : ""}.</p></> : <><span>EXPLORE THE DATA</span><strong>Every bar tells a story.</strong><p>Select a {itemLabel} to see its result in detail.</p></>}</div>
+    </div>
+  );
   return (
     <ul className="space-y-[2px]" role="list">
       {sorted.map((r) => (
@@ -122,6 +145,7 @@ export function LineChart({
   width = 640,
   marker,
   xTicks: xTickValues,
+  interactive = false,
 }: {
   series: Series[];
   xFormat: (x: number) => string;
@@ -133,6 +157,7 @@ export function LineChart({
   marker?: { x: number; label: string };
   /** where to put x labels (defaults to about seven of the data's x values) */
   xTicks?: number[];
+  interactive?: boolean;
 }) {
   const id = useId();
   const W = width, H = height, L = 52, R = 12, T = 10, B = 28;
@@ -143,6 +168,10 @@ export function LineChart({
   const sx = (x: number) => L + ((x - x0) / (x1 - x0 || 1)) * (W - L - R);
   const sy = (y: number) => T + (1 - y / (top || 1)) * (H - T - B);
   const [hover, setHover] = useState<number | null>(null);
+  const [chosen, setChosen] = useState<string[]>(series.map((s) => s.name));
+  const [point, setPoint] = useState(0);
+  const visibleSeries = interactive ? series.filter((s) => chosen.includes(s.name)) : series;
+  const selectedIndex = Math.min(point, Math.max(xs.length - 1, 0));
   const xTicks = xTickValues ?? (xs.length <= 8 ? xs : xs.filter((_, i) => i % Math.ceil(xs.length / 7) === 0));
 
   function move(e: React.PointerEvent<SVGSVGElement>) {
@@ -155,21 +184,22 @@ export function LineChart({
     setHover(best);
   }
 
-  const hx = hover === null ? null : xs[hover];
+  const hx = hover === null ? (interactive ? xs[selectedIndex] : null) : xs[hover];
   return (
     <div className="relative">
       {series.length > 1 && (
         <ul className="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--m-ink-2)]" aria-label="Legend">
           {series.map((s) => (
             <li key={s.name} className="flex items-center gap-1.5">
-              <svg width="18" height="6" aria-hidden>
+              {interactive ? <button type="button" className="chart-series-toggle" aria-pressed={chosen.includes(s.name)} onClick={() => setChosen((current) => current.includes(s.name) ? current.filter((name) => name !== s.name) : [...current, s.name])}><span style={{background: s.color}} />{s.name}</button> : <><svg width="18" height="6" aria-hidden>
                 <line x1="0" x2="18" y1="3" y2="3" stroke={s.color} strokeWidth="2.5" strokeDasharray={s.dashed ? "4 3" : undefined} />
               </svg>
-              {s.name}
+              {s.name}</>}
             </li>
           ))}
         </ul>
       )}
+      {interactive && <p className="chart-hint">Select case types to show or hide them. Drag the timeline to inspect a point.</p>}
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full touch-none"
@@ -200,7 +230,7 @@ export function LineChart({
             </text>
           </g>
         )}
-        {series.map((s) => (
+        {visibleSeries.map((s) => (
           <polyline
             key={s.name}
             fill="none"
@@ -214,21 +244,21 @@ export function LineChart({
         {hx !== null && (
           <g>
             <line x1={sx(hx)} x2={sx(hx)} y1={T} y2={H - B} stroke="var(--m-ink-3)" />
-            {series.map((s) => {
+            {visibleSeries.map((s) => {
               const p = s.points.find((q) => q[0] === hx);
               return p ? <circle key={s.name} cx={sx(p[0])} cy={sy(p[1])} r="4" fill={s.color} stroke="var(--m-card)" strokeWidth="2" /> : null;
             })}
           </g>
         )}
       </svg>
-      {hx !== null && (
+      {hx !== null && !interactive && (
         <div
           role="tooltip"
           className="pointer-events-none absolute top-8 z-10 min-w-36 rounded-md border border-[var(--m-line)] bg-[var(--m-card)] px-2 py-1 text-xs shadow-sm"
           style={sx(hx) / W > 0.6 ? { right: `${(1 - sx(hx) / W) * 100 + 2}%` } : { left: `${(sx(hx) / W) * 100 + 2}%` }}
         >
           <div className="font-semibold text-[var(--m-ink)]">{xFormat(hx)}</div>
-          {series.map((s) => {
+          {visibleSeries.map((s) => {
             const p = s.points.find((q) => q[0] === hx);
             return p ? (
               <div key={s.name} className="flex items-center justify-between gap-3 text-[var(--m-ink-2)]">
@@ -242,6 +272,11 @@ export function LineChart({
           })}
         </div>
       )}
+      {interactive && xs.length > 0 && <div className="timeline-controls">
+        <label htmlFor={`${id}-timeline`}>Time since filing <strong>{xFormat(xs[selectedIndex])}</strong></label>
+        <input id={`${id}-timeline`} type="range" min="0" max={xs.length - 1} step="1" value={selectedIndex} onChange={(e) => setPoint(Number(e.target.value))} />
+        <div className="timeline-readout" aria-live="polite">{visibleSeries.length === 0 ? <p>Select a case type above to see its values.</p> : visibleSeries.map((s) => { const p = s.points.find((q) => q[0] === xs[selectedIndex]); return p ? <div key={s.name}><span><i style={{background: s.color}} />{s.name}</span><strong>{yFormat(p[1])}</strong></div> : null; })}</div>
+      </div>}
     </div>
   );
 }
