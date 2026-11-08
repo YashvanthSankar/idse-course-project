@@ -89,6 +89,10 @@ def predict_row(row: dict) -> tuple[float, list[dict]]:
     return probability, effects
 
 
+# The site calls this API through Vercel, so a whole class arrives from a few proxy addresses:
+# the limit is per proxy, not per student. A prediction takes milliseconds.
+MODEL_PER_MINUTE = 3000
+
 KIND_FIELDS = ("id", "title", "law_detail", "case_type_name", "court_level", "cases_2017",
                "within_1y_2017", "topic", "variant", "timing")
 
@@ -126,12 +130,47 @@ def build_row(body: PredictIn) -> tuple[dict, dict]:
     return row, context
 
 
+MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August",
+          "September", "October", "November", "December"]
+
+
+def used_inputs(row: dict, kind: dict, context: dict) -> list[dict]:
+    """Every value the model received, readable, and where it came from: the visitor's choice,
+    implied by the kind of case they picked, or looked up from the court data."""
+    court = context["court"]
+    def fmt(n: float) -> str:
+        return f"{round(n):,}"
+    section = row["law_section"].split(" s.", 1)[1] if " s." in row["law_section"] else "other"
+    bailable = row["ipc_bailable"]
+    out = [
+        ("district", row["district"], "you"),
+        ("filing_month", MONTHS[int(row["filing_month"]) - 1], "you"),
+        ("case_type", kind["case_type_name"], "case"),
+        ("court_level", row["court_level"], "case"),
+        ("law", row["law"], "case"),
+        ("law_section", section, "case"),
+        ("criminal", row["criminal"], "case"),
+        ("ipc_bailable", bailable, "case"),
+        ("n_ipc_sections", fmt(row["n_ipc_sections"]), "case"),
+        ("log_pending_at_filing",
+         f"{court['pending']:,} cases" if court else "Tamil Nadu typical value", "data"),
+        ("clearance_last_year",
+         f"{court['disposed_last_year']:,} cases closed in a year" if court
+         else "Tamil Nadu typical value", "data"),
+        ("log_prev_year_filings",
+         f"{fmt(float(np.expm1(row['log_prev_year_filings'])))} cases"
+         if context["similar_filings_found"] else "Tamil Nadu typical value", "data"),
+    ]
+    labels = _json("inputs")["labels"]
+    return [{"input": k, "label": labels.get(k, k), "value": v, "source": src} for k, v, src in out]
+
+
 def register_tareekh(app, limit: Callable[..., None] = lambda *_a, **_k: None) -> None:
     router = APIRouter(prefix="/api/model")
 
     @router.get("/options")
     def options(request: Request):
-        limit(request, "model", 240)
+        limit(request, "model", MODEL_PER_MINUTE)
         inputs = _json("inputs")
         return {"question": inputs["question"], "model": inputs["model"],
                 "districts": inputs["districts"], "months": inputs["months"],
@@ -139,11 +178,12 @@ def register_tareekh(app, limit: Callable[..., None] = lambda *_a, **_k: None) -
                 "kinds": [{k: kind[k] for k in KIND_FIELDS} for kind in inputs["kinds"]],
                 "kinds_cover_2017": inputs["kinds_cover_2017"],
                 "test": {k: _json("metadata")["test_metrics"][k] for k in ("n", "auc", "accuracy")},
+                "model_info": inputs["model_info"],
                 "notice": NOTICE, "credit": CREDIT}
 
     @router.post("/predict")
     def predict(body: PredictIn, request: Request):
-        limit(request, "model", 240)
+        limit(request, "model", MODEL_PER_MINUTE)
         row, context = build_row(body)
         probability, effects = predict_row(row)
         kind = _lookups()["kinds"][body.kind]
@@ -154,6 +194,8 @@ def register_tareekh(app, limit: Callable[..., None] = lambda *_a, **_k: None) -
             "kind": {k: kind[k] for k in KIND_FIELDS},
             "district": body.district, "filing_month": body.filing_month,
             "effects": effects, **context,
+            "used_inputs": used_inputs(row, kind, context),
+            "model_info": _json("inputs")["model_info"],
             "still_open": None if curve is None else {"label": curve["label"],
                                                      "months": curve["still_open"],
                                                      "median_days": curve["median_days"]},
@@ -163,7 +205,7 @@ def register_tareekh(app, limit: Callable[..., None] = lambda *_a, **_k: None) -
     @router.get("/sample")
     def sample(request: Request, seed: int | None = None):
         """A real 2017 case the model never saw, with its prediction and what happened."""
-        limit(request, "model", 240)
+        limit(request, "model", MODEL_PER_MINUTE)
         cases = _json("test_cases")
         case = (random.Random(seed) if seed is not None else random).choice(cases)
         probability, effects = predict_row(case)
@@ -177,7 +219,7 @@ def register_tareekh(app, limit: Callable[..., None] = lambda *_a, **_k: None) -
 
     @router.get("/analytics")
     def analytics(request: Request):
-        limit(request, "model", 240)
+        limit(request, "model", MODEL_PER_MINUTE)
         return {**_json("analytics"), "credit": CREDIT}
 
     app.include_router(router)

@@ -191,7 +191,7 @@ def main() -> int:
         "categorical": cats, "numeric": nums,
         "labels": {"district": "District", "court_level": "Court", "case_type": "Case type",
                    "filing_month": "Month filed", "law": "Law", "law_section": "Section",
-                   "ipc_bailable": "Bailable or not (IPC)", "criminal": "Criminal or civil",
+                   "ipc_bailable": "Bailable or not (IPC)", "criminal": "Criminal or civil (as recorded in the data)",
                    "n_ipc_sections": "Number of IPC sections charged",
                    "log_prev_year_filings": "Similar cases filed in the district last year",
                    "log_pending_at_filing": "Cases already waiting in these courts",
@@ -235,6 +235,29 @@ def main() -> int:
         "experiments": {"horizons": experiments["horizons"], "drift": experiments["drift"],
                         "weak_case_types": experiments["weak_spots"]["case_type"][:8]},
     }
+
+    predicted = model.predict_proba(test[cats + nums])[:, 1] >= 0.5
+    actual = test["within_1y"].astype(int).to_numpy().astype(bool)
+    tp, fp = int((predicted & actual).sum()), int((predicted & ~actual).sum())
+    fn, tn = int((~predicted & actual).sum()), int((~predicted & ~actual).sum())
+    confusion = {"tp": tp, "fp": fp, "fn": fn, "tn": tn, "precision": tp / (tp + fp),
+                 "recall": tp / (tp + fn), "accuracy": (tp + tn) / len(test)}
+    train_cases = int((frame["within_1y"].notna() & frame["filing_year"].isin([2015, 2016])).sum())
+    model_info = {
+        "name": "Logistic regression", "library": f"scikit-learn {metadata['scikit_learn']}",
+        "target": "Disposed of within 365 days of filing (yes / no)",
+        "n_inputs": len(cats) + len(nums),
+        "train_cases": train_cases, "train_years": metadata["trained_on_filing_years"],
+        "test_cases": len(test), "test_year": metadata["tested_on_filing_year"],
+        "metrics": metadata["test_metrics"], "confusion": confusion,
+        "file_bytes": metadata["model_bytes"],
+        "base_rate": float(test["within_1y"].mean()),
+    }
+    inputs["model_info"] = model_info
+    analytics["model"]["info"] = model_info
+    analytics["model"]["days_regression"] = json.loads(
+        (REPORT / "days_regression.json").read_text())
+    analytics["experiments"]["drift"] = experiments["drift"]
 
     SITE.mkdir(parents=True, exist_ok=True)
     shutil.copy(ARTIFACT / "model.joblib", SITE / "model.joblib")

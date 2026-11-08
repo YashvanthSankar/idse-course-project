@@ -1,6 +1,6 @@
 # Jeeva: pipeline project status and what's left
 
-The pipeline project is **TAREEKH: how long do Indian district-court cases take?**
+The pipeline project: **how long do Indian district-court cases take?**
 - Findings and results: [`pipeline/REPORT.md`](pipeline/REPORT.md) (the write-up, stage by stage).
 - How to run everything, the raw facts and every decision: [`pipeline/README.md`](pipeline/README.md).
 - Why this topic and the rules: [`IDEA.md`](IDEA.md).
@@ -27,6 +27,8 @@ table; numbers in docs come from the generated reports, never from memory.
       **What the data shows** (five stories), **How it works** (plain summary + folded technical
       section). Served by the game backend at `/api/model/*`. Tests: 132 pipeline, 9 API (in 400
       backend), 3 e2e for /model.
+- [x] Linear regression on days to disposal (`scripts/regress_days.py`), added 2026-11-08: it
+      was listed here as done before it existed.
 - [x] Write-up: `pipeline/REPORT.md`.
 
 ## Left

@@ -1,5 +1,6 @@
-import { About } from "@/components/model/About";
+import { redirect } from "next/navigation";
 
+/** The method now lives on the pipeline page. */
 export default function ModelAboutPage() {
-  return <About />;
+  redirect("/model/pipeline");
 }

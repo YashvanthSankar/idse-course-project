@@ -10,6 +10,6 @@ export function TreeScene() {
     update(); media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
-  return <div className="tree-scene"><ElementsCollection variant="generative-tree" speed={reduced ? 0 : 1.6} size={1} particleAmount={1} style={{position: "absolute", inset: 0}} /><span className="tree-caption" aria-hidden="true">A LIVING NETWORK · MOVE TO INTERACT</span></div>;
+  return <div className="tree-scene"><ElementsCollection variant="generative-tree" speed={reduced ? 0 : 1.6} size={1} particleAmount={1} style={{position: "absolute", inset: 0}} /></div>;
 }
 

@@ -1,6 +1,6 @@
-# Pipeline: TAREEKH — how long do Indian court cases take?
+# Pipeline: how long do Indian court cases take?
 
-*"Tareekh pe tareekh"* (date after date). The IDSE (CS3006) end-to-end project: real Indian
+The IDSE (CS3006) end-to-end project: real Indian
 district-court records → cleaning → EDA → a model of how long cases take → `/model` on the site.
 
 - **The write-up (findings, results, limitations):** [`REPORT.md`](REPORT.md).
@@ -14,7 +14,7 @@ district-court records → cleaning → EDA → a model of how long cases take �
 ```bash
 cd pipeline
 uv sync                      # Python 3.12; scikit-learn pinned to the game backend's 1.9.1
-uv run pytest                # 131 tests
+uv run pytest                # 132 tests
 # 1. download (Dropbox streams the whole folder; each fetch stops once it has what it asked for)
 uv run python scripts/fetch_ddl.py --want 'license.txt' --want 'csv/keys/*' --want 'csv/cases/*' --max-saves 3   # ~10 min
 uv run python scripts/fetch_ddl.py --want 'csv/acts_sections*' --max-saves 1                                    # ~25 min
@@ -28,8 +28,10 @@ uv run python scripts/label_cases.py --state 10
 uv run python scripts/train_within_1y.py
 uv run python scripts/analyse.py
 uv run python scripts/experiments.py
+uv run python scripts/regress_days.py
 # 5. notebooks (read the cleaned data and the reports)
 uv run jupyter nbconvert --to notebook --execute --inplace notebooks/*.ipynb
+uv run python scripts/export_notebook.py   # the executed master notebook → the /model/pipeline page
 # 6. the site package → artifacts/site/ and game/backend/auditor/tareekh/data/
 uv run python scripts/export_site.py
 ```
@@ -66,8 +68,8 @@ pipeline/
 │   ├── clusters.py          k-means on district profiles, k by silhouette
 │   ├── glossary.py          plain-English names for case types and sections
 │   └── plotstyle.py         one look for every chart
-├── notebooks/               01_audit · 02_eda · 03_survival_and_clusters · 04_model (executed)
-├── tests/                   131 tests; cleaning tests use real strings from the data
+├── notebooks/               00_full_pipeline (the master notebook) · 01_audit · 02_eda · 03_survival_and_clusters · 04_model
+├── tests/                   132 tests; cleaning tests use real strings from the data
 ├── artifacts/within_1y/     the served model (6 kB) + metadata
 ├── artifacts/site/          what /model loads (also copied into the game backend)
 └── reports/                 generated: within_1y.md, analysis.md, experiments.md, figures/
@@ -171,7 +173,7 @@ Of 3,640,055 cases: 23,497 decided before filing, 1,554 bail orders and 41 impos
 dates are unusable (an earlier run without the state fallback also marked 89,880 as "filed after
 the cutoff" because one district's dip gave it a 2012 cutoff); outcome groups: decided 33%, pending /
 no disposition 26%, dismissed 19%, **moved 14%**, disposed (manner unknown) 5%, settled 3%.
-A first version of the one-year label was biased: 2018 filings came out 92.6% "within a year"
+A first version of the one-year label was biased: 2018 filings came out about 93% "within a year"
 because only fast cases could be known. Fixed by requiring full follow-up (filed ≥1 year before
 the cutoff). Eligible: 405k (2015), 446k (2016), 549k (2017) cases; 36%, 44%, 50% within a year.
 
@@ -193,7 +195,7 @@ types), and courts got faster each year, so 2017 is slightly under-predicted.
 - `scripts/export_site.py` writes `artifacts/site/` and copies it to
   `game/backend/auditor/tareekh/data/`, which `game/backend/auditor/tareekh/routes.py` serves at
   `/api/model/options | predict | sample | analytics`.
-- Pages: `game/web/app/model/` (check a case, what the data shows, how it works), components in
+- Pages: `game/web/app/model/` (home, explore = test the model, pipeline, analytics), components in
   `game/web/components/model/`. A separate plain light site; the game's effects are off there.
 - After retraining: rerun `export_site.py`, run the backend tests (`test_tareekh_api.py` checks
   the site scores a case exactly as the pipeline does), then deploy backend first, then the web.

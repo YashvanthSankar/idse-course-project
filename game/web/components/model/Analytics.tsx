@@ -48,7 +48,7 @@ function Stories({ a }: { a: Data }) {
   return (
     <div className="space-y-8">
       <section className="story-hero">
-        <p className="model-eyebrow">02 / EXPLORE THE DATA</p>
+        <p className="model-eyebrow">DATA ANALYSIS</p>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">What 81 million court cases show</h1>
         <p className="mt-2 max-w-2xl text-lg text-[var(--m-ink-2)]">
           Every case filed in India&apos;s district courts from 2010 to 2018, and 3.6 million of them from Tamil Nadu looked at closely.
@@ -131,7 +131,7 @@ function Stories({ a }: { a: Data }) {
           year correctly about <b className="text-[var(--m-ink)]">{outOf10(served.accuracy)} times in 10</b>. Its weak spot: it knows which <i>kinds</i> of case are
           quick, but between two cases of the same kind it can&apos;t tell well which will finish first.
         </p>
-        <Link href="/model/about" className="mt-3 inline-block font-medium text-[var(--m-s1)] underline">
+        <Link href="/model/pipeline" className="mt-3 inline-block font-medium text-[var(--m-s1)] underline">
           How it was built and tested →
         </Link>
       </section>

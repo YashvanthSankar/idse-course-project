@@ -50,6 +50,16 @@ def test_predict_returns_a_probability_with_effects_and_context(client):
     assert body["court_found"] and body["court"]["pending"] > 0
     assert len(body["effects"]) == 12 and all(math.isfinite(e["effect"]) for e in body["effects"])
     assert body["kind"]["topic"] == "cheque" and body["kind"]["timing"]["still_open"]["12"] > 0.5
+    used = {u["input"]: u for u in body["used_inputs"]}
+    assert len(used) == 12 and used["district"] == {
+        "input": "district", "label": "District", "value": "Chennai", "source": "you"}
+    assert used["filing_month"]["value"] == "June" and used["law_section"]["value"] == "138"
+    assert used["log_pending_at_filing"]["source"] == "data"
+    info = body["model_info"]
+    assert info["name"] == "Logistic regression" and info["train_cases"] == 850_701
+    c = info["confusion"]
+    assert c["tp"] + c["fp"] + c["fn"] + c["tn"] == info["test_cases"] == 549_273
+    assert c["accuracy"] == pytest.approx(info["metrics"]["accuracy"], abs=1e-9)
     assert body["still_open"]["months"]["12"] > 0
 
 

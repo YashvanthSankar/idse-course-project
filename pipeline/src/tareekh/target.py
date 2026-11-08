@@ -20,7 +20,7 @@ Rules (each is a decision we defend):
 5. "Ended within H days?" is only defined for cases **filed at least H days before their
    court's cutoff**: every one of them had the full H days to end. Without that rule, recent
    filings that ended fast are labelled 1 while their slow neighbours are still unknown, and
-   the label is biased towards "fast" (measured: 92.6% "within a year" for 2018 filings).
+   the label is biased towards "fast" (measured: about 93% "within a year" for 2018 filings).
    Among eligible cases it is 1 if the case ended by day H, 0 if it was still open after H days,
    and unknown only if it moved to another court before day H.
 """

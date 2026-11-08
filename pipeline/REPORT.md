@@ -1,17 +1,17 @@
-# TAREEKH: how long do Indian district-court cases take?
+# How long do Indian district-court cases take?
 
 **IDSE (CS3006) end-to-end data science project** · data: Development Data Lab's judicial data
 (eCourts, 2010–2018, ODbL v1.0) · live at `otlr.vercel.app/model` · code: `pipeline/`
 
 Every number below was produced by the code in this folder; the generated reports
-(`reports/analysis.md`, `reports/within_1y.md`, `reports/experiments.md`) and the four
-notebooks hold the full tables and charts (`reports/figures/`).
+(`reports/analysis.md`, `reports/within_1y.md`, `reports/experiments.md`) and the five
+notebooks (start with `notebooks/00_full_pipeline.ipynb`) hold the full tables and charts (`reports/figures/`).
 
 ---
 
 ## 1. Problem
 
-India's district courts are known for delay (*"tareekh pe tareekh"*: date after date). We ask a
+India's district courts are known for delay. We ask a
 question a litigant, journalist or student could use:
 
 > **Given what is known on the day a case is filed in a Tamil Nadu district court, how likely
@@ -52,7 +52,7 @@ and it forces the hard parts of data science (censoring, leakage, drift) into th
 | 52 disposition categories | mix endings, transfers, bail orders, missing | each given a deliberate group; **transfers, committals, remands, Lok Adalat referrals = "moved"** (censored, not ended) (`outcomes.py`) |
 | Two outcome fields disagree | cases with a decision date but "disposition missing", and the reverse | the decision date decides whether a case ended |
 
-Every rule has tests using real strings from the data (131 pipeline tests).
+Every rule has tests using real strings from the data (132 pipeline tests).
 
 ### The two findings that decide everything else
 
@@ -75,7 +75,7 @@ they were. **We model 2015–2017 filings only.**
 - Each case gets `observed_days` (to its end, its transfer, or the cutoff) and `ended`.
 - "Disposed of within 365 days?" is defined only for cases filed at least a year before their
   court's cutoff, so every labelled case had the full year. A first version labelled recent cases
-  that ended fast while their slow neighbours were unknown: 2018 filings came out 92.6% "within a
+  that ended fast while their slow neighbours were unknown: 2018 filings came out about 93% "within a
   year". The fix is the eligibility rule; transfers before a year stay unlabelled.
 - Eligible: 405,062 (2015), 445,639 (2016), 549,273 (2017) cases; 36%, 44% and 49% disposed of
   within a year.
@@ -129,6 +129,9 @@ loss: **logistic regression with the law inputs** (6 kB).
 | linear SVM + law and section | 0.873 | 0.137 | 0.429 |
 | random forest + law and section | 0.874 | 0.138 | 0.428 |
 
+- **Confusion matrix (2017, threshold 50%):** 192,541 correctly predicted over within a year,
+  251,578 correctly predicted not; 25,937 predicted over but weren't, 79,217 predicted not but
+  were. Precision 88.1%, recall 70.9%, accuracy 80.9%. The model errs towards "not within a year".
 - **Calibration:** a predicted 55% happens 56% of the time, 85% → 87%, 97% → 98%
   (`model_calibration.png`).
 - **What it relies on** (permutation importance): case type 0.31, law + section 0.10, law 0.06;
@@ -141,6 +144,10 @@ loss: **logistic regression with the law inputs** (6 kB).
 - **Weakness:** *within* one case type the model ranks poorly (AUC 0.49–0.62 for rent, domestic
   violence, maintenance, execution, marriage and original suits). It mostly knows which *kinds* of
   case are quick.
+- **Linear regression on days** (exploratory, because it needs finished cases: among cases
+  disposed of within 730 days; train on 2015 filings, test on 2016): R² on log days 0.669 vs
+  0.611 for the median per case type, median error 42.5 vs 51 days, but mean error 116 vs 109 days,
+  so it is better on typical cases and slightly worse on the long tail.
 - **Lessons from things that didn't work:** a random forest allowed every input at every split
   learned 2015's exact congestion levels and did worse on 2016 (AUC 0.79); without the law inputs
   the models barely beat a lookup table.
@@ -153,12 +160,11 @@ loss: **logistic regression with the law inputs** (6 kB).
 - The game's FastAPI backend serves `/api/model/options | predict | sample | analytics`
   (`game/backend/auditor/tareekh/`); 9 API tests, including one that checks the site scores a test
   case exactly as the pipeline does and one that checks the explanations add up to the model's log-odds.
-- The Next.js site serves `/model` in plain language: pick one of 13 everyday topics (cheque
-  bounce, road accident compensation, divorce…) and a district, and read "usually takes about …",
-  "N in 10 are over within a year", milestones, plain reasons, a district comparison and the
-  model's guess on real 2017 cases. `/model/analytics` tells five stories from the data;
-  `/model/about` explains the method, with the technical charts folded away. It is a separate
-  plain site from the game; e2e tests cover it.
+- The Next.js site serves `/model` (what was built), `/model/explore` (choose options, press
+  **Analyze**, read the prediction, each input's effect, the exact inputs sent, and the model's
+  identity and test results), `/model/pipeline` (every step of both pipelines) and
+  `/model/analytics` (what the data shows). Model calls go through the site's own domain, so a
+  visitor only needs to reach Vercel.
 
 ## Limitations
 

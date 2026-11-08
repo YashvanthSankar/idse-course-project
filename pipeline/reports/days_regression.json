@@ -1,0 +1,18 @@
+{
+  "question": "Days to disposal, among cases disposed of within 730 days",
+  "train_filing_year": 2015,
+  "test_filing_year": 2016,
+  "train_cases": 201585,
+  "linear_regression": {
+    "n": 251097,
+    "mae_days": 116.3456464294179,
+    "median_error_days": 42.501981680571774,
+    "r2_log_days": 0.6689191586878926
+  },
+  "baseline_median_per_case_type": {
+    "n": 251097,
+    "mae_days": 108.64061099893667,
+    "median_error_days": 51.0,
+    "r2_log_days": 0.6108959908291978
+  }
+}

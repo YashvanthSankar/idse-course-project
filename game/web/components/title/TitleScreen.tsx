@@ -186,7 +186,7 @@ export function TitleScreen() {
           {/* the course pipeline project: a separate, plain site on the same domain */}
           <Link
             href="/model"
-            title="TAREEKH: a model of how long Indian court cases take, from 81 million real records"
+            title="A model of how long Indian court cases take, from 81 million real records"
             className="flex h-11 items-center rounded border-2 border-paper/30 px-3 text-paper/85 hover:border-[#4cc9f0] hover:text-[#4cc9f0]"
           >
             REAL DATA: COURT CASES →

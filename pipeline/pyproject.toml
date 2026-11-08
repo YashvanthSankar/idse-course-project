@@ -1,7 +1,7 @@
 [project]
 name = "tareekh"
 version = "0.1.0"
-description = "TAREEKH: how long Indian district-court cases take. The IDSE course pipeline project"
+description = "How long Indian district-court cases take. The IDSE course pipeline project"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "matplotlib>=3.11.2",

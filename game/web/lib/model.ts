@@ -1,5 +1,5 @@
-/** Client for /api/model: TAREEKH, the course pipeline project's court-case model. */
-import { API_URL, ApiError } from "./api";
+/** Client for /api/model: the course pipeline project's court-case model. */
+import { ApiError } from "./api";
 
 export type Timing = { cases: number; median_days: number | null; still_open: Record<string, number> };
 
@@ -28,6 +28,25 @@ export type Topic = {
   within_1y: number;
 };
 
+export type Confusion = { tp: number; fp: number; fn: number; tn: number; precision: number; recall: number; accuracy: number };
+
+export type ModelInfo = {
+  name: string;
+  library: string;
+  target: string;
+  n_inputs: number;
+  train_cases: number;
+  train_years: number[];
+  test_cases: number;
+  test_year: number;
+  metrics: { n: number; auc: number; brier: number; log_loss: number; accuracy: number; f1: number };
+  confusion: Confusion;
+  file_bytes: number;
+  base_rate: number;
+};
+
+export type UsedInput = { input: string; label: string; value: string; source: "you" | "case" | "data" };
+
 export type Options = {
   question: string;
   model: string;
@@ -37,6 +56,7 @@ export type Options = {
   kinds: Kind[];
   kinds_cover_2017: number;
   test: { n: number; auc: number; accuracy: number };
+  model_info: ModelInfo;
   notice: string;
   credit: string;
 };
@@ -52,6 +72,8 @@ export type Prediction = {
   court_found: boolean;
   court: { pending: number; disposed_last_year: number; cutoff: string } | null;
   similar_filings_found: boolean;
+  used_inputs: UsedInput[];
+  model_info: ModelInfo;
   still_open: { label: string; months: Record<string, number>; median_days: number | null } | null;
   notice: string;
 };
@@ -106,6 +128,15 @@ export type Analytics = {
     calibration: { predicted: string; cases: number; mean_predicted: number; observed: number }[];
     importance: Record<string, { mean: number; std: number }>;
     served: string;
+    info: ModelInfo;
+    days_regression: {
+      question: string;
+      train_filing_year: number;
+      test_filing_year: number;
+      train_cases: number;
+      linear_regression: { n: number; mae_days: number; median_error_days: number; r2_log_days: number };
+      baseline_median_per_case_type: { n: number; mae_days: number; median_error_days: number; r2_log_days: number };
+    };
   };
   experiments: {
     horizons: Record<string, { train: number[]; test: number; model: Metric; "baseline: rate per case type": Metric }>;
@@ -115,7 +146,7 @@ export type Analytics = {
 };
 
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}/api/model${path}`, {
+  const res = await fetch(`/model-api${path}`, {
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
   });
@@ -139,7 +170,7 @@ export const predict = (district: string, kind: string, filing_month: number) =>
   call<Prediction>("/predict", { method: "POST", body: JSON.stringify({ district, kind, filing_month }) });
 
 export const pct = (x: number, digits = 0) => `${(x * 100).toFixed(digits)}%`;
-export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+export const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 /** "1 year 4 months" for a day count. */
 export function duration(days: number): string {
