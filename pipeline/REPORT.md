@@ -68,7 +68,7 @@ section A2 lists every column with its share of missing values and how the proje
 | 52 disposition categories | mix endings, transfers, bail orders, missing | each given a deliberate group; **transfers, committals, remands, Lok Adalat referrals = "moved"** (censored, not ended) (`outcomes.py`) |
 | Two outcome fields disagree | cases with a decision date but "disposition missing", and the reverse | the decision date decides whether a case ended |
 
-Every rule has tests using real strings from the data (138 pipeline tests).
+Every rule has tests using real strings from the data (142 pipeline tests).
 
 ### The two findings that decide everything else
 
@@ -194,6 +194,29 @@ cases counted as over within a year ended on the day they were filed.
 - **Lessons from things that didn't work:** a random forest allowed every input at every split
   learned 2015's exact congestion levels and did worse on 2016 (AUC 0.79); without the law inputs
   the models barely beat a lookup table.
+
+### How disputes end: settled or dismissed (`scripts/analyse_settlement.py`, notebook B14)
+
+A second question on the same table, for a legal-aid office deciding which cases to steer to mediation:
+within two years of filing, does a real dispute end by settlement (compromise, Lok Adalat, withdrawn,
+compounded) or get dismissed without a ruling? Every case is watched for the full two years. Logistic
+regression on case type, district, court level and law, trained on 2015 filings and tested on
+2016 (293,110 disputes).
+
+| | dismissed | settled |
+|---|---|---|
+| share that end this way | 16.3% | 3.4% |
+| always guessing, accuracy | 83.7% | 96.6% |
+| model, accuracy | 85.0% | 96.6% |
+| lookup by case type, AUC | 0.765 | 0.578 |
+| lookup by case type and law, AUC | 0.767 | 0.690 |
+| model, AUC | 0.788 | 0.749 |
+
+Dismissal is mostly the kind of case. Settlement is rare but can be ranked: inside magistrate trials,
+9.9% of cheque-bounce cases settle within two years against
+0.7% of Indian Penal Code cases. Scoring only the cases that had already
+ended would have claimed 74.5% against 62.7% for dismissal, which is
+not a fair test: on filing day nobody knows which cases those will be.
 
 ## 6. Deployment
 

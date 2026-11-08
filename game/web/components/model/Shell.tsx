@@ -11,26 +11,50 @@ const TABS = [
 ] as const;
 export const REPO = "https://github.com/YashvanthSankar/idse-course-project/tree/main/pipeline";
 
+/** A buff case file tied with red tape. */
+function FileMark() {
+  return (
+    <svg width="24" height="20" viewBox="0 0 24 20" aria-hidden>
+      <rect width="24" height="20" rx="2" fill="#e0c894" />
+      <rect x="15" width="3" height="20" fill="#a8322a" />
+      <rect y="8.5" width="24" height="3" fill="#a8322a" />
+    </svg>
+  );
+}
+
 export function ModelShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   return (
-    <div data-site="model" className="min-h-dvh">
-      <header className="model-header">
-        <div className="model-header-inner">
-          <Link href="/model" className="model-brand"><span>Court Case Duration Model<small>IDSE COURSE PROJECT</small></span></Link>
-          <nav aria-label="Model pages" className="model-nav">
+    <div data-site="model">
+      <header className="m-top">
+        <div className="m-wrap m-top-inner">
+          <Link href="/model" className="m-brand">
+            <FileMark />
+            Court Case Duration Model
+          </Link>
+          <nav aria-label="Model pages" className="m-nav">
             {TABS.map((t) => {
               const active = t.href === "/model" ? path === "/model" : path?.startsWith(t.href);
-              return <Link key={t.href} href={t.href} aria-current={active ? "page" : undefined}>{t.label}</Link>;
+              return (
+                <Link key={t.href} href={t.href} aria-current={active ? "page" : undefined}>
+                  {t.label}
+                </Link>
+              );
             })}
           </nav>
-          <a className="model-code-link" href={REPO} target="_blank" rel="noreferrer">View project <span aria-hidden>↗</span></a>
+          <a className="m-code" href={REPO} target="_blank" rel="noreferrer">
+            Code on GitHub
+          </a>
         </div>
       </header>
-      <main className="model-main mx-auto max-w-6xl px-5 sm:px-8">{children}</main>
-      <footer className="model-footer mx-auto max-w-6xl px-5 sm:px-8">
-        <div><strong>Court Case Duration Model</strong><p>An IDSE course project: data analysis and machine learning on real court records.</p></div>
-        <p>Contains data from Development Data Lab&apos;s judicial data, ODbL v1.0.<br />A historical estimate, not legal advice. · <a href={REPO} target="_blank" rel="noreferrer">Code and method ↗</a> · <Link href="/">OUTLIER game ↗</Link></p>
+      <main>{children}</main>
+      <footer className="m-foot">
+        <div className="m-wrap">
+          <p>
+            IDSE course project (CS3006, IIITDM). Contains data from Development Data Lab&apos;s judicial data, ODbL v1.0. A historical estimate, not legal advice. Photograph: Madras High Court by Yercaud-elango, CC BY 4.0, via Wikimedia Commons.{" "}
+            <Link href="/">OUTLIER game</Link>
+          </p>
+        </div>
       </footer>
     </div>
   );

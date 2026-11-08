@@ -1,0 +1,174 @@
+{
+ "horizon_days": 730,
+ "train_year": 2015,
+ "test_year": 2016,
+ "features": [
+  "case_type",
+  "district",
+  "court",
+  "law"
+ ],
+ "targets": {
+  "dismissed": {
+   "n_train": 302586,
+   "n_test": 293110,
+   "base_rate": 0.16277847906929138,
+   "always_guessing_accuracy": 0.8372215209307086,
+   "lookup_case_type": {
+    "auc": 0.7648945571519157,
+    "accuracy": 0.8396028794650473,
+    "top_decile_precision": 0.5069427859847838
+   },
+   "lookup_case_type_and_law": {
+    "auc": 0.7669568530179602,
+    "accuracy": 0.8414690730442496,
+    "top_decile_precision": 0.516700214936372
+   },
+   "logistic_regression": {
+    "auc": 0.7875991909642791,
+    "accuracy": 0.8496503019344274,
+    "top_decile_precision": 0.5334516051994131
+   }
+  },
+  "settled": {
+   "n_train": 302586,
+   "n_test": 293110,
+   "base_rate": 0.03413394288833544,
+   "always_guessing_accuracy": 0.9658660571116645,
+   "lookup_case_type": {
+    "auc": 0.5775005455715122,
+    "accuracy": 0.9658660571116645,
+    "top_decile_precision": 0.044488417317730546
+   },
+   "lookup_case_type_and_law": {
+    "auc": 0.6898602836481126,
+    "accuracy": 0.9658660571116645,
+    "top_decile_precision": 0.057794002251714376
+   },
+   "logistic_regression": {
+    "auc": 0.7493842093629719,
+    "accuracy": 0.9658660571116645,
+    "top_decile_precision": 0.08778274367984716
+   }
+  }
+ },
+ "within_case_type": {
+  "cc": {
+   "name": "Calendar case (criminal trial before a magistrate)",
+   "n": 81557,
+   "dismissed": {
+    "base_rate": 0.030518533050504556,
+    "auc": 0.6005103387774117
+   },
+   "settled": {
+    "base_rate": 0.036060669225204456,
+    "auc": 0.8317005756887594
+   }
+  },
+  "mcop": {
+   "name": "Motor accident claim",
+   "n": 40784,
+   "dismissed": {
+    "base_rate": 0.12276873283640644,
+    "auc": 0.672624898638845
+   },
+   "settled": {
+    "base_rate": 0.030207924676343666,
+    "auc": 0.8279127301261137
+   }
+  },
+  "os": {
+   "name": "Original suit (civil)",
+   "n": 74832,
+   "dismissed": {
+    "base_rate": 0.14015394483643362,
+    "auc": 0.5871707636741417
+   },
+   "settled": {
+    "base_rate": 0.04754650416933932,
+    "auc": 0.6558211753821555
+   }
+  }
+ },
+ "finished_cases_only_dismissed": {
+  "always_guessing_accuracy": 0.6272563235265585,
+  "auc": 0.79109129908053,
+  "accuracy": 0.7448858822540276,
+  "top_decile_precision": 0.9259474841547018
+ },
+ "by_case_type": [
+  {
+   "case_type": "os",
+   "name": "Original suit (civil)",
+   "cases": 162085,
+   "dismissed": 0.1378289169263041,
+   "settled": 0.04427306660085757
+  },
+  {
+   "case_type": "cc",
+   "name": "Calendar case (criminal trial before a magistrate)",
+   "cases": 151136,
+   "dismissed": 0.02909961888630108,
+   "settled": 0.02424306584797798
+  },
+  {
+   "case_type": "mcop",
+   "name": "Motor accident claim",
+   "cases": 86845,
+   "dismissed": 0.12090506074039956,
+   "settled": 0.028890552133110713
+  },
+  {
+   "case_type": "ep",
+   "name": "Execution petition (enforcing a decree)",
+   "cases": 62163,
+   "dismissed": 0.5110274600646687,
+   "settled": 0.02265012949825459
+  },
+  {
+   "case_type": "hmop",
+   "name": "Hindu marriage petition",
+   "cases": 23908,
+   "dismissed": 0.24347498745189894,
+   "settled": 0.01397021917349841
+  },
+  {
+   "case_type": "op",
+   "name": "Original petition",
+   "cases": 20246,
+   "dismissed": 0.245974513484145,
+   "settled": 0.02958609107971945
+  },
+  {
+   "case_type": "sc",
+   "name": "Sessions case (serious criminal trial)",
+   "cases": 16128,
+   "dismissed": 0.06336805555555555,
+   "settled": 0.0030381944444444445
+  },
+  {
+   "case_type": "as",
+   "name": "Appeal suit (civil appeal)",
+   "cases": 11767,
+   "dismissed": 0.17064672388884167,
+   "settled": 0.007648508540834537
+  }
+ ],
+ "criminal_calendar_by_law": [
+  {
+   "law": "Indian Penal Code",
+   "cases": 96529,
+   "settled": 0.007117032187218349
+  },
+  {
+   "law": "Negotiable Instruments Act",
+   "cases": 22179,
+   "settled": 0.0993281933360386
+  },
+  {
+   "law": "Code of Criminal Procedure",
+   "cases": 14679,
+   "settled": 0.02902105048027795
+  }
+ ]
+}

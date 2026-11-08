@@ -14,7 +14,7 @@ district-court records → cleaning → EDA → a model of how long cases take �
 ```bash
 cd pipeline
 uv sync                      # Python 3.12; scikit-learn pinned to the game backend's 1.9.1
-uv run pytest                # 138 tests
+uv run pytest                # 142 tests
 # 1. download (Dropbox streams the whole folder; each fetch stops once it has what it asked for)
 uv run python scripts/fetch_ddl.py --want 'license.txt' --want 'csv/keys/*' --want 'csv/cases/*' --max-saves 3   # ~10 min
 uv run python scripts/fetch_ddl.py --want 'csv/acts_sections*' --max-saves 1                                    # ~25 min
@@ -30,6 +30,7 @@ uv run python scripts/analyse.py
 uv run python scripts/experiments.py
 uv run python scripts/regress_days.py
 uv run python scripts/analyse_difficulty.py   # easy vs real disputes, hearing stages, dataset card
+uv run python scripts/analyse_settlement.py   # how disputes end: settled or dismissed
 # 5. notebooks (read the cleaned data and the reports)
 uv run jupyter nbconvert --to notebook --execute --inplace notebooks/*.ipynb
 uv run python scripts/export_notebook.py   # the executed master notebook → the /model/pipeline page
@@ -71,7 +72,7 @@ pipeline/
 │   ├── glossary.py          plain-English names for case types and sections
 │   └── plotstyle.py         one look for every chart
 ├── notebooks/               00_full_pipeline (the master notebook) · 01_audit · 02_eda · 03_survival_and_clusters · 04_model
-├── tests/                   138 tests; cleaning tests use real strings from the data
+├── tests/                   142 tests; cleaning tests use real strings from the data
 ├── artifacts/within_1y/     the served model (6 kB) + metadata
 ├── artifacts/site/          what /model loads (also copied into the game backend)
 └── reports/                 generated: within_1y.md, analysis.md, experiments.md, figures/

@@ -195,6 +195,11 @@ def main() -> int:
     res["difficulty"] = {"all": hard["difficulty"]["all"], "easy": hard["difficulty"]["easy"],
                          "contested": hard["difficulty"]["contested"],
                          "contested_only_models": hard["contested_only_models"]}
+    res["stages"] = hard["stages"]["contested"]
+    res["settlement"] = json.loads((REPORTS / "settlement.json").read_text())
+    topics = sorted(json.loads((SITE / "analytics.json").read_text())["topics"], key=lambda t: t["within_1y"])
+    res["topic_extremes"] = {"slowest": {k: topics[0][k] for k in ("title", "within_1y")},
+                             "fastest": {k: topics[-1][k] for k in ("title", "within_1y")}}
     (OUT / "results.json").write_text(json.dumps(res, ensure_ascii=False))
     shutil.copy(NOTEBOOK, OUT / NOTEBOOK.name)
     n_stages = sum(len(p["stages"]) for p in doc["parts"])

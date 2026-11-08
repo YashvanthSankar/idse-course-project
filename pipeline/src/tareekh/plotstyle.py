@@ -1,20 +1,20 @@
 """One look for every notebook chart (matplotlib).
 
 Colours come from a validated categorical palette, used in fixed order (never cycled), and a
-single blue ramp for magnitude. Text stays in ink colours, never the series colour; grids and
+single tape-red ramp for magnitude. Text stays in ink colours, never the series colour; grids and
 axes recede; one y-axis per chart.
 """
 
 import matplotlib as mpl
 
-SURFACE = "#fcfcfb"
-INK = "#0b0b0b"
-INK_2 = "#52514e"
-GRID = "#e4e3df"
-SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6",
-          "#e34948"]
-BLUE_RAMP = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"]
-NEUTRAL = "#b9b8b2"
+SURFACE = "#ffffff"
+INK = "#17140f"
+INK_2 = "#4b473f"
+GRID = "#e2ded5"
+SERIES = ["#a8322a", "#17140f", "#a0772a", "#48697a", "#9a958a", "#6a655a", "#c4905a",
+          "#7a3b66"]
+RAMP = ["#f3ddd0", "#e8bcae", "#d9968a", "#c66f64", "#a8322a", "#84261f", "#5e1a15"]
+NEUTRAL = "#b9b3a6"
 
 
 def apply() -> None:
