@@ -160,7 +160,7 @@ export function LineChart({
   interactive?: boolean;
 }) {
   const id = useId();
-  const W = width, H = height, L = 52, R = 12, T = 10, B = 28;
+  const W = width, H = height, L = 52, R = 30, T = 10, B = 28;
   const xs = useMemo(() => Array.from(new Set(series.flatMap((s) => s.points.map((p) => p[0])))).sort((a, b) => a - b), [series]);
   const [x0, x1] = [xs[0] ?? 0, xs[xs.length - 1] ?? 1];
   const ticks = yMax ? [0, 0.25, 0.5, 0.75, 1].map((f) => f * yMax) : niceTicks(Math.max(...series.flatMap((s) => s.points.map((p) => p[1]))));

@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 
 test("test the model: choose options, press Analyze, read the full result", async ({ page }) => {
   await page.goto("/model");
-  await expect(page.getByRole("heading", { name: "Predicting how long court cases take" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Which court cases get stuck, and can you tell on day one?" })).toBeVisible();
   await expect(page.getByText("Logistic regression", { exact: true })).toBeVisible();
   await page.getByRole("link", { name: /^Test the model/ }).first().click();
   await expect(page).toHaveURL(/\/model\/explore$/);
@@ -28,6 +28,7 @@ test("test the model: choose options, press Analyze, read the full result", asyn
   await expect(page.getByTestId("model-reasons").locator("li")).toHaveCount(6);
   await expect(page.getByTestId("model-inputs").locator("tbody tr")).toHaveCount(12);
   await expect(page.getByTestId("model-inputs")).toContainText("March");
+  await expect(page.getByTestId("model-trust")).toContainText("Always guessing the commonest answer");
   await expect(answer).toContainText("Logistic regression");
   await expect(answer).toContainText("8,50,701");
 
@@ -62,13 +63,13 @@ test("what the data shows, and how it works", async ({ page }) => {
     await expect(figure.getByRole("button", { name: "Show compact chart" })).toHaveAttribute("aria-expanded", "true");
     await figure.getByRole("button", { name: "Show compact chart" }).click();
   }
-  const districtChart = page.locator("figure").filter({ hasText: "3. Where the case is filed matters too" });
+  const districtChart = page.locator("figure").filter({ hasText: "5. Where the case is filed matters too" });
   await districtChart.getByRole("button", { name: /Chennai/ }).click();
   await expect(districtChart.getByText("SELECTED DISTRICT")).toBeVisible();
   await expect(districtChart.locator(".chart-insight").getByText(/over within a year.*cases/)).toBeVisible();
   await districtChart.getByRole("button", { name: /Sort:/ }).click();
   await expect(districtChart.getByRole("button", { name: /lowest first/ })).toBeVisible();
-  const stateChart = page.locator("figure").filter({ hasText: "4. Across India" });
+  const stateChart = page.locator("figure").filter({ hasText: "6. Across India" });
   await stateChart.getByRole("button", { name: /Bihar/ }).click();
   await expect(stateChart.getByText("SELECTED STATE")).toBeVisible();
   await expect(stateChart.getByText(/2010 filings still open/)).toBeVisible();

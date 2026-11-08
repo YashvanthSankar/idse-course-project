@@ -30,6 +30,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from tareekh.courts import court_level
 from tareekh.glossary import (
     CASE_TYPES,
+    PURPOSE_PLAIN,
     TOPIC_NOUN,
     TOPICS,
     case_type_name,
@@ -253,7 +254,24 @@ def main() -> int:
         "file_bytes": metadata["model_bytes"],
         "base_rate": float(test["within_1y"].mean()),
     }
+    difficulty = json.loads((REPORT / "difficulty.json").read_text())
+    table = difficulty["difficulty"]
+    model_info["trust"] = {
+        "easy": table["easy"], "contested": table["contested"],
+        "by_type": {r["case_type"]: r for r in table["by_type"]},
+    }
     inputs["model_info"] = model_info
+    analytics["difficulty"] = {
+        "table": table,
+        "contested_only_models": difficulty["contested_only_models"],
+        "stages": difficulty["stages"],
+        "stuck_at": {
+            "cases_open": difficulty["stuck_at"]["cases_open"],
+            "top": [{**s, "stage": PURPOSE_PLAIN.get(s["purpose"], s["purpose"])}
+                    for s in difficulty["stuck_at"]["top"]],
+        },
+        "dataset_card": difficulty["dataset_card"],
+    }
     analytics["model"]["info"] = model_info
     analytics["model"]["days_regression"] = json.loads(
         (REPORT / "days_regression.json").read_text())

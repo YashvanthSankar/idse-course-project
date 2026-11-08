@@ -1,0 +1,488 @@
+{
+  "difficulty": {
+    "all": {
+      "n": 549273,
+      "share_yes": 0.4947594365643314,
+      "accuracy": 0.8085578573860357,
+      "majority_accuracy": 0.5052405634356686,
+      "auc": 0.873490921928626
+    },
+    "easy": {
+      "n": 196105,
+      "share_yes": 0.8808699421228423,
+      "accuracy": 0.9263761760281481,
+      "majority_accuracy": 0.8808699421228423,
+      "auc": 0.9028892037456018
+    },
+    "contested": {
+      "n": 353168,
+      "share_yes": 0.28036232048203685,
+      "accuracy": 0.743136410999864,
+      "majority_accuracy": 0.7196376795179631,
+      "auc": 0.7060537839824867
+    },
+    "by_type": [
+      {
+        "case_type": "stc",
+        "n": 163915,
+        "share_yes": 0.8606228838117317,
+        "accuracy": 0.9150352316749535,
+        "majority_accuracy": 0.8606228838117317,
+        "auc": 0.8951883455449097,
+        "name": "Summary trial case (petty offences)"
+      },
+      {
+        "case_type": "cc",
+        "n": 97129,
+        "share_yes": 0.2347393672332671,
+        "accuracy": 0.7822483501322983,
+        "majority_accuracy": 0.7652606327667328,
+        "auc": 0.693977650160394,
+        "name": "Calendar case (criminal trial before a magistrate)"
+      },
+      {
+        "case_type": "os",
+        "n": 86542,
+        "share_yes": 0.31021931547687825,
+        "accuracy": 0.694495158420189,
+        "majority_accuracy": 0.6897806845231218,
+        "auc": 0.6189783168298999,
+        "name": "Original suit (civil)"
+      },
+      {
+        "case_type": "mcop",
+        "n": 53172,
+        "share_yes": 0.12965470548408936,
+        "accuracy": 0.8930075979839013,
+        "majority_accuracy": 0.8703452945159107,
+        "auc": 0.6873916806909036,
+        "name": "Motor accident claim"
+      },
+      {
+        "case_type": "ep",
+        "n": 35950,
+        "share_yes": 0.31671766342141866,
+        "accuracy": 0.6863977746870654,
+        "majority_accuracy": 0.6832823365785814,
+        "auc": 0.5813024823034931,
+        "name": "Execution petition (enforcing a decree)"
+      },
+      {
+        "case_type": "crlmp",
+        "n": 32190,
+        "share_yes": 0.9839701770736253,
+        "accuracy": 0.98412550481516,
+        "majority_accuracy": 0.9839701770736253,
+        "auc": 0.7543828283584757,
+        "name": "Criminal miscellaneous petition (bail and similar)"
+      },
+      {
+        "case_type": "hmop",
+        "n": 15768,
+        "share_yes": 0.5064053779807205,
+        "accuracy": 0.5658295281582952,
+        "majority_accuracy": 0.5064053779807205,
+        "auc": 0.5828685353842257,
+        "name": "Hindu marriage petition"
+      },
+      {
+        "case_type": "op",
+        "n": 11775,
+        "share_yes": 0.5810615711252654,
+        "accuracy": 0.6346496815286624,
+        "majority_accuracy": 0.5810615711252654,
+        "auc": 0.6650676208223222,
+        "name": "Original petition"
+      },
+      {
+        "case_type": "sc",
+        "n": 9220,
+        "share_yes": 0.2907809110629067,
+        "accuracy": 0.6818872017353579,
+        "majority_accuracy": 0.7092190889370933,
+        "auc": 0.591735473595748,
+        "name": "Sessions case (serious criminal trial)"
+      },
+      {
+        "case_type": "as",
+        "n": 8125,
+        "share_yes": 0.12381538461538462,
+        "accuracy": 0.8753230769230769,
+        "majority_accuracy": 0.8761846153846153,
+        "auc": 0.6562593116675701,
+        "name": "Appeal suit (civil appeal)"
+      },
+      {
+        "case_type": "mc",
+        "n": 4898,
+        "share_yes": 0.38444262964475295,
+        "accuracy": 0.6073907717435688,
+        "majority_accuracy": 0.615557370355247,
+        "auc": 0.5563440542023464,
+        "name": "Maintenance case"
+      },
+      {
+        "case_type": "crla",
+        "n": 4605,
+        "share_yes": 0.390228013029316,
+        "accuracy": 0.655157437567861,
+        "majority_accuracy": 0.609771986970684,
+        "auc": 0.661327560812814,
+        "name": "Criminal appeal"
+      },
+      {
+        "case_type": "prc",
+        "n": 3812,
+        "share_yes": 0.2725603357817419,
+        "accuracy": 0.6935991605456453,
+        "majority_accuracy": 0.7274396642182581,
+        "auc": 0.5575003635704807,
+        "name": "Preliminary register case (before committal to sessions)"
+      },
+      {
+        "case_type": "dvc",
+        "n": 3309,
+        "share_yes": 0.20701118162586885,
+        "accuracy": 0.7845270474463584,
+        "majority_accuracy": 0.7929888183741312,
+        "auc": 0.49692451486558664,
+        "name": "Domestic violence case"
+      },
+      {
+        "case_type": "rcop",
+        "n": 3216,
+        "share_yes": 0.33115671641791045,
+        "accuracy": 0.6675995024875622,
+        "majority_accuracy": 0.6688432835820896,
+        "auc": 0.49175817340116945,
+        "name": "Rent control petition"
+      }
+    ]
+  },
+  "contested_only_models": {
+    "logistic regression, trained on real disputes only": {
+      "auc": 0.7128916344627053,
+      "accuracy": 0.7465540479318624
+    },
+    "random forest, trained on real disputes only": {
+      "auc": 0.721516396754418,
+      "accuracy": 0.7432213564082816
+    }
+  },
+  "finished_within_a_year": {
+    "outcomes": {
+      "decided": 0.7033,
+      "dismissed": 0.1842,
+      "disposed": 0.0702,
+      "settled": 0.0422,
+      "missing": 0.0
+    },
+    "same_day_share_of_yes": 0.3416900330441054
+  },
+  "stages": {
+    "contested": {
+      "cases": 1071285,
+      "median_wait_first_hearing": 40.0,
+      "median_after_first_hearing": 808.0,
+      "median_gap_between_hearings": 44.0,
+      "gap_cases": 417296
+    },
+    "by_type": [
+      {
+        "case_type": "os",
+        "name": "Original suit (civil)",
+        "cases": 269002,
+        "median_wait_first_hearing": 36.0,
+        "median_after_first_hearing": 754.0,
+        "median_gap_between_hearings": 36.0
+      },
+      {
+        "case_type": "cc",
+        "name": "Calendar case (criminal trial before a magistrate)",
+        "cases": 261602,
+        "median_wait_first_hearing": 33.0,
+        "median_after_first_hearing": 1253.0,
+        "median_gap_between_hearings": 60.0
+      },
+      {
+        "case_type": "mcop",
+        "name": "Motor accident claim",
+        "cases": 195483,
+        "median_wait_first_hearing": 60.0,
+        "median_after_first_hearing": 1144.0,
+        "median_gap_between_hearings": 42.0
+      },
+      {
+        "case_type": "ep",
+        "name": "Execution petition (enforcing a decree)",
+        "cases": 103141,
+        "median_wait_first_hearing": 51.0,
+        "median_after_first_hearing": 526.0,
+        "median_gap_between_hearings": 41.0
+      },
+      {
+        "case_type": "hmop",
+        "name": "Hindu marriage petition",
+        "cases": 41702,
+        "median_wait_first_hearing": 49.0,
+        "median_after_first_hearing": 322.0,
+        "median_gap_between_hearings": 36.0
+      },
+      {
+        "case_type": "op",
+        "name": "Original petition",
+        "cases": 32893,
+        "median_wait_first_hearing": 51.0,
+        "median_after_first_hearing": 254.0,
+        "median_gap_between_hearings": 31.0
+      },
+      {
+        "case_type": "sc",
+        "name": "Sessions case (serious criminal trial)",
+        "cases": 31423,
+        "median_wait_first_hearing": 14.0,
+        "median_after_first_hearing": 723.0,
+        "median_gap_between_hearings": 32.0
+      },
+      {
+        "case_type": "prc",
+        "name": "Preliminary register case (before committal to sessions)",
+        "cases": 22997,
+        "median_wait_first_hearing": 31.0,
+        "median_after_first_hearing": null,
+        "median_gap_between_hearings": 47.0
+      },
+      {
+        "case_type": "as",
+        "name": "Appeal suit (civil appeal)",
+        "cases": 21495,
+        "median_wait_first_hearing": 40.0,
+        "median_after_first_hearing": 1299.0,
+        "median_gap_between_hearings": 35.0
+      },
+      {
+        "case_type": "mc",
+        "name": "Maintenance case",
+        "cases": 14302,
+        "median_wait_first_hearing": 35.0,
+        "median_after_first_hearing": 480.0,
+        "median_gap_between_hearings": 30.0
+      },
+      {
+        "case_type": "crla",
+        "name": "Criminal appeal",
+        "cases": 11371,
+        "median_wait_first_hearing": 28.0,
+        "median_after_first_hearing": 403.0,
+        "median_gap_between_hearings": 28.0
+      },
+      {
+        "case_type": "rcop",
+        "name": "Rent control petition",
+        "cases": 10537,
+        "median_wait_first_hearing": 41.0,
+        "median_after_first_hearing": 552.0,
+        "median_gap_between_hearings": 22.0
+      }
+    ]
+  },
+  "stuck_at": {
+    "cases_open": 435784,
+    "top": [
+      {
+        "purpose": "evidence",
+        "share": 0.1962786590847948
+      },
+      {
+        "purpose": "issue",
+        "share": 0.1416128416613589
+      },
+      {
+        "purpose": "service pending",
+        "share": 0.12307052014614955
+      },
+      {
+        "purpose": "enquiry",
+        "share": 0.08453265945729678
+      },
+      {
+        "purpose": "ia / ea pending / cmp pending / crp pending / cma pending",
+        "share": 0.06606621797804997
+      },
+      {
+        "purpose": "trial",
+        "share": 0.05973828285778012
+      },
+      {
+        "purpose": "counter",
+        "share": 0.04110858433146239
+      },
+      {
+        "purpose": "argument",
+        "share": 0.0398002285598659
+      },
+      {
+        "purpose": "appearance",
+        "share": 0.01814912496522165
+      },
+      {
+        "purpose": "steps",
+        "share": 0.017921484857334035
+      }
+    ]
+  },
+  "dataset_card": [
+    {
+      "column": "ddl_case_id",
+      "meaning": "Anonymous case id",
+      "use": "joins cases to their law and section",
+      "blank_share": 0.0,
+      "sentinel_share": 0.0,
+      "example": "10-01-02-230401000022015"
+    },
+    {
+      "column": "year",
+      "meaning": "Filing year",
+      "use": "splitting into train and test",
+      "blank_share": 0.0,
+      "sentinel_share": 0.0,
+      "example": "2015"
+    },
+    {
+      "column": "state_code",
+      "meaning": "State",
+      "use": "filter to Tamil Nadu",
+      "blank_share": 0.0,
+      "sentinel_share": 0.0,
+      "example": "10"
+    },
+    {
+      "column": "dist_code",
+      "meaning": "District",
+      "use": "model input",
+      "blank_share": 0.0,
+      "sentinel_share": 0.0,
+      "example": "01"
+    },
+    {
+      "column": "court_no",
+      "meaning": "Court within the district",
+      "use": "cleaning only; a visitor can't know it",
+      "blank_share": 0.0,
+      "sentinel_share": 0.0,
+      "example": "02"
+    },
+    {
+      "column": "cino",
+      "meaning": "eCourts case number",
+      "use": "not used",
+      "blank_share": 0.0,
+      "sentinel_share": 0.0,
+      "example": "TNDP060000552015"
+    },
+    {
+      "column": "judge_position",
+      "meaning": "Type of judge / court (free text)",
+      "use": "model input, after cleaning",
+      "blank_share": 0.0,
+      "sentinel_share": 0.0,
+      "example": "judicial magistrate court"
+    },
+    {
+      "column": "female_defendant",
+      "meaning": "Defendant's gender, inferred from name",
+      "use": "description only, kept out of the model",
+      "blank_share": 0.0,
+      "sentinel_share": 0.23590803306063526,
+      "example": "0 male"
+    },
+    {
+      "column": "female_petitioner",
+      "meaning": "Petitioner's gender, inferred from name",
+      "use": "description only, kept out of the model",
+      "blank_share": 0.0,
+      "sentinel_share": 0.48364659988423375,
+      "example": "-9998 unclear"
+    },
+    {
+      "column": "female_adv_def",
+      "meaning": "Defendant advocate's gender",
+      "use": "not used",
+      "blank_share": 0.0,
+      "sentinel_share": 0.8580021707747353,
+      "example": "0"
+    },
+    {
+      "column": "female_adv_pet",
+      "meaning": "Petitioner advocate's gender",
+      "use": "not used",
+      "blank_share": 0.0,
+      "sentinel_share": 0.47098961308799936,
+      "example": "-9998"
+    },
+    {
+      "column": "type_name",
+      "meaning": "Case type (code)",
+      "use": "model input",
+      "blank_share": 0.0,
+      "sentinel_share": 0.0,
+      "example": "956"
+    },
+    {
+      "column": "purpose_name",
+      "meaning": "Purpose of the latest hearing (code)",
+      "use": "analysis of where cases get stuck; not an input (it is from after filing)",
+      "blank_share": 0.06128636314786219,
+      "sentinel_share": 0.0,
+      "example": "6810"
+    },
+    {
+      "column": "disp_name",
+      "meaning": "How the case ended (code)",
+      "use": "the label",
+      "blank_share": 0.0,
+      "sentinel_share": 0.0,
+      "example": "22"
+    },
+    {
+      "column": "date_of_filing",
+      "meaning": "Filing date",
+      "use": "the label and the split",
+      "blank_share": 0.0,
+      "sentinel_share": 0.0,
+      "example": "2015-01-27"
+    },
+    {
+      "column": "date_of_decision",
+      "meaning": "Decision date",
+      "use": "the label",
+      "blank_share": 0.2887897145248963,
+      "sentinel_share": 0.0,
+      "example": "2016-07-14"
+    },
+    {
+      "column": "date_first_list",
+      "meaning": "First hearing date",
+      "use": "analysis of where time goes; not an input",
+      "blank_share": 0.05465399899568673,
+      "sentinel_share": 0.0,
+      "example": "2015-07-31"
+    },
+    {
+      "column": "date_last_list",
+      "meaning": "Latest hearing date",
+      "use": "analysis of where time goes; not an input",
+      "blank_share": 6.284813941225677e-06,
+      "sentinel_share": 0.0,
+      "example": "2016-07-14"
+    },
+    {
+      "column": "date_next_list",
+      "meaning": "Next listed hearing date",
+      "use": "analysis of where time goes; not an input",
+      "blank_share": 0.054370553886937456,
+      "sentinel_share": 0.0,
+      "example": "2016-07-14"
+    }
+  ]
+}

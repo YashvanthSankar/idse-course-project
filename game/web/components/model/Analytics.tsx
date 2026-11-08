@@ -35,6 +35,7 @@ export function Analytics() {
 function Stories({ a }: { a: Data }) {
   const [districtSearch, setDistrictSearch] = useState("");
   const tn = a.tamil_nadu;
+  const h = a.difficulty;
   const filteredDistricts = tn.within_1y_by_district.filter((d) => d.district.toLowerCase().includes(districtSearch.toLowerCase()));
   const all = tn.still_open_curves["all cases"];
   const served = a.model.test[a.model.served];
@@ -58,7 +59,7 @@ function Stories({ a }: { a: Data }) {
       <section className="grid gap-3 sm:grid-cols-3">
         <Big value={all.median_days ? duration(all.median_days) : "—"} label="until half of Tamil Nadu's cases are over" />
         <Big value={`${outOf10(all.still_open["48"])} in 10`} label="cases still not over after 4 years" />
-        <Big value={`${outOf10(served.accuracy)} in 10`} label="times the model guesses right on cases it never saw" />
+        <Big value={`${Math.round((h.stages.contested.median_after_first_hearing / (h.stages.contested.median_after_first_hearing + h.stages.contested.median_wait_first_hearing)) * 100)}%`} label="of a real dispute's time comes after its first hearing" />
       </section>
 
       <Figure
@@ -104,10 +105,29 @@ function Stories({ a }: { a: Data }) {
         />
       </Figure>
 
+      <Figure
+        title="3. Where the time goes in a real dispute"
+        note={`Leaving out petty summary trials and bail-type petitions, a case waits a median of ${Math.round(h.stages.contested.median_wait_first_hearing)} days for its first hearing, then runs a median of ${duration(h.stages.contested.median_after_first_hearing)} more. Hearing dates come about ${Math.round(h.stages.contested.median_gap_between_hearings)} days apart, so that is very roughly ${Math.round(h.stages.contested.median_after_first_hearing / h.stages.contested.median_gap_between_hearings)} hearing dates. Getting started is quick; finishing is what takes years.`}
+        table={<Table head={["kind of case", "wait for first hearing", "after first hearing", "gap between hearings"]} rows={h.stages.by_type.map((s) => [s.name.split(" (")[0], `${Math.round(s.median_wait_first_hearing)} days`, s.median_after_first_hearing === null ? "more than half never ended" : duration(s.median_after_first_hearing), s.median_gap_between_hearings === null ? "—" : `${Math.round(s.median_gap_between_hearings)} days`])} />}
+      >
+        <BarList
+          rows={h.stages.by_type.filter((s) => s.median_after_first_hearing !== null).map((s) => ({ label: s.name.split(" (")[0], value: s.median_after_first_hearing as number, detail: `first hearing after ${Math.round(s.median_wait_first_hearing)} days` }))}
+          format={(v) => duration(v)}
+        />
+      </Figure>
+
+      <Figure
+        title="4. Where open disputes are stuck"
+        note={`The stage recorded at the latest hearing, for ${h.stuck_at.cases_open.toLocaleString("en-IN")} disputes filed 2015–2017 still open when the data was collected.`}
+        table={<Table head={["stage", "share of open disputes"]} rows={h.stuck_at.top.map((s) => [s.stage, pct(s.share, 1)])} />}
+      >
+        <BarList rows={h.stuck_at.top.map((s) => ({ label: s.stage, value: s.share }))} format={(v) => pct(v)} />
+      </Figure>
+
       <div className="district-search"><label htmlFor="district-search">Find a district</label><input id="district-search" type="search" placeholder="Try Chennai or Madurai" value={districtSearch} onChange={(e) => setDistrictSearch(e.target.value)} /><span>{filteredDistricts.length} {filteredDistricts.length === 1 ? "district" : "districts"}</span></div>
       <Figure
         compact
-        title="3. Where the case is filed matters too"
+        title="5. Where the case is filed matters too"
         note="Share of cases over within a year, by district (Tamil Nadu, filed 2015–2017). The same kinds of case move at very different speeds in different districts."
         table={<Table head={["district", "over within a year", "cases"]} rows={filteredDistricts.map((d) => [d.district, pct(d.mean), d.size.toLocaleString("en-IN")])} />}
       >
@@ -117,7 +137,7 @@ function Stories({ a }: { a: Data }) {
 
       <Figure
         compact
-        title="4. Across India, some states have huge backlogs"
+        title="6. Across India, some states have huge backlogs"
         note="Of the cases filed in 2010, the share still not over when the data was collected in early 2019, nine years later. Tamil Nadu is highlighted."
         table={<Table head={["state", "still not over"]} rows={a.national.states.map((s) => [s.state, pct(s.pending_2010_filings, 1)])} />}
       >
@@ -125,11 +145,11 @@ function Stories({ a }: { a: Data }) {
       </Figure>
 
       <section className="rounded-2xl border border-[var(--m-line)] bg-[var(--m-card)] p-5">
-        <h2 className="text-lg font-semibold">5. How good is the model?</h2>
+        <h2 className="text-lg font-semibold">7. Can you tell on the day a case is filed?</h2>
         <p className="mt-1 text-[var(--m-ink-2)]">
-          Tested on {served.n.toLocaleString("en-IN")} real cases from 2017 that it never saw while learning, it guessed whether each would be over within a
-          year correctly about <b className="text-[var(--m-ink)]">{outOf10(served.accuracy)} times in 10</b>. Its weak spot: it knows which <i>kinds</i> of case are
-          quick, but between two cases of the same kind it can&apos;t tell well which will finish first.
+          Partly. On {served.n.toLocaleString("en-IN")} real cases from 2017 it never saw, the model was right {pct(served.accuracy, 1)} of the time, but most of that is telling petty cases from everything else. On real
+          disputes it was right <b className="text-[var(--m-ink)]">{pct(h.table.contested.accuracy, 1)}</b> of the time, against <b className="text-[var(--m-ink)]">{pct(h.table.contested.majority_accuracy, 1)}</b> for always guessing the commonest answer. Filing-day
+          information tells you what kind of case it is, and little more. That fits chart 3: what decides a dispute&apos;s length seems to happen after it starts.
         </p>
         <Link href="/model/pipeline" className="mt-3 inline-block font-medium text-[var(--m-s1)] underline">
           How it was built and tested →

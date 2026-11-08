@@ -93,7 +93,7 @@ def predict_row(row: dict) -> tuple[float, list[dict]]:
 # the limit is per proxy, not per student. A prediction takes milliseconds.
 MODEL_PER_MINUTE = 3000
 
-KIND_FIELDS = ("id", "title", "law_detail", "case_type_name", "court_level", "cases_2017",
+KIND_FIELDS = ("id", "case_type", "title", "law_detail", "case_type_name", "court_level", "cases_2017",
                "within_1y_2017", "topic", "variant", "timing")
 
 

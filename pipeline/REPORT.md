@@ -9,20 +9,27 @@ notebooks (start with `notebooks/00_full_pipeline.ipynb`) hold the full tables a
 
 ---
 
-## 1. Problem
+## 1. Problem and purpose
 
-India's district courts are known for delay. We ask a
-question a litigant, journalist or student could use:
+Indian district courts are known for delay. Our purpose is to answer:
 
-> **Given what is known on the day a case is filed in a Tamil Nadu district court, how likely
-> is it to be disposed of within a year?**
+> **Which court cases get stuck, where, and can you tell on the day a case is filed?**
 
-"Disposed of" means the case ended *in that court*: a judgment, dismissal, settlement or Lok Adalat
-disposal, or a file closed while the accused absconds. A transfer to another court is not an end.
-We also describe how long cases stay open (survival curves) and how districts differ.
+**Who it is for.** This is a planning question, not a prediction for one person's case. A court
+registry can estimate how many new filings will still be open a year later; legal-aid offices can see
+which kinds of case are worth steering towards mediation; anyone can see which districts and stages
+to look at first.
 
-Why this question: it uses real, messy, public data that no other group in the class is using,
-and it forces the hard parts of data science (censoring, leakage, drift) into the open.
+**The measurable question the model answers:** given only what is known on filing day, will a Tamil
+Nadu district-court case be disposed of within a year? "Disposed of" means the case ended *in that
+court*: a judgment, dismissal, settlement or Lok Adalat disposal, or a file closed while the accused
+absconds. A transfer to another court is not an end.
+
+**The answer, in short.** You can tell what *kind* of case will be quick (bail-type petitions: 98%
+within a year; accident claims: 12%). Among real disputes, filing-day information barely predicts which
+ones finish quickly (74.3% accuracy against 72.0% for always guessing the commonest answer), and 95% of
+a dispute's time comes after its first hearing. That suggests delay is driven by what happens after
+a case starts; the data can only partly test this, so we present it as a hypothesis.
 
 ## 2. Collection
 
@@ -40,6 +47,15 @@ and it forces the hard parts of data science (censoring, leakage, drift) into th
   scrape-date and backlog charts. `scripts/build_dataset.py` streams the archive into parquet in one
   pass (~1.5 min), reading every column as text so zero-padded codes ("01") survive.
 
+### What the dataset is
+
+Each row is **one court case**: anonymous id, state, district, court, type of judge or court, case type
+(coded), purpose of the latest hearing (coded), how the case ended (coded), inferred gender of the
+parties and advocates, and five dates (filing, decision, first, latest and next hearing). A second
+file gives the law and section each case was filed under. Not in the data: names (removed), the full
+list of hearings (only first, latest and next), and anything after the early-2019 collection. Notebook
+section A2 lists every column with its share of missing values and how the project uses it.
+
 ## 3. Preparation (cleaning)
 
 | Problem found | Measured | What we did |
@@ -52,7 +68,7 @@ and it forces the hard parts of data science (censoring, leakage, drift) into th
 | 52 disposition categories | mix endings, transfers, bail orders, missing | each given a deliberate group; **transfers, committals, remands, Lok Adalat referrals = "moved"** (censored, not ended) (`outcomes.py`) |
 | Two outcome fields disagree | cases with a decision date but "disposition missing", and the reverse | the decision date decides whether a case ended |
 
-Every rule has tests using real strings from the data (132 pipeline tests).
+Every rule has tests using real strings from the data (138 pipeline tests).
 
 ### The two findings that decide everything else
 
@@ -105,6 +121,20 @@ they were. **We model 2015–2017 filings only.**
   for k = 2…8): k = 3, but the best silhouette is **0.19**. Districts form a continuum, so the
   groups are reported as a summary, not a discovery.
 
+### Where the time goes in a real dispute (notebook A9)
+
+Real disputes are all cases except petty summary trials and bail-type petitions. Filings 2015–2017,
+1,071,285 cases with a usable first-hearing date. The hearing dates were audited first: 4.7% of
+first-hearing dates are blank, 0.3% are before filing, and the latest hearing date equals the decision
+date in 80% of finished cases. They are not model inputs (they happen after filing).
+
+- A dispute waits a median of **40 days** for its first hearing, then runs a median of **808 days**
+  more (Kaplan–Meier): **95% of its time comes after the first hearing**.
+- The median gap between a case's latest hearing and its next listed date is **44 days**, so 808 days is
+  very roughly 18 hearing dates (a rough estimate: each case records only one such gap).
+- Of 435,784 disputes still open at collection, the most common stages at the latest hearing are
+  evidence (20%), framing the issues or issuing process (14%), and summons or notice not yet served (12%).
+
 ## 5. Modelling
 
 **Inputs (known on the filing day only):** district, court level, case type, month, law, main
@@ -128,6 +158,19 @@ loss: **logistic regression with the law inputs** (6 kB).
 | **logistic regression + law and section (served)** | **0.873** | **0.138** | **0.427** |
 | linear SVM + law and section | 0.873 | 0.137 | 0.429 |
 | random forest + law and section | 0.874 | 0.138 | 0.428 |
+
+**Read this first: most of the accuracy comes from easy cases.**
+
+| 2017 test cases | Cases | Model accuracy | Always guessing the commonest answer | AUC |
+|---|---|---|---|---|
+| All | 549,273 | 80.9% | 50.5% | 0.873 |
+| Easy: summary trials, bail-type petitions | 196,105 | 92.6% | 88.1% | 0.903 |
+| **Real disputes (everything else)** | **353,168** | **74.3%** | **72.0%** | **0.706** |
+
+For original suits it is 69.4% vs 69.0%; for sessions trials 68.2% vs 70.9%, worse than guessing. Models
+trained only on real disputes do not change this (logistic regression AUC 0.713, random forest 0.722),
+so the limit is the information available on filing day rather than the algorithm. Also, 34% of the
+cases counted as over within a year ended on the day they were filed.
 
 - **Confusion matrix (2017, threshold 50%):** 192,541 correctly predicted over within a year,
   251,578 correctly predicted not; 25,937 predicted over but weren't, 79,217 predicted not but
@@ -167,6 +210,8 @@ loss: **logistic regression with the law inputs** (6 kB).
   visitor only needs to reach Vercel.
 
 ## Limitations
+
+- The overall accuracy is flattered by easy cases; on real disputes the model barely beats guessing.
 
 - Tamil Nadu, cases filed 2015–2017, scraped early 2019; courts have changed since.
 - Congestion inputs on the site are the values at the end of the data, not today's.

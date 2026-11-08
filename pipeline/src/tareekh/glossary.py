@@ -165,3 +165,18 @@ def variant_label(case_type: str, court_level: str) -> str:
     """How a variant within a topic reads: "full criminal trial · magistrate court"."""
     return (f"{CASE_TYPE_PLAIN.get(case_type, case_type_name(case_type).lower())} · "
             f"{COURT_PLAIN.get(court_level, court_level.lower())}")
+
+
+# The stage recorded at a case's latest hearing, in everyday words
+PURPOSE_PLAIN = {
+    "evidence": "Taking evidence",
+    "issue": "Framing the issues / issuing process",
+    "service pending": "Summons or notice not yet served",
+    "enquiry": "Enquiry",
+    "ia / ea pending / cmp pending / crp pending / cma pending": "A side application is pending",
+    "trial": "Trial",
+    "counter": "Waiting for the other side's reply",
+    "argument": "Arguments",
+    "appearance": "Waiting for parties to appear",
+    "steps": "Waiting for a party to act",
+}

@@ -162,6 +162,8 @@ function Result({ r, ms, topic, stale }: { r: Prediction; ms: number; topic: Top
   const yes = p >= 0.5;
   const info = r.model_info;
   const sure = p >= 0.8 || p <= 0.2 ? "The model is fairly confident." : p > 0.35 && p < 0.65 ? "This one is close to a coin flip." : "The model leans this way, but not strongly.";
+  const trust = info.trust.by_type[r.kind.case_type] ?? info.trust.contested;
+  const gain = trust.accuracy - trust.majority_accuracy;
   const moved = r.effects
     .map((e: Effect) => ({ ...e, points: pointsMoved(p, e.effect) }))
     .sort((a, b) => Math.abs(b.points) - Math.abs(a.points));
@@ -194,6 +196,20 @@ function Result({ r, ms, topic, stale }: { r: Prediction; ms: number; topic: Top
         </div>
         <p className="mt-1 max-w-xl text-center text-xs text-[var(--m-ink-3)]">50% is the line between &ldquo;likely&rdquo; and &ldquo;not likely&rdquo;</p>
       </header>
+
+      <Panel title="How much to trust this answer">
+        <p data-testid="model-trust">
+          For {r.kind.case_type_name.split(" (")[0].toLowerCase()} cases like this, the model was right <b>{pct(trust.accuracy, 1)}</b> of the time on unseen 2017 cases. Always guessing the commonest answer gets{" "}
+          <b>{pct(trust.majority_accuracy, 1)}</b>.
+        </p>
+        <p className="mt-1 text-sm text-[var(--m-ink-2)]">
+          {gain >= 0.05
+            ? "So the model adds real information for this kind of case."
+            : gain >= 0
+              ? "So for this kind of case it adds little beyond knowing the kind of case. Treat the exact percentage as a rough guide."
+              : "So for this kind of case it does no better than always guessing. Treat the exact percentage as a rough guide."}
+        </p>
+      </Panel>
 
       <Panel title="How this compares" tag="share over within 1 year">
         <ul className="space-y-2">
@@ -284,7 +300,8 @@ function Result({ r, ms, topic, stale }: { r: Prediction; ms: number; topic: Top
             ["Predicts", info.target],
             ["Trained on", `${info.train_cases.toLocaleString("en-IN")} cases filed in ${info.train_years.join(" and ")}`],
             ["Tested on", `${info.test_cases.toLocaleString("en-IN")} cases filed in ${info.test_year}, never seen in training`],
-            ["Accuracy on the test cases", pct(info.metrics.accuracy, 1)],
+            ["Accuracy, all test cases", pct(info.metrics.accuracy, 1)],
+            ["Accuracy on real disputes", `${pct(info.trust.contested.accuracy, 1)} (always guessing: ${pct(info.trust.contested.majority_accuracy, 1)})`],
             ["AUC (0.5 = coin flip, 1 = perfect)", info.metrics.auc.toFixed(3)],
             ["Answered in", `${ms} ms, live from the deployed model`],
           ].map(([k, v]) => (

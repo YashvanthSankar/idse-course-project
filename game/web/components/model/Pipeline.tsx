@@ -28,7 +28,10 @@ type Notebook = {
   checks: { agree: number; total: number; text: string } | null;
 };
 type Metric = { name: string; served: boolean; family: string; inputs: string; accuracy: number; auc: number; brier: number; log_loss: number; n: number };
+type Group = { n: number; accuracy: number; majority_accuracy: number; auc: number };
+
 type Results = {
+  difficulty: { all: Group; easy: Group; contested: Group; contested_only_models: Record<string, { auc: number; accuracy: number }> };
   served: string;
   test_year: number;
   train_years: number[];
@@ -146,7 +149,7 @@ function Hero({ served, stageCount }: { served: Metric; stageCount: number }) {
         <Stat value={`${(RES.cases.tamil_nadu / 1e6).toFixed(2)} M`} label="Tamil Nadu cases cleaned and labelled" />
         <Stat value={n(RES.model_info.train_cases)} label={`cases the model learned from (filed ${RES.train_years.join("–")})`} />
         <Stat value={n(served.n)} label={`cases it was tested on, filed in ${RES.test_year}, never seen before`} />
-        <Stat value={`${Math.round(served.accuracy * 10)} in 10`} label={`right about whether a case is over within a year (accuracy ${pct(served.accuracy, 1)})`} />
+        <Stat value={pct(RES.difficulty.contested.accuracy, 1)} label={`accurate on real disputes, vs ${pct(RES.difficulty.contested.majority_accuracy, 1)} for always guessing (${pct(served.accuracy, 1)} on all cases, mostly easy ones)`} />
         <Stat value={so.median_days ? `${Math.round(so.median_days / 30.44)} months` : "—"} label="until half of all Tamil Nadu cases are over" />
       </dl>
     </section>
@@ -290,6 +293,46 @@ function ResultsSection({ served, lookup }: { served: Metric; lookup: Metric }) 
           <i>log loss</i>: how far its probabilities were from what happened (lower is better).
         </p>
       </header>
+
+      <Card
+        title="Read this first: most of the accuracy is easy cases"
+        note="Petty summary trials and bail-type petitions are almost always over within a year. Each group is compared with the simplest possible rule: always guess the commonest answer for that group."
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left text-[13.5px] tabular-nums" data-testid="pipeline-difficulty">
+            <thead>
+              <tr className="text-[var(--m-ink)]">
+                {["Group", "Cases", "Model accuracy", "Always guessing", "AUC"].map((h) => (
+                  <th key={h} className="whitespace-nowrap border-b border-[var(--m-line)] py-2 pr-4 font-medium">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {(
+                [
+                  ["All 2017 test cases", RES.difficulty.all],
+                  ["Easy: summary trials and bail-type petitions", RES.difficulty.easy],
+                  ["Real disputes (everything else)", RES.difficulty.contested],
+                ] as const
+              ).map(([label, g], i) => (
+                <tr key={label} className={i === 2 ? "font-semibold text-[var(--m-ink)]" : "text-[var(--m-ink-2)]"}>
+                  <td className="border-b border-[var(--m-line)] py-2 pr-4">{label}</td>
+                  <td className="border-b border-[var(--m-line)] py-2 pr-4">{n(g.n)}</td>
+                  <td className="border-b border-[var(--m-line)] py-2 pr-4">{pct(g.accuracy, 1)}</td>
+                  <td className="border-b border-[var(--m-line)] py-2 pr-4">{pct(g.majority_accuracy, 1)}</td>
+                  <td className="border-b border-[var(--m-line)] py-2 pr-4">{g.auc.toFixed(3)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-[14px] leading-6 text-[var(--m-ink-2)]">
+          Training a model on real disputes alone barely changes this (best AUC {Math.max(...Object.values(RES.difficulty.contested_only_models).map((m) => m.auc)).toFixed(2)}), so the limit is what can be known on filing day, not the
+          algorithm.
+        </p>
+      </Card>
 
       <Card title="Model comparison" note={`Test year ${RES.test_year}. Bold row: the served model. The three baselines are what you get without any machine learning.`}>
         <div className="overflow-x-auto">

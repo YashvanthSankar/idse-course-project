@@ -5,6 +5,7 @@ export type Timing = { cases: number; median_days: number | null; still_open: Re
 
 export type Kind = {
   id: string;
+  case_type: string;
   title: string;
   law_detail: string;
   case_type_name: string;
@@ -28,6 +29,8 @@ export type Topic = {
   within_1y: number;
 };
 
+export type GroupScore = { n: number; share_yes: number; accuracy: number; majority_accuracy: number; auc: number | null };
+
 export type Confusion = { tp: number; fp: number; fn: number; tn: number; precision: number; recall: number; accuracy: number };
 
 export type ModelInfo = {
@@ -43,6 +46,7 @@ export type ModelInfo = {
   confusion: Confusion;
   file_bytes: number;
   base_rate: number;
+  trust: { easy: GroupScore; contested: GroupScore; by_type: Record<string, GroupScore> };
 };
 
 export type UsedInput = { input: string; label: string; value: string; source: "you" | "case" | "data" };
@@ -90,8 +94,16 @@ export type Metric = { n: number; auc: number; brier: number; log_loss: number; 
 export type Curve = { label: string; cases: number; median_days: number | null; still_open: Record<string, number> };
 export type Rate = { mean: number; size: number };
 
+export type StageRow = { case_type: string; name: string; cases: number; median_wait_first_hearing: number; median_after_first_hearing: number | null; median_gap_between_hearings: number | null };
+
 export type Analytics = {
   topics: Topic[];
+  difficulty: {
+    table: { all: GroupScore; easy: GroupScore; contested: GroupScore };
+    stages: { contested: { median_wait_first_hearing: number; median_after_first_hearing: number; median_gap_between_hearings: number }; by_type: StageRow[] };
+    stuck_at: { cases_open: number; top: { purpose: string; stage: string; share: number }[] };
+    dataset_card: { column: string; meaning: string; use: string; blank_share: number; sentinel_share: number; example: string }[];
+  };
   national: {
     cases: number;
     monthly_decisions: Record<string, number>;

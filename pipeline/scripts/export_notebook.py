@@ -190,7 +190,12 @@ def main() -> int:
             if not s["takeaway"]:
                 raise SystemExit(f"stage {s['id']} has no 'Takeaway:' line")
     (OUT / "notebook.json").write_text(json.dumps(doc, ensure_ascii=False))
-    (OUT / "results.json").write_text(json.dumps(results(), ensure_ascii=False))
+    res = results()
+    hard = json.loads((REPORTS / "difficulty.json").read_text())
+    res["difficulty"] = {"all": hard["difficulty"]["all"], "easy": hard["difficulty"]["easy"],
+                         "contested": hard["difficulty"]["contested"],
+                         "contested_only_models": hard["contested_only_models"]}
+    (OUT / "results.json").write_text(json.dumps(res, ensure_ascii=False))
     shutil.copy(NOTEBOOK, OUT / NOTEBOOK.name)
     n_stages = sum(len(p["stages"]) for p in doc["parts"])
     size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file()) / 1e6

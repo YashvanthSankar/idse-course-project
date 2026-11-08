@@ -60,6 +60,11 @@ def test_predict_returns_a_probability_with_effects_and_context(client):
     c = info["confusion"]
     assert c["tp"] + c["fp"] + c["fn"] + c["tn"] == info["test_cases"] == 549_273
     assert c["accuracy"] == pytest.approx(info["metrics"]["accuracy"], abs=1e-9)
+    # the honest split: real disputes barely beat always guessing the commonest answer
+    trust = info["trust"]
+    assert trust["easy"]["n"] + trust["contested"]["n"] == 549_273
+    assert 0 < trust["contested"]["accuracy"] - trust["contested"]["majority_accuracy"] < 0.05
+    assert body["kind"]["case_type"] in trust["by_type"]
     assert body["still_open"]["months"]["12"] > 0
 
 

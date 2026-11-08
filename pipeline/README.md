@@ -14,7 +14,7 @@ district-court records → cleaning → EDA → a model of how long cases take �
 ```bash
 cd pipeline
 uv sync                      # Python 3.12; scikit-learn pinned to the game backend's 1.9.1
-uv run pytest                # 132 tests
+uv run pytest                # 138 tests
 # 1. download (Dropbox streams the whole folder; each fetch stops once it has what it asked for)
 uv run python scripts/fetch_ddl.py --want 'license.txt' --want 'csv/keys/*' --want 'csv/cases/*' --max-saves 3   # ~10 min
 uv run python scripts/fetch_ddl.py --want 'csv/acts_sections*' --max-saves 1                                    # ~25 min
@@ -29,6 +29,7 @@ uv run python scripts/train_within_1y.py
 uv run python scripts/analyse.py
 uv run python scripts/experiments.py
 uv run python scripts/regress_days.py
+uv run python scripts/analyse_difficulty.py   # easy vs real disputes, hearing stages, dataset card
 # 5. notebooks (read the cleaned data and the reports)
 uv run jupyter nbconvert --to notebook --execute --inplace notebooks/*.ipynb
 uv run python scripts/export_notebook.py   # the executed master notebook → the /model/pipeline page
@@ -65,11 +66,12 @@ pipeline/
 │   ├── features.py          filing-day inputs: congestion, law and section
 │   ├── modelling.py         the shared modelling table
 │   ├── survival.py          Kaplan–Meier in numpy
+│   ├── difficulty.py        easy vs real disputes; where the time in a case goes
 │   ├── clusters.py          k-means on district profiles, k by silhouette
 │   ├── glossary.py          plain-English names for case types and sections
 │   └── plotstyle.py         one look for every chart
 ├── notebooks/               00_full_pipeline (the master notebook) · 01_audit · 02_eda · 03_survival_and_clusters · 04_model
-├── tests/                   132 tests; cleaning tests use real strings from the data
+├── tests/                   138 tests; cleaning tests use real strings from the data
 ├── artifacts/within_1y/     the served model (6 kB) + metadata
 ├── artifacts/site/          what /model loads (also copied into the game backend)
 └── reports/                 generated: within_1y.md, analysis.md, experiments.md, figures/

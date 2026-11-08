@@ -25,7 +25,7 @@ table; numbers in docs come from the generated reports, never from memory.
       district → "usually takes about …", "N in 10 are over within a year", still-open milestones,
       plain reasons, compare districts, "can the model guess right?" on real 2017 cases),
       **What the data shows** (five stories), **How it works** (plain summary + folded technical
-      section). Served by the game backend at `/api/model/*`. Tests: 132 pipeline, 9 API (in 400
+      section). Served by the game backend at `/api/model/*`. Tests: 138 pipeline, 9 API (in 400
       backend), 3 e2e for /model.
 - [x] Linear regression on days to disposal (`scripts/regress_days.py`), added 2026-11-08: it
       was listed here as done before it existed.
