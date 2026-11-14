@@ -119,7 +119,7 @@ with pandas, live.
 ```
 idse-course-project/
 ├── game/                the game (live at otlr.vercel.app)
-│   ├── backend/         Python package `auditor`: case engine, 9 tools, scoring, rooms, autopsy (390+ tests)
+│   ├── backend/         Python package `auditor`: case engine, 9 tools, scoring, rooms, autopsy, the /model API (400 tests)
 │   ├── web/             Next.js game: title, office, investigation, corkboard, verdict, class mode
 │   ├── notebooks/       the three narrated notebooks
 │   └── docs/            IDEA · DESIGN · PLAN · TODO · DEMO

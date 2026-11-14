@@ -31,11 +31,11 @@ uv run python scripts/experiments.py
 uv run python scripts/regress_days.py
 uv run python scripts/analyse_difficulty.py   # easy vs real disputes, hearing stages, dataset card
 uv run python scripts/analyse_settlement.py   # how disputes end: settled or dismissed
-# 5. notebooks (read the cleaned data and the reports)
-uv run jupyter nbconvert --to notebook --execute --inplace notebooks/*.ipynb
-uv run python scripts/export_notebook.py   # the executed master notebook → the /model/pipeline page
-# 6. the site package → artifacts/site/ and game/backend/auditor/courtcases/data/
+# 5. the site package → artifacts/site/ and game/backend/auditor/court_model/data/
 uv run python scripts/export_site.py
+# 6. notebooks (read the cleaned data and the reports), then the /model/pipeline page
+uv run jupyter nbconvert --to notebook --execute --inplace notebooks/*.ipynb
+uv run python scripts/export_notebook.py   # needs step 5's artifacts/site/analytics.json
 ```
 
 Raw data goes to `data/raw/ddl/`, cleaned data to `data/clean/`; neither goes into git. The case
@@ -55,7 +55,11 @@ pipeline/
 │   ├── train_within_1y.py   3 baselines × 3 model families × 2 input sets, time split → report
 │   ├── analyse.py           every number for the notebooks and the site → reports/analysis.*
 │   ├── experiments.py       drift, horizons, cutoff rule, weak spots → reports/experiments.*
-│   └── export_site.py       model + inputs + test cases + analytics for /model
+│   ├── regress_days.py      linear regression on the number of days → reports/days_regression.json
+│   ├── analyse_difficulty.py easy vs real disputes, hearing stages → reports/difficulty.json
+│   ├── analyse_settlement.py settled or dismissed, tested fairly → reports/settlement.json
+│   ├── export_site.py       model + inputs + test cases + analytics for /model
+│   └── export_notebook.py   the executed master notebook → game/web/public/pipeline/
 ├── src/courtcases/
 │   ├── acts.py              29,857 raw law names → 54 laws (+ Unknown, Other)
 │   ├── sections.py          free-text sections → main section (138, 304B, Order 7)
@@ -68,6 +72,7 @@ pipeline/
 │   ├── modelling.py         the shared modelling table
 │   ├── survival.py          Kaplan–Meier in numpy
 │   ├── difficulty.py        easy vs real disputes; where the time in a case goes
+│   ├── settlement.py        how a dispute ended (settled / dismissed), lookup baselines, top-10% precision
 │   ├── clusters.py          k-means on district profiles, k by silhouette
 │   ├── glossary.py          plain-English names for case types and sections
 │   └── plotstyle.py         one look for every chart
@@ -75,7 +80,7 @@ pipeline/
 ├── tests/                   142 tests; cleaning tests use real strings from the data
 ├── artifacts/within_1y/     the served model (6 kB) + metadata
 ├── artifacts/site/          what /model loads (also copied into the game backend)
-└── reports/                 generated: within_1y.md, analysis.md, experiments.md, figures/
+└── reports/                 generated: within_1y.md, analysis.md, experiments.md, *.json, figures/
 ```
 
 ## Getting the data
@@ -196,11 +201,11 @@ types), and courts got faster each year, so 2017 is slightly under-predicted.
 ## The /model site
 
 - `scripts/export_site.py` writes `artifacts/site/` and copies it to
-  `game/backend/auditor/courtcases/data/`, which `game/backend/auditor/courtcases/routes.py` serves at
+  `game/backend/auditor/court_model/data/`, which `game/backend/auditor/court_model/routes.py` serves at
   `/api/model/options | predict | sample | analytics`.
 - Pages: `game/web/app/model/` (home, explore = test the model, pipeline, analytics), components in
   `game/web/components/model/`. A separate plain light site; the game's effects are off there.
-- After retraining: rerun `export_site.py`, run the backend tests (`test_courtcases_api.py` checks
+- After retraining: rerun `export_site.py`, run the backend tests (`tests/test_court_model_api.py` checks
   the site scores a case exactly as the pipeline does), then deploy backend first, then the web.
 
 ## Decisions
@@ -215,10 +220,9 @@ types), and courts got faster each year, so 2017 is slightly under-predicted.
 | Moved cases (transfer, committal, remand, Lok Adalat referral) are censored, not "ended" | They left this court; they didn't finish |
 | One-year label only for cases filed ≥1 year before the cutoff | Otherwise recent filings are biased towards "fast" |
 | Train 2015-16, test 2017 | Early years are incomplete; a later test year is the honest test of a forecast |
-| Served model = best 2016 log loss (logistic regression) | Chosen before looking at 2017; the forest's better 2017 AUC doesn't change that |
 | No gender, no hearing purpose, no later dates as inputs | Fairness rule in IDEA.md; the rest leak the future |
 | Law and section as inputs, first section only | Known at filing; the first section says what the case is about |
-| Served model = logistic regression + law (best 2016 log loss) | Chosen before looking at 2017; it is also the one whose explanations are exact |
+| Served model = logistic regression + law and section (best 2016 log loss) | Chosen before looking at 2017, so the forest's slightly better 2017 AUC doesn't change it; it is also the one whose explanations are exact |
 | Site inputs = 40 common real kinds of case | A visitor can't know case-type codes; the kinds cover 59% of 2017 filings |
 | Congestion on the site = values at the end of the data | A visitor can't know them; the page says which date they come from |
 | k-means groups shown as a summary only | Best silhouette 0.19: no clear structure to name |

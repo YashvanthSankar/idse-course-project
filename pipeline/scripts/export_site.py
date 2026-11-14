@@ -1,6 +1,6 @@
 """Package what the /model site needs, from the same model and data as the reports.
 
-Writes to artifacts/site/ and copies it into the game backend (game/backend/auditor/courtcases/
+Writes to artifacts/site/ and copies it into the game backend (game/backend/auditor/court_model/
 data/), which serves /api/model/*:
 - model.joblib, metadata.json   the served model (scikit-learn 1.9.1, same as the backend)
 - inputs.json                   districts, the common real "kinds of case" (case type + court
@@ -43,7 +43,7 @@ from courtcases.survival import kaplan_meier, median_days, still_open_at
 
 ARTIFACT = ROOT / "artifacts" / "within_1y"
 SITE = ROOT / "artifacts" / "site"
-BACKEND = ROOT.parent / "game" / "backend" / "auditor" / "courtcases" / "data"
+BACKEND = ROOT.parent / "game" / "backend" / "auditor" / "court_model" / "data"
 REPORT = ROOT / "reports"
 SEED = 0
 N_KINDS = 40
