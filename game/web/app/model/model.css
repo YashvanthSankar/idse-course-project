@@ -32,7 +32,8 @@
   display: flex;
   flex-direction: column;
 }
-body:has([data-site="model"]) { background: #f4f3f0; }
+/* the game sets body { overflow-x: hidden }, which makes body a scroll box and breaks sticky; clip does not */
+body:has([data-site="model"]) { background: #f4f3f0; overflow: visible; overflow-x: clip; }
 [data-site="model"] main { flex: 1; }
 [data-site="model"] a:focus-visible, [data-site="model"] button:focus-visible, [data-site="model"] select:focus-visible,
 [data-site="model"] input:focus-visible, [data-site="model"] summary:focus-visible { outline: 2px solid var(--m-tape); outline-offset: 2px; }
@@ -159,7 +160,7 @@ body:has([data-site="model"]) { background: #f4f3f0; }
 
 /* Footer */
 .m-foot { background: #e9e8e4; padding-block: 22px 28px; font-size: 13px; line-height: 1.6; color: var(--m-ink-2); }
-.m-foot p { max-width: 96ch; }
+.m-foot p { max-width: 72ch; }
 .m-foot a { text-decoration: underline; text-underline-offset: 2px; }
 
 /* The model test */
@@ -173,14 +174,14 @@ body:has([data-site="model"]) { background: #f4f3f0; }
 
 /* The pipeline reader */
 .reader { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 40px; margin-top: 28px; }
-.reader-index { position: sticky; top: 16px; align-self: start; max-height: calc(100dvh - 32px); overflow-y: auto; font-size: 13.5px; }
+.reader-index { max-height: calc(100dvh - 32px); overflow-y: auto; font-size: 13.5px; }
 .reader-index p { font-weight: 600; margin-top: 16px; }
 .reader-index p:first-child { margin-top: 0; }
 .reader-index a { display: flex; gap: 8px; padding: 3px 8px; border-radius: 6px; color: var(--m-ink-2); line-height: 1.35; }
 .reader-index a span:first-child { flex: none; width: 2.1em; color: var(--m-ink-3); font-variant-numeric: tabular-nums; }
 .reader-index a:hover { color: var(--m-ink); }
 .reader-index a[aria-current="true"] { background: #e4e2dc; color: var(--m-ink); }
-@media (max-width: 960px) { .reader { grid-template-columns: minmax(0, 1fr); } .reader-index { display: none; } }
+@media (max-width: 960px) { .reader { display: block; } .reader-index { display: none; } }
 .part-title { font: 400 clamp(1.9rem, 3.4vw, 2.75rem)/1.08 var(--m-display); }
 .stage { scroll-margin-top: 16px; padding-block: 28px; border-top: 1px solid var(--m-line); }
 .stage-title { display: flex; gap: 12px; align-items: baseline; font-size: clamp(19px, 2vw, 23px); font-weight: 600; line-height: 1.25; }
@@ -200,3 +201,40 @@ body:has([data-site="model"]) { background: #f4f3f0; }
 .fold-body { border-top: 1px solid var(--m-line); padding: 12px 14px; }
 
 @media (prefers-reduced-motion: reduce) { [data-site="model"] * { scroll-behavior: auto !important; transition-duration: 0s !important; } }
+
+/* Cover: the lead and actions beside the file's label */
+.cover-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 440px); gap: 32px clamp(32px, 6vw, 96px); align-items: start; margin-top: 32px; }
+.cover-body .ch-cover-lead { margin-top: 0; }
+.file-label { display: grid; gap: 3px; border-radius: 8px; overflow: hidden; font-size: 15px; line-height: 1.4; }
+.file-label > div { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 12px; padding: 11px 20px; background: var(--m-buff-pale); }
+.file-label dt { color: #5b5342; font-size: 13px; padding-top: 1px; }
+.file-label dd { font-weight: 600; }
+@media (max-width: 900px) { .cover-body { grid-template-columns: 1fr; } .file-label { max-width: 520px; } }
+@media (max-width: 520px) {
+  .ch-cover .m-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .ch-cover .m-actions .m-btn { grid-column: 1 / -1; }
+  .ch-cover .m-btn-2 { padding-inline: 8px; }
+  .m-kpis { grid-template-columns: 1fr 1fr; }
+  .m-kpis > div:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .m-kpis > div { padding: 14px 16px; }
+}
+
+/* The three notebook figures: the square calibration chart beside the two wide ones */
+@media (min-width: 761px) {
+  .work { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .work figure:last-child { grid-column: 1; grid-row: 1 / span 2; }
+  .work figure:not(:last-child) { grid-column: 2; }
+}
+
+/* The empty result, before Analyze */
+.m-empty ul { margin-top: 10px; display: grid; gap: 4px; padding-left: 20px; list-style: disc; color: var(--m-ink-2); }
+.m-empty ul li::marker { color: var(--m-tape); }
+
+/* Pipeline: the step list, and on phones a sticky "jump to a step" menu */
+.reader-side { position: sticky; top: 16px; align-self: start; min-width: 0; }
+.reader-jump { display: none; }
+@media (max-width: 960px) {
+  .reader-side { top: 0; z-index: 5; background: var(--m-surface); padding-block: 8px; }
+  .reader-jump { display: block; }
+}
+@media (max-width: 960px) { .reader [id] { scroll-margin-top: 76px; } }

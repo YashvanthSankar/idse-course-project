@@ -73,17 +73,45 @@ export function Home() {
       <section className="ch-cover">
         <div className="m-wrap ch-cover-top">
           <h1>Which court cases get stuck?</h1>
-          <p className="ch-cover-lead">We cleaned {(RES.cases.tamil_nadu / 1e6).toFixed(1)} million Tamil Nadu court records, then trained a model on only what is known the day a case is filed. Test it, and see exactly how far it can be trusted.</p>
-          <div className="m-actions">
-            <Link href="/model/explore" className="m-btn">
-              Test the model
-            </Link>
-            <Link href="/model/pipeline" className="m-btn-2">
-              See the pipeline
-            </Link>
-            <Link href="/model/analytics" className="m-btn-2">
-              Data analysis
-            </Link>
+          <div className="cover-body">
+            <div>
+              <p className="ch-cover-lead">We cleaned {(RES.cases.tamil_nadu / 1e6).toFixed(1)} million Tamil Nadu court records, then trained a model on only what is known the day a case is filed. Test it, and see exactly how far it can be trusted.</p>
+              <div className="m-actions">
+                <Link href="/model/explore" className="m-btn">
+                  Test the model
+                </Link>
+                <Link href="/model/pipeline" className="m-btn-2">
+                  See the pipeline
+                </Link>
+                <Link href="/model/analytics" className="m-btn-2">
+                  Data analysis
+                </Link>
+              </div>
+            </div>
+            <dl className="file-label" aria-label="The project at a glance">
+              <div>
+                <dt>Courts</dt>
+                <dd>Tamil Nadu district courts</dd>
+              </div>
+              <div>
+                <dt>Records</dt>
+                <dd>{(RES.cases.tamil_nadu / 1e6).toFixed(1)} million cases, filed 2010–2018</dd>
+              </div>
+              <div>
+                <dt>Question</dt>
+                <dd>Is a case over within a year of filing?</dd>
+              </div>
+              <div>
+                <dt>Model</dt>
+                <dd>Logistic regression, {RES.model_info.n_inputs} filing-day inputs</dd>
+              </div>
+              <div>
+                <dt>Right on real disputes</dt>
+                <dd>
+                  {pct(hard.accuracy, 1)} (guessing: {pct(hard.majority_accuracy, 1)})
+                </dd>
+              </div>
+            </dl>
           </div>
         </div>
         <CaseTape />

@@ -1,5 +1,5 @@
 "use client";
-import { useId, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 
 /** Charts for the /model site: plain SVG/HTML, paper surface, one hue on the main data,
  *  one axis, recessive grid, hover tooltips, and a table view under every chart. */
@@ -95,8 +95,8 @@ export function BarList({
       )}
       <ul role="list">
         {shown.map((r) => (
-          <li key={r.label} className={`grid items-center gap-2 py-[5px] sm:gap-3 ${wideValue ? "grid-cols-[minmax(0,9rem)_minmax(0,1fr)_7.5rem] sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)_7.5rem]" : "grid-cols-[minmax(0,10rem)_minmax(0,1fr)_3rem] sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_3.5rem]"}`} title={r.detail ? `${r.label}: ${format(r.value)}, ${r.detail}` : `${r.label}: ${format(r.value)}`}>
-            <span className="truncate text-sm">{r.label}</span>
+          <li key={r.label} className={`grid items-center gap-2 py-[5px] sm:gap-3 ${wideValue ? "grid-cols-[minmax(0,9rem)_minmax(0,1fr)_7.5rem] sm:grid-cols-[minmax(0,11rem)_minmax(0,1fr)_7.5rem]" : "grid-cols-[minmax(0,9.5rem)_minmax(0,1fr)_2.75rem] sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_3.5rem]"}`} title={r.detail ? `${r.label}: ${format(r.value)}, ${r.detail}` : `${r.label}: ${format(r.value)}`}>
+            <span className="text-sm leading-snug [overflow-wrap:anywhere]">{r.label}</span>
             <span className="block h-3 rounded-r-[3px] bg-[var(--m-blue-100)]">
               <span className="block h-3 rounded-r-[3px]" style={{ width: `${Math.max(((r.value - min) / (top - min)) * 100, 0.5)}%`, background: r.highlight ? "var(--m-ink)" : "var(--m-tape)" }} />
             </span>
@@ -150,7 +150,17 @@ export function LineChart({
   xTicks?: number[];
 }) {
   const id = useId();
-  const W = width, H = height, L = 52, R = 30, T = 10, B = 28;
+  // draw at the real width, so the axis text stays 12px on a phone
+  const box = useRef<HTMLDivElement>(null);
+  const [boxW, setBoxW] = useState(width);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setBoxW(Math.round(e.contentRect.width)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const W = Math.max(280, boxW), H = W < 480 ? Math.round(height * 0.8) : height, L = 44, R = 18, T = 10, B = 28;
   const xs = useMemo(() => Array.from(new Set(series.flatMap((s) => s.points.map((p) => p[0])))).sort((a, b) => a - b), [series]);
   const [x0, x1] = [xs[0] ?? 0, xs[xs.length - 1] ?? 1];
   const ticks = yMax ? [0, 0.25, 0.5, 0.75, 1].map((f) => f * yMax) : niceTicks(Math.max(...series.flatMap((s) => s.points.map((p) => p[1]))));
@@ -173,7 +183,7 @@ export function LineChart({
 
   const hx = hover === null ? null : xs[hover];
   return (
-    <div className="relative">
+    <div className="relative" ref={box}>
       {series.length > 1 && (
         <ul className="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-[var(--m-ink-2)]" aria-label="Legend">
           {series.map((s) => (
@@ -198,20 +208,20 @@ export function LineChart({
         {ticks.map((t) => (
           <g key={t}>
             <line x1={L} x2={W - R} y1={sy(t)} y2={sy(t)} stroke="var(--m-line)" />
-            <text x={L - 6} y={sy(t) + 4} textAnchor="end" fontSize="11" fill="var(--m-ink-3)">
+            <text x={L - 6} y={sy(t) + 4} textAnchor="end" fontSize="12" fill="var(--m-ink-3)">
               {yFormat(t)}
             </text>
           </g>
         ))}
         {xTicks.map((t) => (
-          <text key={t} x={sx(t)} y={H - 8} textAnchor="middle" fontSize="11" fill="var(--m-ink-3)">
+          <text key={t} x={sx(t)} y={H - 8} textAnchor={sx(t) > W - R - 24 ? "end" : "middle"} fontSize="12" fill="var(--m-ink-3)">
             {xFormat(t)}
           </text>
         ))}
         {marker && (
           <g>
             <line x1={sx(marker.x)} x2={sx(marker.x)} y1={T} y2={H - B} stroke="var(--m-ink-3)" strokeDasharray="4 4" />
-            <text x={sx(marker.x) + 6} y={T + 14} fontSize="11" fill="var(--m-ink-2)">
+            <text x={sx(marker.x) + 6} y={T + 14} fontSize="12" fill="var(--m-ink-2)">
               {marker.label}
             </text>
           </g>

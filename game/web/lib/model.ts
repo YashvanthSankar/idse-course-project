@@ -205,3 +205,6 @@ export function inTen(p: number): string {
   if (p < 0.05) return "fewer than 1 in 10";
   return `${outOf10(p)} in 10`;
 }
+
+/** "full criminal trial" → "Full criminal trial" (labels from the data are lower case). */
+export const cap = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);

@@ -1,7 +1,7 @@
 "use client";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { duration, getOptions, inTen, MONTHS, pct, predict, type Effect, type Kind, type Options, type Prediction, type Topic, type UsedInput } from "@/lib/model";
+import { useEffect, useRef, useState } from "react";
+import { cap, duration, getOptions, inTen, MONTHS, pct, predict, type Effect, type Kind, type Options, type Prediction, type Topic, type UsedInput } from "@/lib/model";
 import { RealCase } from "./RealCase";
 
 /** "Test the model": choose from dropdowns, press Analyze, and read everything the model did. */
@@ -64,6 +64,14 @@ function Tester({ opts }: { opts: Options }) {
     onSuccess: setRan,
   });
   const changed = ran && JSON.stringify(ran.form) !== JSON.stringify(form);
+  // bring a new answer into view when it lands below the fold (always on a phone)
+  const resultRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = resultRef.current;
+    if (!ran || !el || el.getBoundingClientRect().top < window.innerHeight * 0.6) return;
+    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
+  }, [ran]);
 
   return (
     <div className="m-wrap m-page">
@@ -75,7 +83,7 @@ function Tester({ opts }: { opts: Options }) {
       <div className="m-grid mt-6">
         <section className="m-panel" aria-label="Case details">
           <h2 className="m-h2 mb-4">Choose a case</h2>
-          <div className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,.8fr)]">
+          <div className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,.7fr)]">
             <label className="block">
               <span className="mb-1 block text-sm font-medium">What is the case about?</span>
               <select
@@ -100,7 +108,7 @@ function Tester({ opts }: { opts: Options }) {
               <select className={select} value={form.kind} data-testid="model-variant" onChange={(e) => setForm({ ...form, kind: e.target.value })}>
                 {topic.kinds.map((id, i) => (
                   <option key={id} value={id}>
-                    {kinds[id].variant}
+                    {cap(kinds[id].variant)}
                     {kinds[id].title !== topic.title ? `, ${kinds[id].title}` : ""}
                     {i === 0 ? " (most common)" : ""}
                   </option>
@@ -135,11 +143,22 @@ function Tester({ opts }: { opts: Options }) {
 
       </div>
 
-      {ran && (
-        <div className="mt-3">
+      <div className="mt-3 scroll-mt-4" ref={resultRef}>
+        {ran ? (
           <Result r={ran.result} ms={ran.ms} topic={opts.topics.find((t) => t.id === ran.form.topic) as Topic} stale={!!changed} />
-        </div>
-      )}
+        ) : (
+          <section className="m-panel m-empty" aria-label="Result">
+            <h2 className="m-h2">The answer appears here</h2>
+            <p className="m-note">Press Analyze and you will see, for the case you chose:</p>
+            <ul>
+              <li>the chance it is over within a year, and how sure the model is</li>
+              <li>how often the model was right on cases like it</li>
+              <li>which inputs pushed the answer up or down</li>
+              <li>all {opts.model_info.n_inputs} inputs it was given, and where each came from</li>
+            </ul>
+          </section>
+        )}
+      </div>
 
       <div className="mt-3">
         <RealCase topics={Object.fromEntries(opts.topics.map((t) => [t.id, t]))} testN={opts.test.n} testAccuracy={opts.test.accuracy} />
@@ -184,7 +203,7 @@ function Result({ r, ms, topic, stale }: { r: Prediction; ms: number; topic: Top
     <article className="m-result" data-stale={stale} data-testid="model-answer" aria-live="polite">
       <header>
         <p className="text-sm text-[var(--m-ink-2)]">
-          {topic.title} · {r.kind.variant} · {r.district}
+          {topic.title} · {cap(r.kind.variant)} · {r.district}
         </p>
         <p className="m-verdict" data-testid="model-verdict">
           {yes ? "Likely to finish within 1 year" : "Not likely to finish within 1 year"}
@@ -235,8 +254,8 @@ function Result({ r, ms, topic, stale }: { r: Prediction; ms: number; topic: Top
           {moved.slice(0, 6).map((m) => {
             const w = (Math.abs(m.points) / maxMoved) * 50;
             return (
-              <li key={m.input} className="grid grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_3.5rem] items-center gap-2 text-sm">
-                <span className="min-w-0 break-words">
+              <li key={m.input} className="grid grid-cols-[minmax(0,1fr)_3.5rem] items-center gap-x-2 gap-y-1 py-0.5 text-sm sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_3.5rem]">
+                <span className="col-span-2 min-w-0 break-words sm:col-span-1">
                   <span className="font-medium">{m.label}</span> <span className="text-[var(--m-ink-2)]">{value[m.input] ?? ""}</span>
                 </span>
                 <span className="relative h-3.5">
@@ -281,15 +300,18 @@ function Result({ r, ms, topic, stale }: { r: Prediction; ms: number; topic: Top
               <tr className="text-[var(--m-ink-3)]">
                 <th className="py-1.5 pr-4 font-normal">Input</th>
                 <th className="py-1.5 pr-4 font-normal">Value</th>
-                <th className="py-1.5 font-normal">Where it came from</th>
+                <th className="hidden py-1.5 font-normal sm:table-cell">Where it came from</th>
               </tr>
             </thead>
             <tbody>
               {r.used_inputs.map((u) => (
                 <tr key={u.input} className="border-b border-[var(--m-line)]">
-                  <td className="py-1.5 pr-4">{u.label}</td>
-                  <td className="py-1.5 pr-4 font-medium">{u.value}</td>
-                  <td className="py-1.5 text-[var(--m-ink-2)]">{SOURCE[u.source]}</td>
+                  <td className="py-1.5 pr-4 align-top">
+                    {u.label}
+                    <span className="block text-[13px] text-[var(--m-ink-3)] sm:hidden">{SOURCE[u.source]}</span>
+                  </td>
+                  <td className="py-1.5 pr-4 align-top font-medium">{cap(String(u.value))}</td>
+                  <td className="hidden py-1.5 align-top text-[var(--m-ink-2)] sm:table-cell">{SOURCE[u.source]}</td>
                 </tr>
               ))}
             </tbody>

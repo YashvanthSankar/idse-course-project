@@ -53,7 +53,7 @@ function HowDisputesEnd() {
     >
       <div className="grid gap-8 lg:grid-cols-2">
         <div>
-          <Table head={["kind of case", "dismissed", "settled"]} rows={S.by_case_type.map((r) => [shortName(r.name), pct(r.dismissed, 1), pct(r.settled, 1)])} />
+          <Table head={["Kind of case", "Dismissed", "Settled"]} rows={S.by_case_type.map((r) => [shortName(r.name), pct(r.dismissed, 1), pct(r.settled, 1)])} />
           {cheque && ipc && (
             <p className="mt-3 text-[15px]">
               Inside magistrate trials, <b className="font-semibold">{pct(cheque.settled, 1)}</b> of cheque-bounce cases settle, against <b className="font-semibold">{pct(ipc.settled, 1)}</b> of Indian Penal Code cases.
@@ -62,7 +62,7 @@ function HowDisputesEnd() {
         </div>
         <div>
           <Table
-            head={["can filing-day facts tell?", "dismissed", "settled"]}
+            head={["Can filing-day facts tell?", "Dismissed", "Settled"]}
             rows={[
               ["Share that end this way", pct(d.base_rate, 1), pct(s.base_rate, 1)],
               ["Always guessing: accuracy", pct(d.always_guessing_accuracy, 1), pct(s.always_guessing_accuracy, 1)],
@@ -124,17 +124,17 @@ function Stories({ a }: { a: Data }) {
         <Figure
           title="1. What the case is about changes everything"
           note="Share of cases over within a year, Tamil Nadu, filed 2015–2017."
-          table={<Table head={["case", "over within a year", "usually takes"]} rows={topics.map((t) => [t.title, pct(t.within_1y), usually(t.timing.median_days)])} />}
+          table={<Table head={["Case", "Over within a year", "Usually takes"]} rows={topics.map((t) => [t.title, pct(t.within_1y), usually(t.timing.median_days)])} />}
         >
           <BarList rows={topics.map((t) => ({ label: t.title, value: t.within_1y, detail: `usually takes ${usually(t.timing.median_days)}` }))} format={(v) => pct(v)} max={1} />
         </Figure>
 
         <Figure
           title="2. How long cases stay open"
-          note={`The share of cases still not over, from the day they are filed. Across all Tamil Nadu cases, half are over after ${all.median_days ? duration(all.median_days) : "—"}.`}
+          note={`The share of cases still not over, from the day they are filed. Across all Tamil Nadu cases, half are over after ${all.median_days ? duration(all.median_days) : "—"}.${tn.still_open_curves.stc ? ` Quick summary trials start lower because ${pct(1 - tn.still_open_curves.stc.still_open["0"])} of them end the day they are filed.` : ""}`}
           table={
             <Table
-              head={["kind", "after 1 year", "after 2 years", "after 4 years"]}
+              head={["Kind", "After 1 year", "After 2 years", "After 4 years"]}
               rows={CURVES.filter(([c]) => tn.still_open_curves[c]).map(([c, name]) => {
                 const so = tn.still_open_curves[c].still_open;
                 return [name, pct(so["12"]), pct(so["24"]), pct(so["48"])];
@@ -148,7 +148,7 @@ function Stories({ a }: { a: Data }) {
         <Figure
           title="3. Where the time goes in a real dispute"
           note={`Time after the first hearing, by kind of case. Overall a dispute waits ${Math.round(stage.median_wait_first_hearing)} days for its first hearing, then runs ${duration(stage.median_after_first_hearing)} more, with hearings about ${Math.round(stage.median_gap_between_hearings)} days apart.`}
-          table={<Table head={["kind of case", "wait for first hearing", "after first hearing", "gap between hearings"]} rows={h.stages.by_type.map((s) => [shortName(s.name), `${Math.round(s.median_wait_first_hearing)} days`, s.median_after_first_hearing === null ? "more than half never ended" : duration(s.median_after_first_hearing), s.median_gap_between_hearings === null ? "—" : `${Math.round(s.median_gap_between_hearings)} days`])} />}
+          table={<Table head={["Kind of case", "Wait for first hearing", "After first hearing", "Gap between hearings"]} rows={h.stages.by_type.map((s) => [shortName(s.name), `${Math.round(s.median_wait_first_hearing)} days`, s.median_after_first_hearing === null ? "more than half never ended" : duration(s.median_after_first_hearing), s.median_gap_between_hearings === null ? "—" : `${Math.round(s.median_gap_between_hearings)} days`])} />}
         >
           <BarList rows={h.stages.by_type.filter((s) => s.median_after_first_hearing !== null).map((s) => ({ label: shortName(s.name), value: s.median_after_first_hearing as number, detail: `first hearing after ${Math.round(s.median_wait_first_hearing)} days` }))} format={(v) => duration(v)} limit={10} itemLabel="kinds of case" wideValue />
         </Figure>
@@ -156,7 +156,7 @@ function Stories({ a }: { a: Data }) {
         <Figure
           title="4. Where open disputes are stuck"
           note={`The stage recorded at the latest hearing, for ${h.stuck_at.cases_open.toLocaleString("en-IN")} disputes filed 2015–2017 still open when the data was collected.`}
-          table={<Table head={["stage", "share of open disputes"]} rows={h.stuck_at.top.map((s) => [s.stage, pct(s.share, 1)])} />}
+          table={<Table head={["Stage", "Share of open disputes"]} rows={h.stuck_at.top.map((s) => [s.stage, pct(s.share, 1)])} />}
         >
           <BarList rows={h.stuck_at.top.map((s) => ({ label: s.stage, value: s.share }))} format={(v) => pct(v)} limit={10} itemLabel="stages" />
         </Figure>
@@ -166,7 +166,7 @@ function Stories({ a }: { a: Data }) {
         <Figure
           title="6. Where the case is filed matters too"
           note="Share of cases over within a year, by district (Tamil Nadu, filed 2015–2017)."
-          table={<Table head={["district", "over within a year", "cases"]} rows={districts.map((d) => [d.district, pct(d.mean), d.size.toLocaleString("en-IN")])} />}
+          table={<Table head={["District", "Over within a year", "Cases"]} rows={districts.map((d) => [d.district, pct(d.mean), d.size.toLocaleString("en-IN")])} />}
         >
           <label className="mb-3 block">
             <span className="sr-only">Find a district</span>
@@ -179,14 +179,14 @@ function Stories({ a }: { a: Data }) {
         <Figure
           title="7. Across India, some states have huge backlogs"
           note="Of the cases filed in 2010, the share still not over when the data was collected in early 2019. Tamil Nadu is in black."
-          table={<Table head={["state", "still not over"]} rows={a.national.states.map((s) => [s.state, pct(s.pending_2010_filings, 1)])} />}
+          table={<Table head={["State", "Still not over"]} rows={a.national.states.map((s) => [s.state, pct(s.pending_2010_filings, 1)])} />}
         >
           <BarList sortable rows={a.national.states.map((s) => ({ label: s.state, value: s.pending_2010_filings, highlight: s.state === "Tamil Nadu", detail: `${s.cases.toLocaleString("en-IN")} cases` }))} format={(v) => pct(v)} limit={14} itemLabel="states" />
         </Figure>
 
         <section className="m-panel lg:col-span-2">
           <h2 className="m-h2">8. Can you tell on the day a case is filed?</h2>
-          <p className="mt-2 max-w-[80ch] text-[var(--m-ink-2)]">
+          <p className="mt-2 max-w-[72ch] text-[var(--m-ink-2)]">
             Partly. On {served.n.toLocaleString("en-IN")} real cases from 2017 it never saw, the model was right {pct(served.accuracy, 1)} of the time, but most of that is telling petty cases from everything else. On real disputes it was right{" "}
             <b className="font-semibold text-[var(--m-ink)]">{pct(h.table.contested.accuracy, 1)}</b> of the time, against <b className="font-semibold text-[var(--m-ink)]">{pct(h.table.contested.majority_accuracy, 1)}</b> for always guessing the commonest answer. Filing-day information tells you what kind of case it is, and little more. That fits chart 3: what decides a dispute&apos;s length seems to happen after it starts.
           </p>

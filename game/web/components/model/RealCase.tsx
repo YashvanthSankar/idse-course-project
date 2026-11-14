@@ -82,7 +82,7 @@ export function RealCase({ topics, testN, testAccuracy, variant = "panel" }: { t
       {error && <div className="text-[var(--m-critical)]">{error}</div>}
       {slip ?? (
         <div className="slip">
-          <p className="slip-row slip-sub">
+          <p className="slip-sub col-span-full py-3">
             There are {testN.toLocaleString("en-IN")} test cases. The model got {pct(testAccuracy, 1)} of them right, mostly the easy ones.
           </p>
         </div>

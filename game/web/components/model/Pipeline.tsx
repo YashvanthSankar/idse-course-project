@@ -104,7 +104,7 @@ export function Pipeline() {
   const served = RES.models.find((m) => m.served)!;
   const lookup = RES.models.find((m) => m.name.includes("district"))!;
   const stages = NB.parts.flatMap((p) => p.stages);
-  const groups = NB.parts.map((p) => ({ id: p.id, title: p.title, stages: p.stages.map((s) => ({ id: s.id, title: shortTitle(s.title) })) }));
+  const groups = NB.parts.map((p) => ({ id: p.id, title: p.title, stages: p.stages.map((s) => ({ id: s.id, title: sentence(shortTitle(s.title)) })) }));
   return (
     <div className="m-wrap m-page">
       <Hero served={served} stageCount={stages.length} />
@@ -202,7 +202,7 @@ function StageCard({ stage }: { stage: Stage }) {
     <article id={stage.id} className="stage">
       <h3 className="stage-title">
         <span>{stage.id}</span>
-        {stage.title}
+        {sentence(stage.title)}
       </h3>
       <Html html={stage.intro_html} className={`${PROSE} mt-3`} />
       <p className="takeaway">
