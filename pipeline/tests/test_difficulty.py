@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from tareekh.difficulty import (
+from courtcases.difficulty import (
     difficulty_table,
     hearing_gap,
     score_group,

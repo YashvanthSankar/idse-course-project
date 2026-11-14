@@ -10,7 +10,7 @@
   rubric check, glossary check): [`JEEVA.md`](JEEVA.md).
 - **Licence in the actual download is ODbL v1.0**, not CC BY-NC-SA as the website says.
 - **Observation cutoff:** no scrape date in the data; estimated per district (most courts
-  Jan–Feb 2019) by `pipeline/src/tareekh/cutoff.py`.
+  Jan–Feb 2019) by `pipeline/src/courtcases/cutoff.py`.
 - **Result:** "disposed of within a year?" on unseen 2017 Tamil Nadu filings: AUC 0.873, Brier
   0.138, vs 0.844 / 0.163 for a case-type × district lookup table.
 

@@ -165,7 +165,7 @@ def used_inputs(row: dict, kind: dict, context: dict) -> list[dict]:
     return [{"input": k, "label": labels.get(k, k), "value": v, "source": src} for k, v, src in out]
 
 
-def register_tareekh(app, limit: Callable[..., None] = lambda *_a, **_k: None) -> None:
+def register_court_model(app, limit: Callable[..., None] = lambda *_a, **_k: None) -> None:
     router = APIRouter(prefix="/api/model")
 
     @router.get("/options")

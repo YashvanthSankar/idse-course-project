@@ -224,7 +224,7 @@ not a fair test: on filing day nobody knows which cases those will be.
   filings, with plain-English names), each court's congestion at the end of the data, 300 real 2017
   test cases and the analytics.
 - The game's FastAPI backend serves `/api/model/options | predict | sample | analytics`
-  (`game/backend/auditor/tareekh/`); 9 API tests, including one that checks the site scores a test
+  (`game/backend/auditor/courtcases/`); 9 API tests, including one that checks the site scores a test
   case exactly as the pipeline does and one that checks the explanations add up to the model's log-odds.
 - The Next.js site serves `/model` (what was built), `/model/explore` (choose options, press
   **Analyze**, read the prediction, each input's effect, the exact inputs sent, and the model's

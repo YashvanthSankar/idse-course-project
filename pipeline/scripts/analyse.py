@@ -17,12 +17,12 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from tareekh.acts import UNKNOWN, canonical_act
-from tareekh.clusters import choose_and_fit
-from tareekh.courts import court_level
-from tareekh.cutoff import cutoffs, monthly_counts
-from tareekh.sections import primary_section
-from tareekh.survival import kaplan_meier, median_days, still_open_at
+from courtcases.acts import UNKNOWN, canonical_act
+from courtcases.clusters import choose_and_fit
+from courtcases.courts import court_level
+from courtcases.cutoff import cutoffs, monthly_counts
+from courtcases.sections import primary_section
+from courtcases.survival import kaplan_meier, median_days, still_open_at
 
 CLEAN = ROOT / "data" / "clean"
 KEYS = ROOT / "data" / "raw" / "ddl" / "keys"

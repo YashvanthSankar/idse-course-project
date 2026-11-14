@@ -2,7 +2,7 @@
 
 Protocol (decided before looking at test results):
 - Data: Tamil Nadu cases with a defined one-year label (filed at least a year before their
-  court's scrape cutoff; moved-before-a-year cases excluded) — see tareekh.target.
+  court's scrape cutoff; moved-before-a-year cases excluded) — see courtcases.target.
 - Years: 2010-2014 filings are left out (early years are incomplete: quickly finished cases from
   before digitisation are missing). Model selection: train on 2015, choose on 2016. Final: refit
   on 2015+2016, report once on 2017, a later year the models never saw.
@@ -42,8 +42,8 @@ from sklearn.svm import LinearSVC
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from tareekh.features import FEATURE_SETS
-from tareekh.modelling import modelling_data
+from courtcases.features import FEATURE_SETS
+from courtcases.modelling import modelling_data
 
 ARTIFACT = ROOT / "artifacts" / "within_1y"
 REPORT = ROOT / "reports"

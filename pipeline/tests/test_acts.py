@@ -2,7 +2,7 @@
 
 import pytest
 
-from tareekh.acts import UNKNOWN, canonical_act, coverage, squash
+from courtcases.acts import UNKNOWN, canonical_act, coverage, squash
 
 
 @pytest.mark.parametrize("raw, law", [
@@ -59,7 +59,7 @@ def test_coverage_weights_by_case_rows():
 
 
 def test_every_kind_on_the_site_gets_a_plain_topic():
-    from tareekh.glossary import TOPICS, topic_of
+    from courtcases.glossary import TOPICS, topic_of
     ids = {t["id"] for t in TOPICS}
     assert topic_of("cc", "Negotiable Instruments Act", "Negotiable Instruments Act s.138") == "cheque"
     assert topic_of("mcop", "Motor Vehicles Act", "Motor Vehicles Act s.166") == "accident"

@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from tareekh.clusters import choose_and_fit
-from tareekh.survival import kaplan_meier, median_days, still_open_at
+from courtcases.clusters import choose_and_fit
+from courtcases.survival import kaplan_meier, median_days, still_open_at
 
 
 def test_kaplan_meier_matches_the_hand_calculation():

@@ -1,6 +1,6 @@
 """Package what the /model site needs, from the same model and data as the reports.
 
-Writes to artifacts/site/ and copies it into the game backend (game/backend/auditor/tareekh/
+Writes to artifacts/site/ and copies it into the game backend (game/backend/auditor/courtcases/
 data/), which serves /api/model/*:
 - model.joblib, metadata.json   the served model (scikit-learn 1.9.1, same as the backend)
 - inputs.json                   districts, the common real "kinds of case" (case type + court
@@ -27,8 +27,8 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from tareekh.courts import court_level
-from tareekh.glossary import (
+from courtcases.courts import court_level
+from courtcases.glossary import (
     CASE_TYPES,
     PURPOSE_PLAIN,
     TOPIC_NOUN,
@@ -38,12 +38,12 @@ from tareekh.glossary import (
     topic_of,
     variant_label,
 )
-from tareekh.modelling import CLEAN, district_names, modelling_data
-from tareekh.survival import kaplan_meier, median_days, still_open_at
+from courtcases.modelling import CLEAN, district_names, modelling_data
+from courtcases.survival import kaplan_meier, median_days, still_open_at
 
 ARTIFACT = ROOT / "artifacts" / "within_1y"
 SITE = ROOT / "artifacts" / "site"
-BACKEND = ROOT.parent / "game" / "backend" / "auditor" / "tareekh" / "data"
+BACKEND = ROOT.parent / "game" / "backend" / "auditor" / "courtcases" / "data"
 REPORT = ROOT / "reports"
 SEED = 0
 N_KINDS = 40

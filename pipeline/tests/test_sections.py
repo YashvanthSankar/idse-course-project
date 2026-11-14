@@ -2,7 +2,7 @@
 
 import pytest
 
-from tareekh.sections import primary_section
+from courtcases.sections import primary_section
 
 
 @pytest.mark.parametrize("raw, section", [

@@ -35,13 +35,13 @@ CLEAN = ROOT / "data" / "clean"
 NATIONAL_COLUMNS = ["state_code", "dist_code", "court_no", "date_of_filing",
                     "date_of_decision", "disp_name"]
 BLOCK = 64 << 20  # bytes of CSV per batch
-EARLIEST = pa.scalar(datetime.date(1950, 1, 1), pa.date32())  # same window as tareekh.cases
+EARLIEST = pa.scalar(datetime.date(1950, 1, 1), pa.date32())  # same window as courtcases.cases
 LATEST = pa.scalar(datetime.date(2022, 12, 31), pa.date32())
 
 
 def as_date(column: pa.ChunkedArray | pa.Array) -> pa.Array:
     """ISO date strings to date32. Blanks, unparseable strings and dates outside the window
-    `tareekh.cases` accepts (1950–2022: year 0001, 5000-01-01, 7201-…) become null, so the
+    `courtcases.cases` accepts (1950–2022: year 0001, 5000-01-01, 7201-…) become null, so the
     national files and the state files agree on which dates exist."""
     parsed = pc.cast(pc.strptime(column, format="%Y-%m-%d", unit="s", error_is_null=True),
                      pa.date32())

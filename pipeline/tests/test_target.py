@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tareekh.target import label, within
+from courtcases.target import label, within
 
 CUTOFF = pd.Timestamp("2019-02-28")
 

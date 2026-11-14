@@ -40,7 +40,7 @@ table; numbers in docs come from the generated reports, never from memory.
 2. [ ] **Confirm the rubric and deadline with the professor**: required algorithms (we have
        linear and logistic regression, SVM, random forest, k-means), and whether deployment and
        analytics are marked.
-3. [ ] **Check the glossary** in `pipeline/src/tareekh/glossary.py` (case-type abbreviations and
+3. [ ] **Check the glossary** in `pipeline/src/courtcases/glossary.py` (case-type abbreviations and
        section meanings) before the viva; it lists only meanings we're confident of, but each
        should be verified against a source.
 4. [ ] **Viva prep**: walk through REPORT.md sections 3–5; the strongest points are the scrape

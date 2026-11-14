@@ -26,11 +26,11 @@ from sklearn.pipeline import Pipeline
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from tareekh.cases import decode
-from tareekh.cutoff import cutoffs, with_fallback
-from tareekh.features import FEATURE_SETS
-from tareekh.modelling import CLEAN, modelling_data
-from tareekh.target import label
+from courtcases.cases import decode
+from courtcases.cutoff import cutoffs, with_fallback
+from courtcases.features import FEATURE_SETS
+from courtcases.modelling import CLEAN, modelling_data
+from courtcases.target import label
 
 sys.path.insert(0, str(ROOT / "scripts"))
 from train_within_1y import one_hot

@@ -28,8 +28,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from train_within_1y import one_hot
 
-from tareekh.features import FEATURE_SETS
-from tareekh.modelling import CLEAN, modelling_data
+from courtcases.features import FEATURE_SETS
+from courtcases.modelling import CLEAN, modelling_data
 
 HORIZON = 730
 CATS, NUMS = FEATURE_SETS["+ law and section"]

@@ -9,8 +9,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from auditor.api import create_app
+from auditor.court_model.routes import DATA
 from auditor.store import SessionStore
-from auditor.tareekh.routes import DATA
 from auditor.telemetry import Telemetry
 
 
@@ -103,7 +103,7 @@ def test_effects_add_up_to_the_model_log_odds(client):
     body = client.get("/api/model/sample", params={"seed": 3}).json()
     model = joblib.load(DATA / "model.joblib")
     inputs = json.loads((DATA / "inputs.json").read_text())
-    from auditor.tareekh.routes import predict_row
+    from auditor.court_model.routes import predict_row
     case = next(c for c in json.loads((DATA / "test_cases.json").read_text())
                 if c["id"] == body["case"]["id"])
     probability, effects = predict_row(case)

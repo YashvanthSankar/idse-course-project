@@ -13,7 +13,7 @@ most recent hearing dates, and the stage it was stuck at when the data was colle
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
-from tareekh.survival import kaplan_meier, median_days
+from courtcases.survival import kaplan_meier, median_days
 
 EASY_TYPES = ("stc", "crlmp")  # summary trials and criminal miscellaneous (bail-type) petitions
 

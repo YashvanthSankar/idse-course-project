@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from tareekh.settlement import ended_as, lookup_rates, top_decile_precision
+from courtcases.settlement import ended_as, lookup_rates, top_decile_precision
 
 
 def frame():

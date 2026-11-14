@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from tareekh.features import add_law, build, decode_acts, section_vocabulary, type_vocabulary
-from tareekh.target import within
+from courtcases.features import add_law, build, decode_acts, section_vocabulary, type_vocabulary
+from courtcases.target import within
 
 ROOT = Path(__file__).resolve().parents[2]
 CLEAN = ROOT / "data" / "clean" / "10"

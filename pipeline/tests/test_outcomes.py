@@ -1,4 +1,4 @@
-from tareekh.outcomes import ENDS_CASE, OUTCOME_GROUP, outcome_group
+from courtcases.outcomes import ENDS_CASE, OUTCOME_GROUP, outcome_group
 
 # All 52 categories in DDL's disp_name_key.csv (2010–2018)
 DDL_DISPOSITIONS = """

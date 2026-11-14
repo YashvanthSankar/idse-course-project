@@ -2,7 +2,7 @@
 
 import pytest
 
-from tareekh.courts import OTHER, court_level
+from courtcases.courts import OTHER, court_level
 
 
 @pytest.mark.parametrize("raw, level", [

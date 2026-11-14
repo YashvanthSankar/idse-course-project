@@ -34,7 +34,7 @@ uv run python scripts/analyse_settlement.py   # how disputes end: settled or dis
 # 5. notebooks (read the cleaned data and the reports)
 uv run jupyter nbconvert --to notebook --execute --inplace notebooks/*.ipynb
 uv run python scripts/export_notebook.py   # the executed master notebook → the /model/pipeline page
-# 6. the site package → artifacts/site/ and game/backend/auditor/tareekh/data/
+# 6. the site package → artifacts/site/ and game/backend/auditor/courtcases/data/
 uv run python scripts/export_site.py
 ```
 
@@ -56,7 +56,7 @@ pipeline/
 │   ├── analyse.py           every number for the notebooks and the site → reports/analysis.*
 │   ├── experiments.py       drift, horizons, cutoff rule, weak spots → reports/experiments.*
 │   └── export_site.py       model + inputs + test cases + analytics for /model
-├── src/tareekh/
+├── src/courtcases/
 │   ├── acts.py              29,857 raw law names → 54 laws (+ Unknown, Other)
 │   ├── sections.py          free-text sections → main section (138, 304B, Order 7)
 │   ├── courts.py            116 court names → 14 court levels (+ unclear)
@@ -171,7 +171,7 @@ Early cohorts therefore look much slower than they were (6% of 2010 filings "wit
 50% of 2017's). **Models use 2015-2017 filings only.**
 
 ### Labelling (Tamil Nadu)
-Cutoff per district (with state fallback) → `tareekh.target.label` → `within(…, 365)`.
+Cutoff per district (with state fallback) → `courtcases.target.label` → `within(…, 365)`.
 Of 3,640,055 cases: 23,497 decided before filing, 1,554 bail orders and 41 impossible decision
 dates are unusable (an earlier run without the state fallback also marked 89,880 as "filed after
 the cutoff" because one district's dip gave it a 2012 cutoff); outcome groups: decided 33%, pending /
@@ -196,11 +196,11 @@ types), and courts got faster each year, so 2017 is slightly under-predicted.
 ## The /model site
 
 - `scripts/export_site.py` writes `artifacts/site/` and copies it to
-  `game/backend/auditor/tareekh/data/`, which `game/backend/auditor/tareekh/routes.py` serves at
+  `game/backend/auditor/courtcases/data/`, which `game/backend/auditor/courtcases/routes.py` serves at
   `/api/model/options | predict | sample | analytics`.
 - Pages: `game/web/app/model/` (home, explore = test the model, pipeline, analytics), components in
   `game/web/components/model/`. A separate plain light site; the game's effects are off there.
-- After retraining: rerun `export_site.py`, run the backend tests (`test_tareekh_api.py` checks
+- After retraining: rerun `export_site.py`, run the backend tests (`test_courtcases_api.py` checks
   the site scores a case exactly as the pipeline does), then deploy backend first, then the web.
 
 ## Decisions

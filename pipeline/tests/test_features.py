@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from tareekh.features import congestion, prev_year_load
+from courtcases.features import congestion, prev_year_load
 
 
 def cases(rows):
@@ -39,7 +39,7 @@ def test_prev_year_load_uses_last_year_only():
 
 
 def test_law_features_join_by_case_id_and_mark_missing_rows():
-    from tareekh.features import NO_LAW, add_law, decode_acts
+    from courtcases.features import NO_LAW, add_law, decode_acts
 
     acts = pd.DataFrame({"ddl_case_id": ["10-a", "10-b"], "act": ["1", "2"],
                          "section": ["7", "8"], "bailable_ipc": ["non-bailable", ""],

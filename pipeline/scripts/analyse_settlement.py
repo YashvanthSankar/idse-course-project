@@ -21,11 +21,11 @@ from sklearn.preprocessing import OneHotEncoder
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from tareekh.acts import canonical_act
-from tareekh.courts import court_level
-from tareekh.difficulty import EASY_TYPES
-from tareekh.glossary import case_type_name
-from tareekh.settlement import ended_as, lookup_rates, top_decile_precision
+from courtcases.acts import canonical_act
+from courtcases.courts import court_level
+from courtcases.difficulty import EASY_TYPES
+from courtcases.glossary import case_type_name
+from courtcases.settlement import ended_as, lookup_rates, top_decile_precision
 
 CLEAN = ROOT / "data" / "clean" / "10"
 KEYS = ROOT / "data" / "raw" / "ddl" / "keys"

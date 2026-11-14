@@ -22,7 +22,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from train_within_1y import one_hot, ordinal
 
-from tareekh.difficulty import (
+from courtcases.difficulty import (
     EASY_TYPES,
     difficulty_table,
     hearing_gap,
@@ -30,8 +30,8 @@ from tareekh.difficulty import (
     stage_summary,
     stuck_at,
 )
-from tareekh.glossary import case_type_name
-from tareekh.modelling import CLEAN, modelling_data
+from courtcases.glossary import case_type_name
+from courtcases.modelling import CLEAN, modelling_data
 
 ARTIFACT = ROOT / "artifacts" / "within_1y"
 COLUMNS = {  # what each raw column is and how the project uses it

@@ -16,9 +16,9 @@ moved (moved cases are censored at the move) that is the court it was filed in.
 import numpy as np
 import pandas as pd
 
-from tareekh.acts import canonical_act
-from tareekh.courts import court_level
-from tareekh.sections import primary_section
+from courtcases.acts import canonical_act
+from courtcases.courts import court_level
+from courtcases.sections import primary_section
 
 BASE_CATEGORICAL = ["district", "court_level", "case_type", "filing_month"]
 BASE_NUMERIC = ["log_prev_year_filings", "log_pending_at_filing", "clearance_last_year"]
@@ -60,7 +60,7 @@ def congestion(cases: pd.DataFrame, group_cols: list[str]) -> pd.DataFrame:
     - disposed_last_year: cases in the group that ended or moved in the 365 days before;
     - clearance_last_year: disposed_last_year / (pending_at_filing + 1), how fast the queue
       moves relative to its length.
-    Needs `observed_days`/`ended` from tareekh.target; cases with an end date after the cutoff
+    Needs `observed_days`/`ended` from courtcases.target; cases with an end date after the cutoff
     count as still pending. Early-year incompleteness (quick cases missing before
     digitisation) hardly affects these from 2015 on: the missing cases had long since ended."""
     filed = cases["date_of_filing"].to_numpy("datetime64[D]")

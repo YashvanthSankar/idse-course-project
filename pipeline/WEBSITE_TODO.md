@@ -1,4 +1,4 @@
-# TAREEKH website: ideas and TODO
+# Website: ideas and TODO
 
 Ideas for future work on the `/model` site. These are proposals, not features that are already available. The model describes historical Tamil Nadu cases; new interactions should make that scope and its limitations clear.
 

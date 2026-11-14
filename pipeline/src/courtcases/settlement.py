@@ -8,7 +8,7 @@ nobody knows which cases those will be. reports/settlement.json keeps both numbe
 import numpy as np
 import pandas as pd
 
-from tareekh.target import within
+from courtcases.target import within
 
 
 def ended_as(labelled: pd.DataFrame, group: str, horizon_days: int) -> pd.Series:

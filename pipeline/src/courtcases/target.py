@@ -28,7 +28,7 @@ Rules (each is a decision we defend):
 import numpy as np
 import pandas as pd
 
-from tareekh.outcomes import ENDS_CASE, outcome_group
+from courtcases.outcomes import ENDS_CASE, outcome_group
 
 
 def label(df: pd.DataFrame, cutoff: pd.Series) -> pd.DataFrame:

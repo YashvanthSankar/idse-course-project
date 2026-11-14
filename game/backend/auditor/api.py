@@ -21,6 +21,7 @@ from auditor.autopsy import build_autopsy
 from auditor.career.routes import CareerVerdict, register_career
 from auditor.career.storage import CareerStore
 from auditor.charts import reveal_figure
+from auditor.court_model.routes import register_court_model
 from auditor.generator.cases import build_case, level_infos
 from auditor.interrogation import statements
 from auditor.models import (
@@ -41,7 +42,6 @@ from auditor.results import tool_result
 from auditor.rooms import GRACE_SECONDS, RoomManager
 from auditor.scoring import score_accusation
 from auditor.store import CaseSession, SessionStore
-from auditor.tareekh.routes import register_tareekh
 from auditor.telemetry import Telemetry
 from auditor.tools.registry import TOOLS, resolve_params, tool_specs
 
@@ -378,7 +378,7 @@ def create_app(store: SessionStore | None = None, telemetry: Telemetry | None = 
                      if player_id in r.players), "Detective")
         return profile_for(player_id, events, name=name)
 
-    register_tareekh(app, limit)  # the course pipeline project's model (/api/model)
+    register_court_model(app, limit)  # the course pipeline project's model (/api/model)
     if careers is None and os.getenv("AUDITOR_CAREER", "1") != "0":
         careers = CareerStore(app.state.telemetry.url)  # same database as telemetry
     app.state.careers = careers

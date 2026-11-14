@@ -21,9 +21,9 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from tareekh.cases import decode
-from tareekh.cutoff import cutoffs, with_fallback
-from tareekh.target import label, within
+from courtcases.cases import decode
+from courtcases.cutoff import cutoffs, with_fallback
+from courtcases.target import label, within
 
 CLEAN = ROOT / "data" / "clean"
 

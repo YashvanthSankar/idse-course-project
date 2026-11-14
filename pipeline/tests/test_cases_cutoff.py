@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 
-from tareekh.cases import decode
-from tareekh.cutoff import cliff, cutoffs, with_fallback
+from courtcases.cases import decode
+from courtcases.cutoff import cliff, cutoffs, with_fallback
 
 
 def write_keys(tmp_path):
