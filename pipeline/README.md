@@ -173,7 +173,7 @@ The same 592 Tamil Nadu courts present from 2010 record 171k cases filed in 2010
 2018 (×3.6), and same-day decisions rise from 0.7% of cases to 18%. Courts didn't get 3.6×
 busier: cases that finished quickly *before* a court went digital were mostly never entered.
 Early cohorts therefore look much slower than they were (6% of 2010 filings "within a year" vs
-50% of 2017's). **Models use 2015-2017 filings only.**
+49% of 2017's). **Models use 2015-2017 filings only.**
 
 ### Labelling (Tamil Nadu)
 Cutoff per district (with state fallback) → `courtcases.target.label` → `within(…, 365)`.
@@ -183,7 +183,7 @@ the cutoff" because one district's dip gave it a 2012 cutoff); outcome groups: d
 no disposition 26%, dismissed 19%, **moved 14%**, disposed (manner unknown) 5%, settled 3%.
 A first version of the one-year label was biased: 2018 filings came out about 93% "within a year"
 because only fast cases could be known. Fixed by requiring full follow-up (filed ≥1 year before
-the cutoff). Eligible: 405k (2015), 446k (2016), 549k (2017) cases; 36%, 44%, 50% within a year.
+the cutoff). Eligible: 405k (2015), 446k (2016), 549k (2017) cases; 36%, 44%, 49% within a year.
 
 ### The model (full tables: [`reports/within_1y.md`](reports/within_1y.md), write-up: [`REPORT.md`](REPORT.md))
 Test = 549,273 cases filed in 2017, never seen during training or model choice.

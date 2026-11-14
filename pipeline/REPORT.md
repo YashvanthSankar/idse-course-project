@@ -1,11 +1,17 @@
 # How long do Indian district-court cases take?
 
-**IDSE (CS3006) end-to-end data science project** · data: Development Data Lab's judicial data
-(eCourts, 2010–2018, ODbL v1.0) · live at `otlr.vercel.app/model` · code: `pipeline/`
+**IDSE (CS3006) end-to-end data science project, IIITDM** · data: Development Data Lab's judicial
+data (eCourts, 2010–2018, ODbL v1.0) · live at [otlr.vercel.app/model](https://otlr.vercel.app/model)
+· code: `pipeline/`
 
-Every number below was produced by the code in this folder; the generated reports
-(`reports/analysis.md`, `reports/within_1y.md`, `reports/experiments.md`) and the five
-notebooks (start with `notebooks/00_full_pipeline.ipynb`) hold the full tables and charts (`reports/figures/`).
+Every number below was produced by the code in this folder. The full tables are in the generated
+reports (`reports/within_1y.md`, `analysis.md`, `experiments.md`, and `difficulty.json`,
+`settlement.json`, `days_regression.json`), the charts in `reports/figures/`, and the whole story,
+step by step with its code, in the five notebooks (start with `notebooks/00_full_pipeline.ipynb`,
+also readable at [otlr.vercel.app/model/pipeline](https://otlr.vercel.app/model/pipeline)).
+
+**Contents:** 1 Problem and purpose · 2 Collection · 3 Preparation · 4 Exploratory analysis ·
+5 Modelling and evaluation · 6 Deployment · 7 Limitations · 8 Reproduce
 
 ---
 
@@ -135,7 +141,7 @@ date in 80% of finished cases. They are not model inputs (they happen after fili
 - Of 435,784 disputes still open at collection, the most common stages at the latest hearing are
   evidence (20%), framing the issues or issuing process (14%), and summons or notice not yet served (12%).
 
-## 5. Modelling
+## 5. Modelling and evaluation
 
 **Inputs (known on the filing day only):** district, court level, case type, month, law, main
 section (40 most common law + section pairs), IPC bailable or not, number of IPC sections,
@@ -232,21 +238,27 @@ not a fair test: on filing day nobody knows which cases those will be.
   `/model/analytics` (what the data shows). Model calls go through the site's own domain, so a
   visitor only needs to reach Vercel.
 
-## Limitations
+## 7. Limitations
 
 - The overall accuracy is flattered by easy cases; on real disputes the model barely beats guessing.
-
 - Tamil Nadu, cases filed 2015–2017, scraped early 2019; courts have changed since.
 - Congestion inputs on the site are the values at the end of the data, not today's.
 - Within one kind of case, the model can barely tell faster from slower cases.
 - Kaplan–Meier assumes watching stops for reasons unrelated to how soon a case would end; true for
   the scrape cutoff, an approximation for transfers.
+- The days regression and the settled/dismissed analysis are exploratory: the first only sees cases
+  that finished within two years, the second has few settlements to learn from.
+- The data has no scrape date; the cutoff per district is an estimate (section 3), and party gender
+  is inferred by the data provider, often "unclear", and kept out of the model on purpose.
 - A statistical summary of past cases, not a prediction for any real case, and not legal advice.
 
-## Reproduce
+## 8. Reproduce
+
+Under an hour end to end on a laptop, most of it the download. Each step and what it writes is
+explained in [`README.md`](README.md).
 
 ```bash
-cd pipeline && uv sync && uv run pytest
+cd pipeline && uv sync && uv run pytest                     # 142 tests
 uv run python scripts/fetch_ddl.py --want 'license.txt' --want 'csv/keys/*' --want 'csv/cases/*' --max-saves 3
 uv run python scripts/fetch_ddl.py --want 'csv/acts_sections*' --max-saves 1
 mkdir -p data/raw/ddl/keys && tar xzf data/raw/ddl/csv/keys/keys.tar.gz -C data/raw/ddl/keys
@@ -255,5 +267,9 @@ uv run python scripts/build_dataset.py --state 10 --archive data/raw/ddl/csv/act
 uv run python scripts/label_cases.py --state 10
 uv run python scripts/train_within_1y.py
 uv run python scripts/analyse.py && uv run python scripts/experiments.py
+uv run python scripts/regress_days.py
+uv run python scripts/analyse_difficulty.py && uv run python scripts/analyse_settlement.py
 uv run python scripts/export_site.py
+uv run jupyter nbconvert --to notebook --execute --inplace notebooks/*.ipynb
+uv run python scripts/export_notebook.py
 ```

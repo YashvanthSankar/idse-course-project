@@ -1,21 +1,99 @@
-# 🕵️ OUTLIER
+# IDSE course project · CS3006, IIITDM
+
+Two data-science projects built for **Introduction to Data Science for Engineers**, served from one
+website:
+
+| | Live | What it is |
+|---|---|---|
+| 📊 **The court case duration model** | **[otlr.vercel.app/model](https://otlr.vercel.app/model)** | An end-to-end pipeline on 81 million real Indian court records: collection, cleaning, EDA, a tested model, and a site where you can try it |
+| 🕵️ **OUTLIER** | **[otlr.vercel.app](https://otlr.vercel.app)** | A noir detective game where you catch corporate fraudsters with real Python data analysis |
+
+The website runs on Vercel; the Python side (FastAPI under systemd, Caddy for HTTPS) runs on a small
+always-on VPS, with game telemetry in Neon Postgres.
+
+---
+
+## Part 1 · The court case duration model
+
+![The model's home page](pipeline/docs/screenshots/01-home.jpg)
+
+**The question.** Indian district courts are known for delay. *Which court cases get stuck, where,
+and can you tell on the day a case is filed?* The model answers one measurable version of it: given
+only what is known on filing day, **will a Tamil Nadu district-court case be disposed of within a
+year?** It is a planning tool (how many new cases will still be open next year, which kinds to steer
+towards mediation), not a prediction for one person's case, and not legal advice.
+
+**The data.** [Development Data Lab](https://www.devdatalab.org/judicial-data)'s de-identified
+eCourts records: **80,935,944 cases** filed 2010–2018 across India, of which **3,640,055** are from
+Tamil Nadu, where IIITDM is. Licence: ODbL v1.0.
+
+### The pipeline
+
+| Stage | What was done |
+|---|---|
+| **Collect** | Streamed the 16 GB archive out of a Dropbox folder that refuses single-file links, keeping only the files needed and checking each against its CRC-32 |
+| **Clean** | 29,857 hand-typed law names → 54 laws; free-text courts and sections parsed; impossible dates (year 0001, `5000-01-01`) blanked and counted; sentinel codes decoded. Every rule is tested on real strings |
+| **Label honestly** | The data has no scrape date, so it was estimated per district from the collapse in monthly decisions (Jan–Feb 2019). "Within a year" is labelled only for cases watched for a full year; transfers are not counted as endings |
+| **Explore** | The early years are missing their quick cases (survivorship), "median days among decided cases" is a trap, and almost all of a dispute's time comes after its first hearing. Kaplan–Meier curves, k-means on districts |
+| **Model** | 12 inputs known on filing day (no hearing dates, no gender). Three baselines against logistic regression, linear SVM and random forest. Train on 2015, choose on 2016, **test once on 2017** |
+| **Evaluate** | Accuracy, AUC, Brier, log loss, confusion matrix, calibration, permutation importance, drift, other horizons, and easy cases vs real disputes |
+| **Deploy** | The 6 kB logistic regression is served by FastAPI; on the site you choose a case, press Analyze, and see the prediction, why, and every input it was given |
+
+### Results on 549,273 unseen 2017 cases
+
+| | Cases | Model accuracy | Always guessing the commonest answer | AUC |
+|---|---|---|---|---|
+| All cases | 549,273 | 80.9% | 50.5% | 0.873 |
+| Easy cases (petty summary trials, bail-type petitions) | 196,105 | 92.6% | 88.1% | 0.903 |
+| **Real disputes** | **353,168** | **74.3%** | **72.0%** | **0.706** |
+
+The served model beats a case type × district lookup table (AUC 0.873 vs 0.844, Brier 0.138 vs
+0.163) and its probabilities are calibrated (a predicted 55% happens 56% of the time). But most of
+that accuracy is easy cases. **On real disputes, filing-day information barely beats guessing**, and
+models trained only on disputes do no better: the limit is the information, not the algorithm.
+
+### What we found
+
+- **The kind of case decides most.** Bail cases are over within a year 98% of the time; civil appeals 11%.
+- **The time comes after the start.** A typical dispute waits 40 days for its first hearing, then runs
+  another 2 years 3 months: 95% of its time comes after the first hearing.
+- **Cheque-bounce cases settle far more often.** Inside magistrate trials, 9.9% of cheque-bounce cases
+  settle within two years, against 0.7% of Indian Penal Code cases. That is where a legal-aid office
+  could steer cases to mediation.
+- **Some states have huge backlogs.** Of the cases filed in 2010, 63% in Bihar were still open in
+  early 2019; in Tamil Nadu, 10%.
+
+| | |
+|---|---|
+| ![Test the model](pipeline/docs/screenshots/02-test-the-model.jpg) | ![Data analysis](pipeline/docs/screenshots/03-data-analysis.jpg) |
+| **Test the model:** the prediction, how much to trust it, why, and the 12 inputs sent | **Data analysis:** what 81 million cases show |
+
+![The pipeline page](pipeline/docs/screenshots/04-pipeline.jpg)
+
+**Read more**
+
+- [`pipeline/REPORT.md`](pipeline/REPORT.md): the write-up, stage by stage, with every number.
+- [`pipeline/notebooks/00_full_pipeline.ipynb`](pipeline/notebooks/00_full_pipeline.ipynb): the whole
+  pipeline in one executed notebook, also readable at
+  [otlr.vercel.app/model/pipeline](https://otlr.vercel.app/model/pipeline); plus four focused
+  notebooks: audit, EDA, survival and clusters, model.
+- [`pipeline/README.md`](pipeline/README.md): how to run every step, the raw facts measured, and each
+  decision with its reason.
+
+---
+
+## Part 2 · OUTLIER, the game
 
 > *"Every number tells a story. Some of them lie."*
 
-### ▶ Play it: **[otlr.vercel.app](https://otlr.vercel.app)**
-
-### 📊 The course pipeline project: **[otlr.vercel.app/model](https://otlr.vercel.app/model)**, a model of how long Indian court cases take, from 81 million real records ([write-up](pipeline/REPORT.md))
-
-The game runs on Vercel; the Python brain runs on a small always-on VPS (FastAPI under systemd, Caddy for HTTPS) with telemetry in Neon Postgres.
-
 A noir detective web game where you catch corporate fraudsters with **real Python data analysis**.
-Built for **IDSE (Introduction to Data Science for Engineers)**.
+Play it at **[otlr.vercel.app](https://otlr.vercel.app)**.
 
 ![Title screen](game/docs/screenshots/01-title.jpg)
 
 ---
 
-## The game in 30 seconds
+### The game in 30 seconds
 
 Mumbai, 2 AM, monsoon. You're a rookie forensic auditor. Each case is a company ledger of about
 1,000 transactions and five suspects, and one of them is cooking the books.
@@ -32,7 +110,7 @@ Mumbai, 2 AM, monsoon. You're a rookie forensic auditor. Each case is a company 
 
 ---
 
-## Six cases, six techniques
+### Six cases, six techniques
 
 | # | Case | The fraud | Caught by |
 |---|---|---|---|
@@ -52,7 +130,7 @@ catches the fraudster at least 19 times out of 20, and that honest companies are
 
 ---
 
-## 💼 Career Mode: from a sweet shop to the Kaveri Inquiry
+### 💼 Career Mode: from a sweet shop to the Kaveri Inquiry
 
 Start with offer letters from three small businesses and climb: **3 small → 5 mid → 3 large → 2 very large →
 the Final**. Each contract is a year at one company: five cases, easy to hard, with the same staff and a
@@ -63,7 +141,7 @@ job, always innocent — until the Final. Full design: [game/docs/CAREER.md](gam
 
 ---
 
-## 🎓 Class Mode: the class becomes the dataset
+### 🎓 Class Mode: the class becomes the dataset
 
 The professor puts a QR code on the projector. **The whole class joins from their phones**, races on the
 same case with a live leaderboard, and then the **Class Autopsy** analyzes the class's own play data
@@ -81,7 +159,7 @@ with pandas, live.
 
 ---
 
-## 🧠 How Python powers every move
+### 🧠 How Python powers every move
 
 | In the game | Python |
 |---|---|
@@ -100,7 +178,7 @@ with pandas, live.
 | Detective Cards | `StandardScaler` + `KMeans` |
 | Case Report | `seaborn` + `matplotlib` PDF |
 
-### 📓 Notebooks (the full analysis)
+#### 📓 Notebooks (the full analysis)
 - [`01_case_generator.ipynb`](game/notebooks/01_case_generator.ipynb): building a believable company, and why Benford's law appears
 - [`02_detection_tools.ipynb`](game/notebooks/02_detection_tools.ipynb): every tool derived by hand, plus the fairness proof
 - [`03_class_autopsy.ipynb`](game/notebooks/03_class_autopsy.ipynb): telemetry, logistic regression, chi-square, KMeans + elbow/silhouette
@@ -110,51 +188,72 @@ with pandas, live.
 ## 🏗️ Architecture
 
 ```
- Browser · Next.js game UI          ◄── REST + WebSocket ──►   Python brain · FastAPI
- Tailwind · Framer Motion · Plotly                              numpy · pandas · scipy
- dnd-kit corkboard · Web Audio                                  scikit-learn · plotly · seaborn
- Pyodide (Hacker Mode)                                          SQLite telemetry → pandas
+ Browser · Next.js on Vercel             ◄── REST + WebSocket ──►   Python · FastAPI on a VPS
+ /         the game                                                  auditor/              the game engine
+ /model    the court case model site    ── /model-api/* proxy ──►   auditor/court_model/  the served model
+ Tailwind · Framer Motion · Plotly                                   numpy · pandas · scipy · scikit-learn
+ dnd-kit corkboard · Pyodide (Hacker Mode)                           telemetry → Neon Postgres → pandas
 ```
+
+The model site calls the API through its own domain (`/model-api/*` is rewritten to the VPS), so a
+visitor only ever talks to Vercel.
 
 ```
 idse-course-project/
-├── game/                the game (live at otlr.vercel.app)
+├── pipeline/            the court case duration model (served at /model)
+│   ├── src/courtcases/  cleaning, labelling, features, survival, clustering, settlement (142 tests)
+│   ├── scripts/         download → parquet → labels → models → reports → site package → notebook page
+│   ├── notebooks/       00 the full pipeline · 01 audit · 02 EDA · 03 survival and clusters · 04 model
+│   ├── reports/         generated tables, JSON and figures
+│   └── REPORT.md        the write-up
+├── game/
 │   ├── backend/         Python package `auditor`: case engine, 9 tools, scoring, rooms, autopsy, the /model API (400 tests)
-│   ├── web/             Next.js game: title, office, investigation, corkboard, verdict, class mode
-│   ├── notebooks/       the three narrated notebooks
-│   └── docs/            IDEA · DESIGN · PLAN · TODO · DEMO
-├── pipeline/            how long Indian court cases take (EDA, cleaning, model; served at /model)
+│   ├── web/             Next.js: the game and the /model site
+│   ├── notebooks/       the game's three narrated notebooks
+│   └── docs/            IDEA · DESIGN · CAREER · PLAN · TODO · DEMO
 ├── IDEA.md              shared context for both parts
-└── JEEVA.md             pipeline work still to do
+└── JEEVA.md             pipeline work still open
 ```
 
 ---
 
-## 🚀 Run it
+## 🚀 Run it locally
 
-**1 · Backend** (Python 3.12 via [uv](https://docs.astral.sh/uv/))
+**1 · Backend** (Python 3.12 via [uv](https://docs.astral.sh/uv/)): serves the game and `/api/model/*`
 ```bash
 cd game/backend
 uv sync
 uv run uvicorn auditor.api:app --host 0.0.0.0 --port 8000
 ```
 
-**2 · Game** (Node 20+, pnpm)
+**2 · Website** (Node 20+, pnpm)
 ```bash
 cd game/web
 pnpm install
-pnpm dev --port 3200          # open http://localhost:3200
+pnpm dev --port 3200          # the game at http://localhost:3200, the model at /model
 ```
 
 For Class Mode, phones on the same Wi-Fi join via the QR code on the host screen.
 
+**3 · The pipeline** (only needed to rebuild the model from the raw data; about an hour, mostly the download)
+```bash
+cd pipeline
+uv sync
+uv run pytest                 # then follow pipeline/README.md, "Run it"
+```
+
 **Tests**
 ```bash
-cd game/backend && uv run pytest              # engine, tools, fairness, API, rooms, autopsy
-cd game/web && pnpm test && pnpm exec playwright test
+cd pipeline && uv run pytest                  # 142: cleaning rules on real strings, labels, cutoff, survival, settlement
+cd game/backend && uv run pytest              # 400: engine, tools, fairness, API, rooms, autopsy, the /model API
+cd game/web && pnpm test && pnpm e2e          # unit tests, then Playwright end to end (needs the backend running)
 ```
 
 ---
 
-## 📚 Docs
-[IDEA](game/docs/IDEA.md) · [DESIGN](game/docs/DESIGN.md) · [CAREER](game/docs/CAREER.md) · [CAREER HANDOVER](game/docs/CAREER_HANDOVER.md) · [PLAN](game/docs/PLAN.md) · [TODO](game/docs/TODO.md) · [DEMO script](game/docs/DEMO.md)
+## 📚 Docs and credits
+
+- Model: [REPORT](pipeline/REPORT.md) · [pipeline README](pipeline/README.md) · [IDEA](IDEA.md) · [open work](JEEVA.md)
+- Game: [IDEA](game/docs/IDEA.md) · [DESIGN](game/docs/DESIGN.md) · [CAREER](game/docs/CAREER.md) · [CAREER HANDOVER](game/docs/CAREER_HANDOVER.md) · [PLAN](game/docs/PLAN.md) · [TODO](game/docs/TODO.md) · [DEMO script](game/docs/DEMO.md)
+- Contains data from Development Data Lab's judicial data, ODbL v1.0. Photograph on the model site:
+  Madras High Court by Yercaud-elango, CC BY 4.0, via Wikimedia Commons.
