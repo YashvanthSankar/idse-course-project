@@ -12,6 +12,13 @@ const PLACES = [
   { place: 3, height: "clamp(3rem, 12vh, 9rem)", delay: 0, color: "#c0854a" },
 ];
 
+/** How much earlier the reveal starts, so it opens with the lowest place that has a winner.
+ * Only three places exist, however many players caught the fraudster. */
+export function revealShift(winners: number): number {
+  const lowest = Math.min(Math.max(winners, 1), PLACES.length);
+  return PLACES.find((p) => p.place === lowest)!.delay;
+}
+
 export function Podium({ rows }: { rows: BoardRow[] }) {
   const reduced = useReducedEffects();
   const winners = rows.filter((r) => r.solved && r.correct);
@@ -33,8 +40,7 @@ export function Podium({ rows }: { rows: BoardRow[] }) {
     <div data-testid="podium" className="flex w-full items-end justify-center gap-2 sm:gap-6">
       {PLACES.filter(({ place }) => place <= winners.length).map(({ place, height, delay, color }) => {
         const row = winners[place - 1];
-        // with fewer than three winners, the reveal starts with the lowest real place
-        const shift = PLACES.find((p) => p.place === winners.length)!.delay;
+        const shift = revealShift(winners.length);
         return (
           <div key={place} className="flex min-w-0 flex-1 flex-col items-center sm:max-w-64">
             {row && (
