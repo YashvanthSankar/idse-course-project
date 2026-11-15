@@ -1,7 +1,9 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { SiteGuide } from "@/components/guide/SiteGuide";
+import { browserStorage, guideSeen, markGuideSeen } from "@/lib/guide";
 
 const TABS = [
   { href: "/model", label: "Home" },
@@ -24,6 +26,14 @@ function FileMark() {
 
 export function ModelShell({ children }: { children: ReactNode }) {
   const path = usePathname();
+  const [guide, setGuide] = useState(false);
+
+  // A first visit opens the short guide to the whole site; the footer link reopens it.
+  useEffect(() => {
+    if (guideSeen(browserStorage())) return;
+    markGuideSeen(browserStorage());
+    setGuide(true); // eslint-disable-line react-hooks/set-state-in-effect -- reads localStorage, client only
+  }, []);
   return (
     <div data-site="model">
       <header className="m-top">
@@ -53,9 +63,14 @@ export function ModelShell({ children }: { children: ReactNode }) {
           <p>
             IDSE course project (CS3006, IIITDM). Contains data from Development Data Lab&apos;s judicial data, ODbL v1.0. A historical estimate, not legal advice. Photograph: Madras High Court by Yercaud-elango, CC BY 4.0, via Wikimedia Commons.{" "}
             <Link href="/">OUTLIER game</Link>
+            {" · "}
+            <button type="button" className="m-guide-link" onClick={() => setGuide(true)}>
+              What&apos;s on this site
+            </button>
           </p>
         </div>
       </footer>
+      <SiteGuide open={guide} onClose={() => setGuide(false)} />
     </div>
   );
 }

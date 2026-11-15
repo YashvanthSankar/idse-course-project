@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Rain } from "@/components/fx/Rain";
+import { SiteGuide } from "@/components/guide/SiteGuide";
 import { SettingsPanel } from "@/components/settings/SettingsPanel";
 import { CAREER_ENABLED } from "@/lib/career";
+import { browserStorage, guideSeen, markGuideSeen } from "@/lib/guide";
 import { progressSummary, totalScore } from "@/lib/progress";
 import { rankFor } from "@/lib/rank";
 import { sfx } from "@/lib/sound";
@@ -41,7 +43,14 @@ export function TitleScreen() {
   const rank = rankFor(totalScore(progress));
   const [awake, setAwake] = useState(false);
   const [focus, setFocus] = useState(0);
-  const [panel, setPanel] = useState<"manual" | "settings" | null>(null);
+  const [panel, setPanel] = useState<"manual" | "settings" | "guide" | null>(null);
+
+  // A first visit opens the short guide to the whole site; once seen, it stays behind the ? button.
+  useEffect(() => {
+    if (guideSeen(browserStorage())) return;
+    markGuideSeen(browserStorage());
+    setPanel("guide"); // eslint-disable-line react-hooks/set-state-in-effect -- reads localStorage, client only
+  }, []);
 
   useEffect(() => {
     const onMove = (e: PointerEvent) => pointerX.set(e.clientX / window.innerWidth - 0.5);
@@ -182,6 +191,14 @@ export function TitleScreen() {
           >
             ⚙
           </button>
+          <button
+            onClick={() => setPanel("guide")}
+            aria-label="What's on this site"
+            title="What's on this site"
+            className="flex h-11 w-11 items-center justify-center rounded border-2 border-paper/30 text-xl text-paper/85 hover:border-[#4cc9f0] hover:text-[#4cc9f0]"
+          >
+            ?
+          </button>
           <span>© 2026 IDSE<span className="hidden sm:inline"> · NUMPY · PANDAS · SCIPY · SKLEARN</span></span>
           {/* the course pipeline project: a separate, plain site on the same domain */}
           <Link
@@ -201,6 +218,7 @@ export function TitleScreen() {
 
       <Manual open={panel === "manual"} onClose={() => setPanel(null)} />
       <SettingsPanel open={panel === "settings"} onClose={() => setPanel(null)} />
+      <SiteGuide open={panel === "guide"} onClose={() => setPanel(null)} />
     </main>
   );
 }
