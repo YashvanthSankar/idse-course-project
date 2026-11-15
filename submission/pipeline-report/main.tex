@@ -9,7 +9,7 @@
 \usepackage[hidelinks,pdftitle={How Long Do Indian District-Court Cases Take? Predicting Disposal Within a Year at Filing},
   pdfauthor={Yashvanth S, Jeevanandham T, Nithillakrishi PY},
   pdfsubject={CS3006 Introduction to Data Science for Engineers, IIITDM Kancheepuram},
-  pdfkeywords={Indian judiciary, eCourts, case duration, censoring, logistic regression, Kaplan-Meier},
+  pdfkeywords={Indian courts, eCourts, case duration, logistic regression},
   pdflang={en-GB}]{hyperref}
 
 \graphicspath{{../../pipeline/reports/figures/}{../../pipeline/docs/screenshots/}}
@@ -33,193 +33,203 @@ Predicting Disposal Within a Year at Filing}
 \maketitle
 
 \begin{abstract}
-Indian district courts are known for delay, but it is not clear which cases get stuck and whether
-this can be told on the day a case is filed. We study 80.9 million de-identified eCourts records
-(2010--2018) and model the 3.64 million Tamil Nadu cases. The data has no collection date and its
-early years are incomplete, so we estimate a collection cutoff for each district and label a case
-only if it was observed for a full year. A logistic regression on twelve filing-day inputs, trained
-on 2015--2016 and tested once on 549,273 cases filed in 2017, reaches an AUC of 0.873 against 0.844
-for a case-type $\times$ district lookup table, with well-calibrated probabilities. Most of this
-comes from easy cases: on real disputes the model is right 74.3\% of the time against 72.0\% for
-always guessing. Filing-day information tells what \emph{kind} of case will be quick, but not which
-dispute will be.
+Court cases in India often take years. We wanted to know which cases take long, and whether we can
+tell this on the day a case is filed. We used public records of 80.9 million court cases from 2010
+to 2018 and studied the 3.64 million cases from Tamil Nadu. We cleaned the data, fixed two problems
+that would have made cases look faster than they are, and trained a model to answer one question:
+will this case finish within a year? We tested it on 549,273 cases filed in 2017 that it had never
+seen. It is right 80.9\% of the time, but most of that comes from easy cases. For real disputes it
+is right 74.3\% of the time, while simply guessing ``no'' every time is right 72.0\% of the time. So
+the type of case tells a lot, but on the first day we cannot say which dispute will be quick.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Indian judiciary, eCourts, case duration, censoring, survival analysis, logistic regression
+Indian courts, eCourts, case duration, data cleaning, logistic regression
 \end{IEEEkeywords}
 
 \section{Introduction}
-Pendency in Indian courts is widely discussed, but mostly through totals. We ask a narrower
-question that public data can answer: \emph{given only what is known on the day a case is filed,
-will a Tamil Nadu district-court case be disposed of within 365 days?} ``Disposed of'' means the
-case ended in that court (judgment, dismissal, settlement, Lok Adalat or closure); a transfer to
-another court is not an end.
+Delays in Indian courts are well known, but people usually talk about total pending cases. We asked
+a simpler question: \emph{if we only know what is written on the day a case is filed, can we say
+whether it will finish within one year?} By ``finish'' we mean the case ended in that court, by a
+judgment, dismissal, settlement or Lok Adalat. If a case was sent to another court, we do not count
+that as finished.
 
-The answer is meant for planning, for example how many new filings a registry will still have
-open next year, or which kinds of case a legal-aid office could steer towards mediation. It is not
-a prediction for one person's case. Two rules follow: the model may use only filing-day
-information, and it must beat a simple lookup table, or it is not worth using.
+This kind of answer can help a court plan its work, for example to estimate how many of this year's
+new cases will still be pending next year. It is not meant to predict any one person's case. We
+set two rules for ourselves: the model can only use information known on the filing day, and it
+must do better than a simple table of past averages. If it cannot beat that table, there is no
+point in using it.
 
 \section{Data}
-Development Data Lab (DDL) publishes de-identified records from the eCourts portal: 80,935,944
-cases filed in district courts across India between 2010 and 2018 \cite{ddl}. The licence in the
-download is ODbL v1.0 \cite{odbl}. Each row is one case, with its district and court, case type,
-outcome, the last hearing's purpose, and five dates (filing, decision, first, latest and next
-hearing); a second file gives the law and section. We model Tamil Nadu (3,640,055 cases), where
-our institute is; the all-India data is used only to estimate the collection date.
+We used data from Development Data Lab \cite{ddl}, who collected and anonymised records from the
+government's eCourts website. It has 80,935,944 cases filed in district courts across India from
+2010 to 2018, shared under the ODbL v1.0 licence \cite{odbl}. Each row is one case. It tells us the
+district and court, the type of case, how it ended, and five dates: filing, decision, first
+hearing, last hearing and next hearing. A second file gives the law and section the case was filed
+under. Names of people are not included.
 
-The data is shared only as one large zip stream from a Dropbox folder. Our script reads the stream,
-keeps only the needed files, checks each against its CRC-32, and converts the 16\,GB of CSVs to
-Parquet in one pass.
+We focused on Tamil Nadu (3,640,055 cases), since our institute is here. We used the all-India data
+only to find out when the data was collected. The data is only available as one very large
+download, so we wrote a script that reads it as it downloads, keeps only the files we need, and
+checks that each file arrived correctly.
 
-\section{Data Preparation}
+\section{Preparing the Data}
 
 \subsection{Cleaning}
-Most fields were typed by hand in thousands of courts. Every rule was written against real strings
-from the data and is covered by tests (142 in total). Table~\ref{tab:clean} lists the main steps.
-Dates we could not trust were blanked and counted, not guessed, and 23,497 cases ``decided before
-filing'' were excluded. Transfers, committals and remands (14\% of cases) are treated as
-\emph{censored}: the case left that court, it did not end.
+Most fields were typed by hand by court staff, so the same thing is written in many ways.
+Table~\ref{tab:clean} shows the main fixes. When a value was clearly wrong, such as a date in the
+year 7201, we removed it and counted how many there were, instead of guessing. We also removed
+23,497 cases that were ``decided before they were filed''. Cases sent to another court (14\%) are
+marked as ``moved'', not finished. We wrote 142 tests to check that the cleaning rules work on real
+examples from the data.
 
-\begin{table}[t]
+\begin{table}[!t]
 \caption{Main cleaning steps (Tamil Nadu)}
 \label{tab:clean}
 \centering\small
-\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.36\columnwidth}>{\raggedright\arraybackslash}p{0.56\columnwidth}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.40\columnwidth}>{\raggedright\arraybackslash}p{0.52\columnwidth}@{}}
 \toprule
 Problem & What we did \\
 \midrule
-29,857 spellings of law names & Mapped to 54 laws; 94.1\% of rows named \\
-Free-text sections (``138r/w142'') & Parsed to the main section \\
-116 court-name strings & Mapped to 14 court levels \\
-Impossible dates (year 0001, 7201) & Blanked and counted \\
-52 outcome codes & Grouped; transfers marked ``moved'' \\
+Law names written 29,857 different ways & Grouped into 54 laws \\
+Section numbers as free text (``138r/w142'') & Read out the main section \\
+116 spellings of court names & Grouped into 14 court types \\
+Impossible dates (year 0001, 7201) & Removed and counted \\
+52 different ``how it ended'' codes & Grouped; transfers marked ``moved'' \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Estimating the collection date}
-A case with no decision date is only known to be open up to the day the data was collected, and
-the data does not record that day. The monthly count of decisions shows it (Fig.~\ref{fig:cliff}):
-about one million a month in 2018, then 790,000 in January 2019 and 286,000 in February. For each
-district we take the last month before this collapse that still has at least half a normal month
-of decisions; Tamil Nadu's districts fall between December 2018 and February 2019.
+\subsection{When was the data collected?}
+If a case has no decision date, we only know it was still pending on the day the data was
+collected. But the data does not tell us that day. We found it from the number of decisions per
+month (Fig.~\ref{fig:cliff}). Across India there were about one million decisions every month in
+2018, and then the count suddenly drops in January and February 2019. That drop is when the data
+was collected. We worked out this date for each district separately.
 
-\begin{figure}[t]
+\begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{eda_scrape_cliff.png}
-\caption{Decisions recorded per month, all India. The fall in early 2019 marks when the data was
-collected.}
+\caption{Decisions recorded per month across India. The sudden drop in early 2019 shows when the
+data was collected.}
 \label{fig:cliff}
 \end{figure}
 
-\subsection{Survivorship in the early years}
-The same 592 Tamil Nadu courts record 170,958 filings in 2010 but 622,473 in 2018. Courts did not
-become 3.6 times busier: cases that ended quickly before a court went digital were mostly never
-entered, so early years look far slower than they were. We therefore model 2015--2017 filings only.
+\subsection{The early years are incomplete}
+The same 592 courts in Tamil Nadu have 170,958 cases filed in 2010 but 622,473 filed in 2018.
+Courts did not get 3.6 times busier. Cases that finished quickly before the courts started using
+computers were mostly never entered, so the old years look much slower than they really were. For
+this reason we only used cases filed from 2015 to 2017.
 
 \subsection{Labels}
-Each case gets the days it was observed (to its end, its transfer or its district's cutoff) and
-whether that period ended in a disposal. ``Within 365 days'' is defined only for cases filed at
-least a year before their court's cutoff, so every labelled case had a full year in which to end.
-Without this rule, 2018 filings came out 93\% ``within a year''. The labelled shares are 35.9\%
-(2015, 405,062 cases), 43.5\% (2016, 445,639) and 49.5\% (2017, 549,273).
+For each case we want a yes or no answer: did it finish within 365 days? We only give this answer
+if the case was filed at least one year before the data was collected, so that every case had a
+full year to finish. Our first attempt skipped this rule, and it said 93\% of 2018 cases finished
+within a year, which was clearly wrong. After the fix, the share of cases finishing within a year
+is 35.9\% for 2015 (405,062 cases), 43.5\% for 2016 (445,639) and 49.5\% for 2017 (549,273).
 
-\section{Exploratory Analysis}
+\section{What the Data Shows}
 
-\paragraph*{The median trap} The median days among \emph{decided} cases falls from 1,366 for 2010
-filings to 17 for 2017 filings, only because recent slow cases have not finished. A Kaplan--Meier
-estimate \cite{km}, which counts open cases for as long as they were watched, falls much less
-(Fig.~\ref{fig:median}). For 2015--2018 filings its median is 532 days.
+\paragraph*{A misleading average} If we take only the cases that have finished, the typical
+(median) time falls from 1,366 days for 2010 cases to just 17 days for 2017 cases. This is not
+because courts became faster. It is because many 2017 cases had not finished yet, so only the
+quick ones were counted. A Kaplan--Meier estimate \cite{km}, which also counts the cases that are
+still pending, shows a much smaller fall (Fig.~\ref{fig:median}). By this method, a typical case
+filed between 2015 and 2018 takes 532 days.
 
-\begin{figure}[t]
+\begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{eda_median_trap.png}
-\caption{Median time to decision by filing year, Tamil Nadu: among decided cases only (black) and
-Kaplan--Meier, which counts open cases (red).}
+\caption{Typical (median) time to a decision by filing year in Tamil Nadu. Black: only finished
+cases. Red: Kaplan--Meier, which also counts pending cases.}
 \label{fig:median}
 \end{figure}
 
-\paragraph*{Kind of case} The share disposed of within a year ranges from 98\% for bail-type
-petitions and 80\% for petty summary trials to 28\% for original suits and 12\% for accident
-claims (Fig.~\ref{fig:open}); by district it ranges from 19\% to 74\%. K-means on the districts found no clear groups
-(best silhouette 0.19).
+\paragraph*{Type of case matters most} 98\% of bail-type petitions and 80\% of petty-offence cases
+finish within a year, but only 28\% of civil suits and 12\% of accident claims do
+(Fig.~\ref{fig:open}). Between districts the share goes from 19\% to 74\%. We tried grouping
+districts with k-means, but they did not form clear groups.
 
-\begin{figure}[t]
+\begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{survival_still_open.png}
-\caption{Share of Tamil Nadu cases (filed 2015--2018) still open after $N$ months, Kaplan--Meier, by case type.}
+\caption{Share of Tamil Nadu cases (filed 2015--2018) still pending after a given number of months,
+for each type of case.}
 \label{fig:open}
 \end{figure}
 
-\paragraph*{Where the time goes} For real disputes (all cases except summary trials and bail-type
-petitions) the first hearing comes after a median of 40 days, and the case then runs a median of
-808 more days: 95\% of its time comes after the first hearing.
+\paragraph*{Where the time goes} We call every case except petty-offence cases and bail-type
+petitions a \emph{real dispute}. A real dispute waits about 40 days for its first hearing, and then
+goes on for about 808 more days. So 95\% of the time is spent after the first hearing.
 
-\section{Methodology}
+\section{Method}
 
-\paragraph*{Inputs} Twelve inputs known on filing day: district, court level, case type, filing
-month, law, law and section, whether the offence is bailable, criminal or civil, the number of
-penal-code sections, the cases pending in those courts, how many they cleared last year, and last
-year's filings of this type in the district. Hearing dates (they describe the future), gender
-(a public tool should not score cases by it) and the court number are left out on purpose.
+\paragraph*{What the model sees} Twelve facts known on the filing day: the district, the court,
+the type of case, the month, the law and section, whether the offence is bailable, whether it is
+criminal or civil, the number of sections charged, how many cases are already pending in those
+courts, how many cases they finished last year, and how many cases of this type were filed there
+last year. We did not use hearing dates, because they happen after filing. We did not use gender,
+because a public tool should not judge a case by the gender of the people in it.
 
-\paragraph*{Split} We train on 2015, choose the model on 2016, refit on 2015--2016 (850,701 cases)
-and test once on 2017 (549,273 cases), which was never used for training or choosing.
+\paragraph*{How we tested} We trained on 2015 cases and used 2016 cases to choose the best model.
+Then we trained that model again on 2015 and 2016 (850,701 cases) and tested it only once, on 2017
+cases (549,273). The 2017 cases were never used before the final test.
 
-\paragraph*{Models} Three lookup-table baselines (overall rate, rate per case type, rate per case
-type $\times$ district) against logistic regression, a calibrated linear SVM and a random forest
-\cite{rf}, all from scikit-learn \cite{sklearn}, each with and without the law inputs. We report
-AUC \cite{auc}, Brier score \cite{brier}, log loss and accuracy. The model with the best 2016 log
-loss, logistic regression with the law inputs, is served; it is 6\,kB.
+\paragraph*{Models} We compared three simple ``past average'' tables (overall, by case type, and by
+case type and district) with three models from scikit-learn \cite{sklearn}: logistic regression, a
+linear SVM and a random forest \cite{rf}. We measured accuracy, AUC \cite{auc} (how well the model
+puts quick cases above slow ones; 0.5 is guessing, 1.0 is perfect) and the Brier score \cite{brier}
+(how close the predicted chances are to what happened; lower is better). Logistic regression did
+best on the 2016 cases, so that is the model we use. Saved, it is only 6\,kB.
 
 \section{Results}
-Table~\ref{tab:results} shows the 2017 test. The served model improves on the best lookup table
-(AUC 0.844 to 0.873, Brier 0.163 to 0.138). The SVM and random forest score almost the same; the
-served model was fixed on 2016, before the test year was scored. Its probabilities are calibrated: a predicted 55\% happens 56\% of the
-time and 85\% happens 87\% of the time (Fig.~\ref{fig:cal}).
+Table~\ref{tab:results} shows the 2017 test. Our model is better than the best past-average table
+(AUC 0.873 against 0.844, Brier score 0.138 against 0.163). The SVM and random forest give almost
+the same numbers, so a more complex model did not help. The model's chances can also be trusted:
+when it says 55\%, the case finishes within a year 56\% of the time, and when it says 85\%, it
+happens 87\% of the time (Fig.~\ref{fig:cal}).
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.8\columnwidth]{model_calibration.png}
-\caption{Calibration on the 2017 test year: points near the diagonal mean a predicted probability matches how often cases really ended within a year.}
-\label{fig:cal}
-\end{figure}
-
-\begin{table}[t]
-\caption{2017 test year, 549,273 cases}
+\begin{table}[!t]
+\caption{Test on 2017 cases (549,273 cases)}
 \label{tab:results}
 \centering\small
 \begin{tabular}{@{}lccc@{}}
 \toprule
 Method & AUC & Brier & Accuracy \\
 \midrule
-Overall rate & 0.500 & 0.259 & 50.5\% \\
-Rate per case type & 0.828 & 0.163 & 78.0\% \\
-Case type $\times$ district & 0.844 & 0.163 & 75.9\% \\
-Logistic regression (served) & \textbf{0.873} & \textbf{0.138} & \textbf{80.9\%} \\
-Linear SVM, calibrated & 0.873 & 0.137 & 81.1\% \\
+Overall average & 0.500 & 0.259 & 50.5\% \\
+Average by case type & 0.828 & 0.163 & 78.0\% \\
+Average by case type and district & 0.844 & 0.163 & 75.9\% \\
+Logistic regression (our model) & \textbf{0.873} & \textbf{0.138} & \textbf{80.9\%} \\
+Linear SVM & 0.873 & 0.137 & 81.1\% \\
 Random forest & 0.874 & 0.138 & 80.7\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-An accuracy of 80.9\% sounds good, but petty summary trials and bail-type petitions almost always
-end within a year, and the model only has to recognise them. Table~\ref{tab:split} splits the test
-year. \textbf{On real disputes the model is right 74.3\% of the time, against 72.0\% for always
-answering ``not within a year''} (AUC 0.706). Models trained on disputes alone do no better
-(AUC 0.713 to 0.722), so the limit is the information available on filing day, not the algorithm.
-Permutation importance agrees: case type matters most, and within one case type the model ranks
-cases poorly.
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.62\columnwidth]{model_calibration.png}
+\caption{Predicted chance against what really happened, 2017 cases. Points close to the diagonal
+mean the predicted chances are correct.}
+\label{fig:cal}
+\end{figure}
 
-\begin{table}[t]
-\caption{Accuracy against always guessing, 2017}
+However, 80.9\% accuracy is less impressive than it sounds. Petty-offence cases and bail-type
+petitions almost always finish within a year, and the model only has to recognise them.
+Table~\ref{tab:split} splits the test cases into easy cases and real disputes. \textbf{For real
+disputes the model is right 74.3\% of the time, while always saying ``no'' is right 72.0\% of the
+time.} Models trained only on real disputes did not do better either. This means the problem is
+not the algorithm: the information available on the filing day is simply not enough to tell which
+dispute will be quick.
+
+\begin{table}[!t]
+\caption{Model accuracy against always guessing the most common answer, 2017}
 \label{tab:split}
 \centering\small
 \begin{tabular}{@{}lrccc@{}}
 \toprule
-Test cases & Cases & Model & Guessing & AUC \\
+Cases & Number & Model & Guessing & AUC \\
 \midrule
 All & 549,273 & 80.9\% & 50.5\% & 0.873 \\
 Easy cases & 196,105 & 92.6\% & 88.1\% & 0.903 \\
@@ -228,38 +238,37 @@ Real disputes & 353,168 & 74.3\% & 72.0\% & 0.706 \\
 \end{tabular}
 \end{table}
 
-\section{Deployment}
-The model and the analytics are packaged by one script and served by a FastAPI backend
-(\texttt{/api/model}); a test checks that the site scores a case exactly as the pipeline does. The
-website (Next.js, \url{https://otlr.vercel.app/model}) lets a visitor choose a case, press Analyze,
-and see the probability, how far to trust it, and the effect of each input. It also shows the
-analytics and every pipeline step with its code.
+\section{Website}
+We put the model online at \url{https://otlr.vercel.app/model}. A small Python server (FastAPI)
+runs the model, and the website (Next.js) lets anyone pick a case, press Analyze and see the
+chance of it finishing within a year, how much to trust that number, and which facts pushed it up
+or down. The site also shows our data analysis and every step of the pipeline with its code. A
+test checks that the website gives exactly the same answer as our pipeline.
 
-\section{Limitations and Ethics}
-The overall accuracy is flattered by easy cases. The model covers Tamil Nadu filings of 2015--2017,
-and courts have changed since. The collection date is an estimate, and some apparent backlog may be
-records that were never updated. Gender and hearing information are not inputs, and the tool is
-for planning, not legal advice: a probability for one case must not be used to advise a litigant.
-The records were de-identified by DDL and we add no personal data.
+\section{Limitations}
+The high overall accuracy mostly comes from easy cases. The data covers only Tamil Nadu cases filed
+from 2015 to 2017, and courts may have changed since then. The collection date is our estimate,
+not a recorded fact, and some cases that look pending may simply never have been updated. The
+model is meant for planning, not legal advice, and should not be used to make decisions about any
+one person's case.
 
 \section{Conclusion}
-We built an end-to-end pipeline on 80.9 million court records: a selective download, tested
-cleaning rules, an estimated collection date, labels that wait for a full year, exploratory
-analysis, a model tested once on a later year, and a live website. On filing day one can tell what
-kind of case will be quick (AUC 0.873), but not which dispute will be (74.3\% against 72.0\%). As a
-dispute spends 95\% of its time after its first hearing, delay seems to depend mostly on what
-happens after a case starts. Future work: predict at each hearing, model duration directly with a
-survival model, and compare states with very different backlogs.
+We built a complete pipeline: downloading 80.9 million records, cleaning them, fixing the
+collection date and the missing early cases, exploring the data, building and testing a model, and
+putting it on a website. On the filing day we can tell which \emph{type} of case will be quick, but
+not which dispute will be (74.3\% against 72.0\% for guessing). Since 95\% of a dispute's time is
+spent after the first hearing, delays seem to depend mainly on what happens once the case starts.
+In future, a model that updates its prediction after each hearing could do much better.
 
 \section*{Contributions}
-The work was shared equally. Yashvanth S: modelling and evaluation, the served model and its API,
-and deployment. Jeevanandham T: data collection, the cleaning rules and their tests, and labelling
-(collection cutoff, censoring, survivorship). Nithillakrishi PY: exploratory analysis, survival
-curves and clustering, the notebooks and figures, and the website pages.
+All three of us contributed equally. Yashvanth S built and tested the models, the model server
+and the deployment. Jeevanandham T handled the data download, the cleaning rules and their tests,
+and the labels (collection date, moved cases, missing early cases). Nithillakrishi PY did the data
+analysis, the survival curves and clustering, the notebooks and figures, and the website pages.
 
 \section*{Data and Code}
-Contains data from Development Data Lab's judicial data, ODbL v1.0. Code, notebooks and reports:
-\url{https://github.com/YashvanthSankar/idse-course-project} (folder \texttt{pipeline/}).
+Contains data from Development Data Lab's judicial data, ODbL v1.0. All code, notebooks and
+results: \url{https://github.com/YashvanthSankar/idse-course-project} (folder \texttt{pipeline/}).
 
 \begin{thebibliography}{7}
 \bibitem{ddl} Development Data Lab, ``Judicial data: Indian district court records (eCourts),
