@@ -161,8 +161,9 @@ was replaced; the tests now cover both traps plus vacation dips.
 - **80,935,944 cases** filed 2010-2018: 4.28 M (2010) rising to 13.72 M (2018).
   **Tamil Nadu: 3,640,055.**
 - **Scrape dates, from all filing years together:** almost every state was scraped in
-  **January-February 2019**; a few later (Kerala, Gujarat March 2019; West Bengal, Chandigarh
-  early 2020). Tamil Nadu's monthly decisions: ~45-85k a month in 2018, 32k in Jan 2019, 13k in
+  **January-February 2019**; a few looked later on this first count (Kerala, Gujarat March 2019; West Bengal,
+  Chandigarh early 2020), but the per-district rule below puts them at January 2019 too
+  (`reports/analysis.md`). Tamil Nadu's monthly decisions: ~45-85k a month in 2018, 32k in Jan 2019, 13k in
   Feb, 4.5k in March, so the scrape ran *during* February. We use "the last month with at least
   half a normal month" (TN districts: Dec 2018 to Feb 2019) so partly scraped months don't make
   decided cases look pending.
@@ -182,7 +183,7 @@ the cutoff" because one district's dip gave it a 2012 cutoff); outcome groups: d
 no disposition 26%, dismissed 19%, **moved 14%**, disposed (manner unknown) 5%, settled 3%.
 A first version of the one-year label was biased: 2018 filings came out about 93% "within a year"
 because only fast cases could be known. Fixed by requiring full follow-up (filed ≥1 year before
-the cutoff). Eligible: 405k (2015), 446k (2016), 549k (2017) cases; 36%, 44%, 49% within a year.
+the cutoff). Eligible: 405k (2015), 446k (2016), 549k (2017) cases; 36%, 43%, 49% within a year.
 
 ### The model (full tables: [`reports/within_1y.md`](reports/within_1y.md), write-up: [`REPORT.md`](REPORT.md))
 Test = 549,273 cases filed in 2017, never seen during training or model choice.

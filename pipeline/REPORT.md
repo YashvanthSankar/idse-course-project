@@ -99,7 +99,7 @@ they were. **We model 2015–2017 filings only.**
   court's cutoff, so every labelled case had the full year. A first version labelled recent cases
   that ended fast while their slow neighbours were unknown: 2018 filings came out about 93% "within a
   year". The fix is the eligibility rule; transfers before a year stay unlabelled.
-- Eligible: 405,062 (2015), 445,639 (2016), 549,273 (2017) cases; 36%, 44% and 49% disposed of
+- Eligible: 405,062 (2015), 445,639 (2016), 549,273 (2017) cases; 36%, 43% and 49% disposed of
   within a year.
 
 ## 4. Exploratory analysis
