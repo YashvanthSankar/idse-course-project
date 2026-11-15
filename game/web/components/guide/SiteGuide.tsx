@@ -14,19 +14,25 @@ const DOWNLOADS = [
   { label: "All code", href: GITHUB },
 ] as const;
 
+const ADDRESS =
+  "break-all font-mono text-[13px] text-[#8a2b22] underline decoration-[#8a2b22]/40 underline-offset-4 hover:decoration-[#8a2b22]";
+
+/** Where each part lives, with the address spelled out so it can be typed or shared. */
+const WHERE = [
+  { what: "Use the model", address: "otlr.vercel.app/model/explore", href: "/model/explore", internal: true,
+    note: "Choose a case, press Analyze, see the chance it ends within a year and why." },
+  { what: "See the pipeline", address: "otlr.vercel.app/model/pipeline", href: "/model/pipeline", internal: true,
+    note: "Every step from raw data to the model, with its code and output." },
+  { what: "Data analysis", address: "otlr.vercel.app/model/analytics", href: "/model/analytics", internal: true,
+    note: "What the 81 million court records show." },
+  { what: "Pipeline code", address: "github.com/YashvanthSankar/idse-course-project/tree/main/pipeline", href: `${GITHUB}/tree/main/pipeline`, internal: false,
+    note: "The scripts, tests and notebooks; pipeline/README.md says how to run each step." },
+  { what: "Model API", address: "otlr.vercel.app/model-api/predict", href: `${GITHUB}#pages-on-the-site`, internal: false,
+    note: "POST the 12 inputs and get the prediction back as JSON (endpoints listed in the README)." },
+] as const;
+
 function Heading({ children }: { children: ReactNode }) {
   return <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-[#8a2b22]">{children}</h3>;
-}
-
-function PageLink({ href, title, onGo, children }: { href: string; title: string; onGo: () => void; children: ReactNode }) {
-  return (
-    <li>
-      <Link href={href} onClick={onGo} className="font-semibold text-[#1d1a16] underline decoration-[#8a2b22]/40 underline-offset-4 hover:decoration-[#8a2b22]">
-        {title}
-      </Link>
-      <span className="text-[#4a443c]">: {children}</span>
-    </li>
-  );
 }
 
 /** "What's on this site": a short, closable guide to both projects, shown once on a first visit. */
@@ -57,11 +63,21 @@ export function SiteGuide({ open, onClose }: { open: boolean; onClose: () => voi
           <p className="mt-1">
             Will a Tamil Nadu court case finish within a year? Built from 81 million real court records.
           </p>
-          <ul className="mt-2 space-y-1">
-            <PageLink href="/model/explore" title="Test the model" onGo={onClose}>choose a case, press Analyze, see the chance and why</PageLink>
-            <PageLink href="/model/pipeline" title="Pipeline" onGo={onClose}>every step from raw data to model, with its code</PageLink>
-            <PageLink href="/model/analytics" title="Data analysis" onGo={onClose}>what the court data shows</PageLink>
-          </ul>
+          <dl className="mt-3 grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-[11rem_1fr]">
+            {WHERE.map((w) => (
+              <div key={w.what} className="contents">
+                <dt className="font-semibold">{w.what}</dt>
+                <dd className="mb-1 sm:mb-0">
+                  {w.internal ? (
+                    <Link href={w.href} onClick={onClose} className={ADDRESS}>{w.address}</Link>
+                  ) : (
+                    <a href={w.href} target="_blank" rel="noreferrer" className={ADDRESS}>{w.address}</a>
+                  )}
+                  <span className="block text-sm text-[#4a443c]">{w.note}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
           <p className="mt-3 flex flex-wrap items-center gap-x-1 gap-y-2">
             <span className="mr-1 font-semibold">Download:</span>
             {DOWNLOADS.map((d) => (

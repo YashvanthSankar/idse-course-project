@@ -22,7 +22,10 @@ always-on VPS, with game telemetry in Neon Postgres.
 | Contributions | [`submission/README.md`](submission/README.md#contributions) |
 | Notebooks (pipeline) | [`00_full_pipeline`](pipeline/notebooks/00_full_pipeline.ipynb) · [`01_audit`](pipeline/notebooks/01_audit.ipynb) · [`02_eda`](pipeline/notebooks/02_eda.ipynb) · [`03_survival_and_clusters`](pipeline/notebooks/03_survival_and_clusters.ipynb) · [`04_model`](pipeline/notebooks/04_model.ipynb) |
 | Notebooks (game) | [`01_case_generator`](game/notebooks/01_case_generator.ipynb) · [`02_detection_tools`](game/notebooks/02_detection_tools.ipynb) · [`03_class_autopsy`](game/notebooks/03_class_autopsy.ipynb) |
-| Try the model | [otlr.vercel.app/model](https://otlr.vercel.app/model) · the pipeline step by step: [otlr.vercel.app/model/pipeline](https://otlr.vercel.app/model/pipeline) |
+| Use the model | [otlr.vercel.app/model/explore](https://otlr.vercel.app/model/explore): choose a case, press Analyze |
+| See the pipeline, step by step | [otlr.vercel.app/model/pipeline](https://otlr.vercel.app/model/pipeline): every step with its code and output |
+| Pipeline code | [`pipeline/`](pipeline/) (how to run each step: [`pipeline/README.md`](pipeline/README.md)) |
+| Trained model | [`pipeline/artifacts/within_1y/model.joblib`](pipeline/artifacts/within_1y/model.joblib) (6 kB, scikit-learn), served at `POST https://otlr.vercel.app/model-api/predict` |
 | Play the game | [otlr.vercel.app](https://otlr.vercel.app) · [how to play](#how-to-play) |
 | Run it on your laptop | [Run it locally](#-run-it-locally) |
 

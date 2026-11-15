@@ -6,7 +6,7 @@ test("a first visit opens the site guide once; it closes and can be reopened", a
   await page.goto("/");
   const guide = page.getByRole("dialog", { name: "What's on this site" });
   await expect(guide).toBeVisible();
-  await expect(guide.getByRole("link", { name: "Test the model" })).toHaveAttribute("href", "/model/explore");
+  await expect(guide.getByRole("link", { name: "otlr.vercel.app/model/explore" })).toHaveAttribute("href", "/model/explore");
   await expect(guide.getByRole("link", { name: "Report (PDF)" })).toHaveAttribute("href", /Court-Case-Duration-Report\.pdf$/);
   await guide.getByRole("button", { name: "Close" }).click();
   await expect(guide).toHaveCount(0);
