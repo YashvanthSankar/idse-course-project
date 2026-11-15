@@ -1,4 +1,4 @@
-# Website: ideas and TODO
+# Website: future work
 
 Ideas for future work on the `/model` site. These are proposals, not features that are already available. The model describes historical Tamil Nadu cases; new interactions should make that scope and its limitations clear.
 

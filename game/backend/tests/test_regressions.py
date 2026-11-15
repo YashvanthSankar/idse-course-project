@@ -1,4 +1,4 @@
-"""Regression tests for the final code review findings (C1, I1-I3, I5-I7)."""
+"""Regression tests for class rooms and the autopsy: host authority, small classes, repeat rounds, round timing, memory limits, exact tests and late joins."""
 
 import asyncio
 
@@ -37,7 +37,7 @@ def verdict(correct=True, score=1200):
                    evidence=[])
 
 
-# ---- C1: only the session that created the room may act as its host -------------
+# ---- only the session that created the room may act as its host -------------
 
 def test_create_room_returns_host_token(client):
     body = client.post("/api/rooms").json()
@@ -59,7 +59,7 @@ def test_host_with_token_accepted(client):
         assert ws.receive_json()["type"] == "lobby"
 
 
-# ---- I1: the autopsy never crashes on small or odd classes ----------------------
+# ---- the autopsy never crashes on small or odd classes ----------------------
 
 def _events(rows):
     return pd.DataFrame(rows, columns=COLS)
@@ -85,7 +85,7 @@ def test_autopsy_identical_players():
     assert len(build_autopsy(_events(rows))) == 6
 
 
-# ---- I2: a second round is analysed on its own -----------------------------------
+# ---- a second round is analysed on its own -----------------------------------
 
 def test_autopsy_uses_latest_round():
     rows = []
@@ -99,7 +99,7 @@ def test_autopsy_uses_latest_round():
     assert build_autopsy(_events(rows))[0].stats["solve_rate"] == 1.0
 
 
-# ---- I3: the round ends on time, server-side, and late verdicts don't count -----
+# ---- the round ends on time, server-side, and late verdicts don't count -----
 
 def _room_with_player(rooms):
     code = rooms.create()
@@ -141,7 +141,7 @@ def test_stale_timer_does_not_end_a_newer_round(tmp_path):
     assert rooms.rooms[code].status == "running"
 
 
-# ---- I5: memory stays bounded and a live class can't be evicted ------------------
+# ---- memory stays bounded and a live class can't be evicted ------------------
 
 def test_live_room_sessions_survive_eviction(tmp_path):
     store = SessionStore(max_size=2)
@@ -181,7 +181,7 @@ def test_old_rooms_expire(tmp_path):
     assert old not in rooms.rooms
 
 
-# ---- I6: the autopsy uses an exact test for 2x2 tables --------------------------
+# ---- the autopsy uses an exact test for 2x2 tables --------------------------
 
 def test_predictive_tool_uses_exact_test():
     rows = []
@@ -198,7 +198,7 @@ def test_predictive_tool_uses_exact_test():
     assert stats["best_tool"] in {"Benford's Law", "Case Summary"} and stats["best_p"] < 0.05
 
 
-# ---- I7: a phone joining during START can't break the round ---------------------
+# ---- a phone joining during START can't break the round ---------------------
 
 def test_join_during_start_is_safe(tmp_path, monkeypatch):
     rooms = manager(tmp_path)
