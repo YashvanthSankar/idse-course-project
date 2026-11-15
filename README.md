@@ -11,9 +11,20 @@ website:
 The website runs on Vercel; the Python side (FastAPI under systemd, Caddy for HTTPS) runs on a small
 always-on VPS, with game telemetry in Neon Postgres.
 
-**Course submission:** the project report, the presentation and who did what are in
-[`submission/`](submission/). Team: Yashvanth S (CS24I1029), Jeevanandham T (CS24I1035),
-Nithillakrishi PY (CS24I1039).
+**Team:** Yashvanth S (CS24I1029), Jeevanandham T (CS24I1035), Nithillakrishi PY (CS24I1039).
+
+### Quick links
+
+| What | Where |
+|---|---|
+| Project report (PDF, LaTeX) | [`submission/pipeline-report/Court-Case-Duration-Report.pdf`](submission/pipeline-report/Court-Case-Duration-Report.pdf) · source [`main.tex`](submission/pipeline-report/main.tex) |
+| Presentation | [`submission/Court-Case-Duration-Presentation.pptx`](submission/Court-Case-Duration-Presentation.pptx) · [PDF](submission/Court-Case-Duration-Presentation.pdf) |
+| Contributions | [`submission/README.md`](submission/README.md#contributions) |
+| Notebooks (pipeline) | [`00_full_pipeline`](pipeline/notebooks/00_full_pipeline.ipynb) · [`01_audit`](pipeline/notebooks/01_audit.ipynb) · [`02_eda`](pipeline/notebooks/02_eda.ipynb) · [`03_survival_and_clusters`](pipeline/notebooks/03_survival_and_clusters.ipynb) · [`04_model`](pipeline/notebooks/04_model.ipynb) |
+| Notebooks (game) | [`01_case_generator`](game/notebooks/01_case_generator.ipynb) · [`02_detection_tools`](game/notebooks/02_detection_tools.ipynb) · [`03_class_autopsy`](game/notebooks/03_class_autopsy.ipynb) |
+| Try the model | [otlr.vercel.app/model](https://otlr.vercel.app/model) · the pipeline step by step: [otlr.vercel.app/model/pipeline](https://otlr.vercel.app/model/pipeline) |
+| Play the game | [otlr.vercel.app](https://otlr.vercel.app) · [how to play](#how-to-play) |
+| Run it on your laptop | [Run it locally](#-run-it-locally) |
 
 ---
 
@@ -106,6 +117,34 @@ Mumbai, 2 AM, monsoon. You're a rookie forensic auditor. Each case is a company 
 2. **Pin two clues**: drag them onto a suspect on the corkboard and tie them with red string.
 3. **Accuse**: hold to accuse. One shot.
 4. **Verdict**: GUILTY or WRONG SUSPECT, then the Reveal shows exactly how the fraud was hidden.
+
+### How to play
+
+Open **[otlr.vercel.app](https://otlr.vercel.app)** on a laptop or phone (no sign-up).
+
+**Quick Case (solo, start here)**
+1. Choose **QUICK CASE**. The case desk opens; case 1 is unlocked, and solving a case unlocks the next.
+2. Read the briefing memo: the company, the five suspects and your **coin budget**. Every tool costs
+   coins and the budget never covers all of them, so choose. Each coin left over is worth 40 points.
+3. Run tools from the tool kit (or press keys 1–9). Each result says who it points at; open
+   **Under the hood** to see the exact Python that ran. You can also question suspects.
+4. Click **Pin as evidence** on the two results you trust most.
+5. Press **B** (or *Open the board & accuse*), drag both clues onto one suspect, then press
+   **MAKE THE ACCUSATION** and hold the button until it fills.
+6. The verdict shows your score, and the Reveal shows how the fraud was hidden and which tool catches it.
+
+**Career Mode:** choose **CAREER**, pick one of three small companies and work your way up to the
+Final. Here an accusation also needs the trick you think was used and 1–5 rows from the ledger as
+exhibits; each case is rated out of 100 ([details](game/docs/CAREER.md)).
+
+**Class Mode (for a lecture):** the teacher opens **CLASS MODE** on the projector to create a room.
+Students scan the QR code (or open the link and type the room code) and play the same case on their
+phones while a live leaderboard runs. After the round, the **Class Autopsy** analyses the class's own
+play with pandas. It works on the live site; to host it from your own laptop instead, see
+[Run it locally](#-run-it-locally).
+
+**Hacker Mode:** write your own pandas query against the ledger in the browser (Python runs in
+Pyodide); it costs 1 coin a run.
 
 | | |
 |---|---|
