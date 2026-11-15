@@ -54,5 +54,6 @@ like a real web game. Class Mode runs on WebSockets.
 
 ## Docs
 - [DESIGN.md](DESIGN.md): full game design (rules, levels, tools, UI)
-- [PLAN.md](PLAN.md): build plan (27 tasks)
+- [CAREER.md](CAREER.md): Career Mode
+- [DEMO.md](DEMO.md): the 5-minute demo script
 - [TODO.md](TODO.md): progress checklist

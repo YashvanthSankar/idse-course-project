@@ -1,6 +1,6 @@
 # OUTLIER: TODO
 
-Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN.md); the game design is in [DESIGN.md](DESIGN.md).
+Tick a box when a task is done. The game design is in [DESIGN.md](DESIGN.md), Career Mode in [CAREER.md](CAREER.md).
 
 ## 🟥 MUST
 
@@ -74,7 +74,7 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 
 ## 🕵️ CAREER EVIDENCE
 
-### M16 · Prove the case (branch `career-evidence`, not merged yet)
+### M16 · Prove the case
 - [x] T30 · New case rating: Verdict 35 · Theory 10 · Proof 10 · Exhibits 25 · Spending 20 (replaces Evidence / Tool judgment / Efficiency)
 - [x] T31 · Accuse with a theory (the trick), 1–2 clues and 1–5 exhibit rows from the accused's ledger; a clue from a tool that fits the theory proves it, anything else is a lead unless a second tool agrees
 - [x] T32 · Exceptional bar per tier (88 small/mid · 92 large · 90 very large), free cross-check slack (2 · 2 · 1), three Good years at one large firm count as one Exceptional, Box & Whisker is the intended tool for big invoices
@@ -82,15 +82,15 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 - [x] T34 · Bug: can't move from case 1 to case 2 in a contract (main reloads case 1 over case 2 from the verdict screen; fixed on the branch, e2e checks it)
 - [x] T35 · Bug: tapping a row in the ledger picker filtered by the value under your finger instead of pinning it, hiding the other fraud rows; the row now pins wherever you tap and only the 🔍 filters
 - [x] T36 · All 3 career e2e tests passing; full backend suite (350) passing; old saved careers still load
-- [ ] T37 · CAREER.md §3.1 / §3.2 rewritten for the new rating, new §7.7 Seniors; CAREER_HANDOVER.md updated
+- [x] T37 · CAREER.md §3.1 / §3.2 rewritten for the new rating, new §7.7 Seniors, §10 calibration results
 - [x] T38 · Calibrate with bots (`backend/scripts/calibrate_career.py`). A sharp bot reaches Exceptional 100% small · 87% mid · 40% large · ~20% very large. The bar barely matters: solving the hard case decides it, so Large hard cases now get 1 spare coin instead of 2 (was 70%)
 - [x] T39 · Commit the branch and merge to main
-- [ ] T40 · Deploy the backend (VPS) and the frontend (Vercel) together: the career accusation request changed (theory + exhibits), so one without the other breaks accusations
-- [ ] T41 · Very large comes out at ~20% Exceptional (target 30–40%): the two-fraudster case is solved too rarely. Decide whether to loosen it (more spare coins on very hard) or keep it
+- [x] T40 · Deploy the backend (VPS) and the frontend (Vercel) together: the career accusation request changed (theory + exhibits), so one without the other breaks accusations
+- [x] T41 · Very large comes out at ~20% Exceptional (target was 30–40%). Kept: its hard case has two fraudsters and it is the last step before the Final (CAREER.md §10)
 
 ## 🛡️ CAREER HARDENING
 
-### M17 · Review fixes before the class plays it (verified locally, not deployed yet)
+### M17 · Review fixes before the class plays it
 - [x] T42 · Career saves go to a background writer: no request waits on the database, failed writes retry, a graceful restart flushes (200 students at once on a 1 s database: 8.7 s instead of 22.8 s, all 360 saves landed)
 - [x] T43 · Every change is made on a copy under the career's lock and swapped in whole; a case from an old contract, a closed case or a retired career can't be scored
 - [x] T44 · A hidden salt per career: fraudsters, seeds and the Final's culprit can't be worked out from the visible code
@@ -103,7 +103,7 @@ Tick a box when a task is done. Full details for each task are in [PLAN.md](PLAN
 
 ## 🖥️ UI STABILISATION
 
-### M18 · Every screen at phone, tablet, laptop and desktop (three review rounds, verified locally)
+### M18 · Every screen at phone, tablet, laptop and desktop (three review rounds)
 - [x] T51 · Overlays: modals render on <body>, keyboard focus stays inside and returns on close, Escape closes only the top one; the screen shake no longer drags fixed layers
 - [x] T52 · Accusation: a sticky hold bar with a "Next: …" hint in every mode; Career case file, proof meter, rows picker (amount first, cap message, no wrapping) and score guide fixed
 - [x] T53 · Case screen: a readable title on every width, step guide on tablets, honest out-of-budget guidance, tools you can't afford are blocked up front, bigger tap targets

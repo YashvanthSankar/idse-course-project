@@ -210,9 +210,8 @@ idse-course-project/
 │   ├── backend/         Python package `auditor`: case engine, 9 tools, scoring, rooms, autopsy, the /model API (400 tests)
 │   ├── web/             Next.js: the game and the /model site
 │   ├── notebooks/       the game's three narrated notebooks
-│   └── docs/            IDEA · DESIGN · CAREER · PLAN · TODO · DEMO
-├── IDEA.md              shared context for both parts
-└── JEEVA.md             pipeline work still open
+│   └── docs/            IDEA · DESIGN · CAREER · TODO · DEMO
+└── README.md            this file
 ```
 
 ---
@@ -253,7 +252,7 @@ cd game/web && pnpm test && pnpm e2e          # unit tests, then Playwright end 
 
 ## 📚 Docs and credits
 
-- Model: [REPORT](pipeline/REPORT.md) · [pipeline README](pipeline/README.md) · [IDEA](IDEA.md) · [open work](JEEVA.md)
-- Game: [IDEA](game/docs/IDEA.md) · [DESIGN](game/docs/DESIGN.md) · [CAREER](game/docs/CAREER.md) · [CAREER HANDOVER](game/docs/CAREER_HANDOVER.md) · [PLAN](game/docs/PLAN.md) · [TODO](game/docs/TODO.md) · [DEMO script](game/docs/DEMO.md)
+- Model: [REPORT](pipeline/REPORT.md) · [pipeline README](pipeline/README.md) · [notebooks](pipeline/notebooks/)
+- Game: [IDEA](game/docs/IDEA.md) · [DESIGN](game/docs/DESIGN.md) · [CAREER](game/docs/CAREER.md) · [TODO](game/docs/TODO.md) · [DEMO script](game/docs/DEMO.md)
 - Contains data from Development Data Lab's judicial data, ODbL v1.0. Photograph on the model site:
   Madras High Court by Yercaud-elango, CC BY 4.0, via Wikimedia Commons.

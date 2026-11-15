@@ -1,8 +1,8 @@
 # Demo Script (5 minutes)
 
 ## Before you present (10 minutes early)
-- [ ] Backend running: `cd backend && uv run uvicorn auditor.api:app --host 0.0.0.0 --port 8000`
-- [ ] Frontend running: `cd web && pnpm dev --port 3200` (or the deployed link)
+- [ ] Backend running: `cd game/backend && uv run uvicorn auditor.api:app --host 0.0.0.0 --port 8000`
+- [ ] Frontend running: `cd game/web && pnpm dev --port 3200` (or the deployed link)
 - [ ] Open http://localhost:8000/api/levels once, so the server is warm
 - [ ] Laptop and projector on the **same Wi-Fi** as the class (phones join over the network)
 - [ ] Projector at 1920×1080, sound on, browser full screen (F11 / ⌃⌘F)

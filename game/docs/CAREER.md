@@ -80,27 +80,38 @@ spending, the ghost vendor) grow with the ledger so they stay findable.
 
 ### 3.1 Case rating (0–100)
 
+To accuse in Career you build a case, not just pick a name: the **suspect**, the **theory** (which of the
+six tricks they used), **1–2 clues** from your tools, and **1–5 exhibit rows** from their ledger.
+
 | Part | Points | Measures |
 |---|---|---|
-| Verdict | 40 | right suspect (0 if wrong) |
-| Evidence | 25 | your best clue comes from a tool that catches this fraud (15); the second backs it up (10) |
-| Tool judgment | 20 | 20 × (coins spent on catching tools ÷ coins spent) |
-| Efficiency | 15 | 15 × (cost of the **intended** tool ÷ coins spent), capped at 15 |
+| Verdict | 35 | you accused the right person |
+| Theory | 10 | you named the trick they really used |
+| Proof | 10 | **proven** (10): a clue from a tool that *fits* your theory names them alone, or two different tools do; **lead** (4): a clue points at them but proves nothing; **none** (0) |
+| Exhibits | 25 | 25 × (share of your pinned rows that show the trick) × (rows that show it ÷ rows needed, capped at 1). Three rows are needed, fewer when the fraud left fewer |
+| Spending | 20 | 20 × (coins the intended tools cost + a free cross-check ÷ coins spent, capped at 1), counted only for accusations a clue points at |
 
+- **What fits a theory** (`career/proof.py`): one monster invoice → Box & Whisker; billed twice →
+  Duplicates; made-up receipts → Benford or Isolation Forest; weekend payments → Time Series or Pattern
+  Matrix by weekday; costs too big for the deal → Regression; just under the approval limit → Pattern Matrix
+  by vendor or Isolation Forest. A tool fits when, in the calibration runs, it named the fraudster alone in at
+  least nine cases in ten. Z-Score fits nothing: it says where to look, not who did it.
+- **Fair exhibits:** a fraud row, or a row that is part of the evidence, such as the honest original of a bill
+  billed twice. Every honest row you pin lowers the score.
+- **The free cross-check:** 2 coins at small and mid firms, 1 at large, none above. Large hard cases leave one
+  spare coin instead of the usual two, so a wrong guess puts the right tool out of reach.
+- **No analysis, no thrift:** an accusation no clue points at earns no Spending points, so a lucky guess can't
+  be Exceptional.
+- **Two fraudsters (very hard cases):** every part is shared between them; you accuse both, each with their own
+  theory, clues and rows.
 - **No TRY AGAIN in Career.** A wrong verdict scores what it scores and the contract moves on to the next
   case; the 5-case average is the second chance. (Quick Case keeps TRY AGAIN for practice.)
-- **Points after every case:** the verdict screen shows the case rating broken down (Verdict, Evidence, Tool
-  judgment, Efficiency, each with a one-line reason), plus the running contract average and the band it
-  currently sits in.
-- **Intended tool:** one field per fraud type — the method the case teaches (e.g. Anomaly Hunter for the
-  ghost vendor). A cheaper valid route still gets the full 15, thanks to the cap.
-- **Case Summary runs automatically and free** when a case opens, so every player starts with an overview and
-  no exemption rule is needed.
-- **Very hard (two fraudsters):** 20 verdict points per fraudster, and 2 clues per fraudster (4 pins). On the
-  phone, the accusation shows two stacked 2-pin groups.
+- **Points after every case:** the verdict screen shows the five parts, each with a one-line reason, plus the
+  running contract average and the band it sits in.
+- **Case Summary runs automatically and free** when a case opens, so every player starts with an overview.
 
 The in-case score (1000 + evidence + 40 per coin) stays as it is; the rating is a separate number used only
-for the career, in its own module, so Quick Case and Class Mode never touch it.
+for the career, in its own module (`career/rating.py`), so Quick Case and Class Mode never touch it.
 
 ### 3.2 Contract rating
 
@@ -108,15 +119,15 @@ Contract rating = the average of the 5 case ratings (3 for the Final).
 
 | Result | Rating |
 |---|---|
-| **Exceptional** | 88 and above, **and the hard case solved** |
-| **Good** | 70–87 |
+| **Exceptional** | at or above the tier's bar (**88** small and mid · **92** large · **90** very large), **and the hard case solved** |
+| **Good** | 70 up to the bar |
 | **OK** | 60–69, **or any contract where every suspect was right** |
 | **Bad** | below 60 (only possible with at least one wrong accusation) |
 
 Every case counts equally in the average. The contract screen says from the start: *"Exceptional requires
-solving the hard case."*
+solving the hard case."* The bars were set with bots (§10).
 
-Consequences: one wrong accusation always rules out Exceptional; you can only be fired for wrong
+Consequences: one wrong accusation nearly always rules out Exceptional; you can only be fired for wrong
 accusations, never for a slow or messy investigation.
 
 ---
@@ -129,7 +140,7 @@ accusations, never for a slow or messy investigation.
 |---|---|
 | Small → Mid | 1 **Good** contract. An **Exceptional** also brings 1 Large offer. |
 | Mid → Large | 2 **Good** contracts at two different mid companies. An OK pauses the streak, it does not reset it. |
-| Large → Very large | **Exceptional** at 2 of the 3 large companies |
+| Large → Very large | **Exceptional** at 2 of the 3 large companies; three **Good** years at one large company count as one Exceptional |
 | Very large → The Final | **Exceptional** at both very large companies |
 
 | Result | What happens |
@@ -352,11 +363,22 @@ culture is the red herring.
   - **The Final: all three are there, and one of them is guilty.** See the twist in 7.5.
   - **How often** they're among the suspects: ~54% of cases at your first company (3 of 23); at Mid and Large
     ~24% with 1 cameo, ~42% with 2; at Very large ~33% with 1, ~55% with 2.
-  - *The three characters (names, personalities, how each one's role changes from company to company) are
-    still to be written.*
+  - **The three** (`career/catalog.py`): **Imran Sheikh**, who knows everyone's name and is always first to
+    say hello; **Tara Pinto**, dry wit and a sharp pencil, who reads contracts for fun; **Meher Contractor**,
+    calm and kind, who always has a spare charger. Each has a first-day line, a greeting that names your last
+    shared company, a confession for the Final and an escape line for the bitter ending.
 - **Story names are reserved.** The suspect generator excludes every surname used by a story character
   (the Chief, company owners, written staff). This fixes the R. Desai / Rohan Desai clash for good.
 - The company list above is a working map: only the first-version companies are final.
+
+### 7.7 Seniors
+
+On day one at every company except the Final, a senior hands you their notes (`career/seniors.py`). Seniors
+are never suspects. Their notes are about the company (how honest money moves there, what fooled the last
+auditor), never about the case, and their numbers come from the calibration runs. The notes fade as you
+climb: a full page at small firms, a few lines at mid, one line at very large, nobody in the Final ("you're
+the senior now"). Small and mid firms also show the tool kit with what each tool can prove, and small firms
+spell out the proof rule: *name the trick, attach the clue that shows it, then pin the rows that prove it.*
 
 ---
 
@@ -365,7 +387,7 @@ culture is the red herring.
 - **Title menu:** QUICK CASE · CAREER · CLASS MODE · MANUAL, with Options behind a gear icon. The stable
   mode stays on top, so turning the career flag off doesn't move what the presenter rehearsed.
 - **Career hub:** offers, the current contract, appraisals, tier, company, salary and history.
-- **Case verdict (Career):** after every case, the 0–100 rating with its four parts and the reason for each,
+- **Case verdict (Career):** after every case, the 0–100 rating with its five parts and the reason for each,
   the contract so far (e.g. "Case 3 of 5 · average 84 · Good"), and a NEXT CASE button. No TRY AGAIN.
 - **Detective Card:** gains only the career **title** (e.g. Chief Auditor). Company and salary live on the
   Career hub, so the card never shows empty fields in Quick Case or Class Mode.
@@ -385,26 +407,28 @@ culture is the red herring.
 
 ## 9.1 Implementation Notes
 
-- **Code:** `backend/auditor/career/` — `catalog.py` (tiers, salaries, companies, cameos), `people.py`
-  (rosters), `cases.py` (contract plans and case building), `rating.py` (0–100 and bands), `rules.py` (the
+- **Code:** `game/backend/auditor/career/` — `catalog.py` (tiers, salaries, companies, cameos), `people.py`
+  (rosters), `cases.py` (contract plans and case building), `proof.py` (what proves a theory), `rating.py`
+  (0–100 and bands), `seniors.py` (day-one notes), `rules.py` (the
   career state machine), `storage.py` (the `careers` table, next to telemetry), `routes.py` (`/api/career`).
-  Frontend: `web/components/career/`, `web/components/verdict/CareerVerdictScreen.tsx`, `/career`.
+  Frontend: `game/web/components/career/`, `game/web/components/verdict/CareerVerdictScreen.tsx`, `/career`.
 - **Feature flag:** `NEXT_PUBLIC_CAREER=0` hides Career Mode from the menu; `AUDITOR_CAREER=0` turns off its
   routes. Quick Case and Class Mode never call career code.
 - **Fairness tests** (`tests/test_career_fairness.py`, slow): at every company, over 20 contracts, at least one
   catching tool finds each fraudster (95% overall, 85% per fraud), and honest companies stay quiet. Z-Score is
   allowed some false alarms on honest ledgers (up to 7 in 20, more often in big ledgers) — the lesson that an
   outlier is a question, not an answer. The boss (the CEO herring) is excluded: looking guilty is their job.
-- **Evidence** is "best clue 15 + backup clue 10" rather than "both clues from a catching tool": four of the
-  six frauds have only one catching tool, and re-running a tool gives the same result, so "two strong clues"
-  would be impossible.
 - **Debug jump:** with `AUDITOR_DEBUG=1`, `POST /api/career/{code}/debug-jump` sets a career's offers and tier
   — for tests and for a presenter demoing late-game screens.
 
 ---
 
-## 10. Still Open
+## 10. Calibration
 
-- **Calibration:** run simulator bots (hint follower, run-everything, guesser) through every tier; target a
-  hint follower reaching Exceptional ~80% of the time at Small/Mid and ~30–40% at Large and above.
-- **Salary as a resource:** status only for now; revisit later.
+Bots play every tier (`game/backend/scripts/calibrate_career.py`). A sharp bot (reads the senior's notes, runs
+the fitting tool, pins the rows it flags) reaches Exceptional **100%** of the time at small firms, **87%** at
+mid, **40%** at large and **about 20%** at very large. The bar barely matters: solving the hard case decides
+it, which is why large hard cases now leave one spare coin instead of two (it was 70%).
+
+Very large stays at about 20%, below the 30–40% first aimed for, on purpose: its hard case has two
+fraudsters, and it is the last step before the Final. Salary is status only.

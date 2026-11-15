@@ -1,7 +1,7 @@
 """Plain-English names for the codes visitors see on the site.
 
 Only well-established meanings are listed. Anything not listed is shown as its raw code
-rather than guessed; check each entry before quoting it in the report (JEEVA.md, task 7).
+rather than guessed; check each entry against a source before quoting it.
 """
 
 # Tamil Nadu district-court case types (DDL's type_name, lower-cased)

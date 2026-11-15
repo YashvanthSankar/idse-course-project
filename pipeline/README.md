@@ -4,10 +4,9 @@ The IDSE (CS3006) end-to-end project: real Indian
 district-court records → cleaning → EDA → a model of how long cases take → `/model` on the site.
 
 - **The write-up (findings, results, limitations):** [`REPORT.md`](REPORT.md).
-- **Why this topic, and the rules the work follows:** [`../IDEA.md`](../IDEA.md).
+- **Why this topic and who it is for:** [`REPORT.md`](REPORT.md), section 1.
 - **This file:** how to run everything, what each piece does, the raw facts measured, and the
   decisions with their reasons.
-- **What's left:** [`../JEEVA.md`](../JEEVA.md).
 
 ## Run it
 
@@ -220,7 +219,7 @@ types), and courts got faster each year, so 2017 is slightly under-predicted.
 | Moved cases (transfer, committal, remand, Lok Adalat referral) are censored, not "ended" | They left this court; they didn't finish |
 | One-year label only for cases filed ≥1 year before the cutoff | Otherwise recent filings are biased towards "fast" |
 | Train 2015-16, test 2017 | Early years are incomplete; a later test year is the honest test of a forecast |
-| No gender, no hearing purpose, no later dates as inputs | Fairness rule in IDEA.md; the rest leak the future |
+| No gender, no hearing purpose, no later dates as inputs | A public tool should not score cases by gender; the rest leak the future |
 | Law and section as inputs, first section only | Known at filing; the first section says what the case is about |
 | Served model = logistic regression + law and section (best 2016 log loss) | Chosen before looking at 2017, so the forest's slightly better 2017 AUC doesn't change it; it is also the one whose explanations are exact |
 | Site inputs = 40 common real kinds of case | A visitor can't know case-type codes; the kinds cover 59% of 2017 filings |

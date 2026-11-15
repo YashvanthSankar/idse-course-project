@@ -5,7 +5,7 @@ Kept out on purpose:
   case stands *later* (the latest hearing's purpose, the next date), so they leak the answer;
 - disp_name, date_of_decision: the outcome itself;
 - petitioner / defendant gender: known at filing, but the project shows gender as EDA with
-  caveats and does not let a public tool score cases by it (see IDEA.md);
+  caveats and does not let a public tool score cases by it;
 - court_no: a visitor to the site can't know which numbered court will hear their case, so
   congestion is measured for the district's courts of that level, not the single court.
 
