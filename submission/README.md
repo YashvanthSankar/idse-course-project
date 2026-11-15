@@ -15,7 +15,7 @@ day a case is filed, will a Tamil Nadu district-court case be disposed of within
 
 | File | What it is |
 |---|---|
-| [`Court-Case-Duration-Report.pdf`](pipeline-report/Court-Case-Duration-Report.pdf) | The project report: a short research paper (IEEE two-column format, LaTeX) covering data, preparation, analysis, method, results, deployment and limitations |
+| [`Court-Case-Duration-Report.pdf`](pipeline-report/Court-Case-Duration-Report.pdf) | The project report: a short research paper (LaTeX, 6 pages) covering data, preparation, analysis, method, results, deployment and limitations |
 | [`pipeline-report/`](pipeline-report/) | The report's LaTeX source (`main.tex`); figures are read from `pipeline/reports/figures/` and `pipeline/docs/screenshots/` |
 | [`Court-Case-Duration-Presentation.pptx`](Court-Case-Duration-Presentation.pptx) | The presentation, with speaker notes on every slide |
 | [`Court-Case-Duration-Presentation.pdf`](Court-Case-Duration-Presentation.pdf) | The same presentation as a PDF |

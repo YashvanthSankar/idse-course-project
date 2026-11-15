@@ -1,4 +1,11 @@
-\documentclass[conference,a4paper]{IEEEtran}
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{mathptmx}
+\usepackage{caption}
+\usepackage{float}
+\captionsetup{font=small,labelfont=bf}
+\setlength{\parskip}{4pt}
 
 \usepackage[T1]{fontenc}
 \usepackage{graphicx}
@@ -20,15 +27,13 @@
 Predicting Disposal Within a Year at Filing}
 
 \author{
-\IEEEauthorblockN{Yashvanth S}
-\IEEEauthorblockA{CS24I1029\\IIITDM Kancheepuram}
-\and
-\IEEEauthorblockN{Jeevanandham T}
-\IEEEauthorblockA{CS24I1035\\IIITDM Kancheepuram}
-\and
-\IEEEauthorblockN{Nithillakrishi PY}
-\IEEEauthorblockA{CS24I1039\\IIITDM Kancheepuram}
-}
+\begin{tabular}{@{}c@{\hspace{3em}}c@{\hspace{3em}}c@{}}
+Yashvanth S & Jeevanandham T & Nithillakrishi PY\\
+CS24I1029 & CS24I1035 & CS24I1039
+\end{tabular}\\[8pt]
+CS3006 Introduction to Data Science for Engineers\\
+IIITDM Kancheepuram}
+\date{November 2026}
 
 \maketitle
 
@@ -43,9 +48,7 @@ is right 74.3\% of the time, while simply guessing ``no'' every time is right 72
 the type of case tells a lot, but on the first day we cannot say which dispute will be quick.
 \end{abstract}
 
-\begin{IEEEkeywords}
-Indian courts, eCourts, case duration, data cleaning, logistic regression
-\end{IEEEkeywords}
+\noindent\textbf{Keywords:} Indian courts, eCourts, case duration, data cleaning, logistic regression
 
 \section{Introduction}
 Delays in Indian courts are well known, but people usually talk about total pending cases. We asked
@@ -83,11 +86,11 @@ year 7201, we removed it and counted how many there were, instead of guessing. W
 marked as ``moved'', not finished. We wrote 142 tests to check that the cleaning rules work on real
 examples from the data.
 
-\begin{table}[!t]
+\begin{table}[H]
 \caption{Main cleaning steps (Tamil Nadu)}
 \label{tab:clean}
 \centering\small
-\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.40\columnwidth}>{\raggedright\arraybackslash}p{0.52\columnwidth}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.45\textwidth}>{\raggedright\arraybackslash}p{0.40\textwidth}@{}}
 \toprule
 Problem & What we did \\
 \midrule
@@ -107,9 +110,9 @@ month (Fig.~\ref{fig:cliff}). Across India there were about one million decision
 2018, and then the count suddenly drops in January and February 2019. That drop is when the data
 was collected. We worked out this date for each district separately.
 
-\begin{figure}[!t]
+\begin{figure}[H]
 \centering
-\includegraphics[width=\columnwidth]{eda_scrape_cliff.png}
+\includegraphics[width=0.62\textwidth]{eda_scrape_cliff.png}
 \caption{Decisions recorded per month across India. The sudden drop in early 2019 shows when the
 data was collected.}
 \label{fig:cliff}
@@ -137,9 +140,9 @@ quick ones were counted. A Kaplan--Meier estimate \cite{km}, which also counts t
 still pending, shows a much smaller fall (Fig.~\ref{fig:median}). By this method, a typical case
 filed between 2015 and 2018 takes 532 days.
 
-\begin{figure}[!t]
+\begin{figure}[H]
 \centering
-\includegraphics[width=\columnwidth]{eda_median_trap.png}
+\includegraphics[width=0.6\textwidth]{eda_median_trap.png}
 \caption{Typical (median) time to a decision by filing year in Tamil Nadu. Black: only finished
 cases. Red: Kaplan--Meier, which also counts pending cases.}
 \label{fig:median}
@@ -150,9 +153,9 @@ finish within a year, but only 28\% of civil suits and 12\% of accident claims d
 (Fig.~\ref{fig:open}). Between districts the share goes from 19\% to 74\%. We tried grouping
 districts with k-means, but they did not form clear groups.
 
-\begin{figure}[!t]
+\begin{figure}[H]
 \centering
-\includegraphics[width=\columnwidth]{survival_still_open.png}
+\includegraphics[width=0.62\textwidth]{survival_still_open.png}
 \caption{Share of Tamil Nadu cases (filed 2015--2018) still pending after a given number of months,
 for each type of case.}
 \label{fig:open}
@@ -189,7 +192,7 @@ the same numbers, so a more complex model did not help. The model's chances can 
 when it says 55\%, the case finishes within a year 56\% of the time, and when it says 85\%, it
 happens 87\% of the time (Fig.~\ref{fig:cal}).
 
-\begin{table}[!t]
+\begin{table}[H]
 \caption{Test on 2017 cases (549,273 cases)}
 \label{tab:results}
 \centering\small
@@ -207,9 +210,9 @@ Random forest & 0.874 & 0.138 & 80.7\% \\
 \end{tabular}
 \end{table}
 
-\begin{figure}[!t]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.62\columnwidth]{model_calibration.png}
+\includegraphics[width=0.42\textwidth]{model_calibration.png}
 \caption{Predicted chance against what really happened, 2017 cases. Points close to the diagonal
 mean the predicted chances are correct.}
 \label{fig:cal}
@@ -223,7 +226,7 @@ time.} Models trained only on real disputes did not do better either. This means
 not the algorithm: the information available on the filing day is simply not enough to tell which
 dispute will be quick.
 
-\begin{table}[!t]
+\begin{table}[H]
 \caption{Model accuracy against always guessing the most common answer, 2017}
 \label{tab:split}
 \centering\small
@@ -270,7 +273,7 @@ analysis, the survival curves and clustering, the notebooks and figures, and the
 Contains data from Development Data Lab's judicial data, ODbL v1.0. All code, notebooks and
 results: \url{https://github.com/YashvanthSankar/idse-course-project} (folder \texttt{pipeline/}).
 
-\begin{thebibliography}{7}
+\begin{thebibliography}{7}\small
 \bibitem{ddl} Development Data Lab, ``Judicial data: Indian district court records (eCourts),
 2010--2018.'' [Online]. Available: \url{https://www.devdatalab.org/judicial-data}
 \bibitem{odbl} Open Data Commons, ``Open Database License (ODbL) v1.0.'' [Online]. Available:
