@@ -11,6 +11,10 @@ website:
 The website runs on Vercel; the Python side (FastAPI under systemd, Caddy for HTTPS) runs on a small
 always-on VPS, with game telemetry in Neon Postgres.
 
+**Course submission:** the project report, the presentation and who did what are in
+[`submission/`](submission/). Team: Yashvanth S (CS24I1029), Jeevanandham T (CS24I1035),
+Nithillakrishi PY (CS24I1039).
+
 ---
 
 ## Part 1 · The court case duration model
@@ -206,6 +210,7 @@ idse-course-project/
 │   ├── notebooks/       00 the full pipeline · 01 audit · 02 EDA · 03 survival and clusters · 04 model
 │   ├── reports/         generated tables, JSON and figures
 │   └── REPORT.md        the write-up
+├── submission/          the course submission: report (LaTeX + PDF), presentation, contributions
 ├── game/
 │   ├── backend/         Python package `auditor`: case engine, 9 tools, scoring, rooms, autopsy, the /model API (400 tests)
 │   ├── web/             Next.js: the game and the /model site
