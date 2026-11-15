@@ -156,7 +156,7 @@ chart next to the pandas code that made it:
 2. Tool usage counts
 3. Time-to-accuse histogram, correct vs. wrong
 4. Accuracy vs. number of tools used, with Pearson r and p
-5. "Which tool predicts success?" Success rate of users vs. non-users per tool, chi-square p
+5. "Which tool predicts success?" Success rate of users vs. non-users per tool, Fisher's exact test p
 6. Detective archetypes across the class (cluster sizes)
 
 **Detective Profiles:** per-player features `[n_tools, distinct_tools, budget_spent_ratio, seconds_to_accuse,

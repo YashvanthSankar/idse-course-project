@@ -33,7 +33,7 @@ Walk through the slides with ← →:
 - Solve rate and median time
 - Which tools the class used
 - **"Does more analysis pay off?"**: Pearson r and the p-value, computed live on *their* data
-- Which tool predicts success (chi-square)
+- Which tool predicts success (Fisher's exact test)
 - KMeans detective archetypes. Everyone can open their own **Detective Card**.
 
 ## 5 · Close (30 s)

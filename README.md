@@ -152,8 +152,8 @@ with pandas, live.
 | ![Live leaderboard](game/docs/screenshots/09-class-leaderboard.jpg) | ![Class autopsy](game/docs/screenshots/10-class-autopsy.jpg) |
 | ![Detective card](game/docs/screenshots/11-detective-card.jpg) | ![Case report PDF](game/docs/screenshots/12-case-report.jpg) |
 
-- **Autopsy slides**: solve rate, tool usage, Pearson r for "does more analysis pay off?", chi-square
-  for "which tool predicts success?". Each slide shows the Python that produced it.
+- **Autopsy slides**: solve rate, tool usage, Pearson r for "does more analysis pay off?", Fisher's
+  exact test for "which tool predicts success?". Each slide shows the Python that produced it.
 - **Detective Cards**: KMeans groups players into four styles: Statistician, Gambler, Hacker, Visualizer.
 - Tested with **200 simulated phones**: every player gets their case in about 0.13 s.
 
@@ -174,7 +174,7 @@ with pandas, live.
 | Anomaly Hunter | `sklearn.ensemble.IsolationForest` |
 | Charts | `plotly` figures built in Python, rendered in the browser |
 | Hacker Mode | real pandas running in your browser (Pyodide) |
-| Class Autopsy | SQLite telemetry → `pd.read_sql` → Pearson r, chi-square |
+| Class Autopsy | SQLite telemetry → `pd.read_sql` → Pearson r, Fisher's exact test |
 | Detective Cards | `StandardScaler` + `KMeans` |
 | Case Report | `seaborn` + `matplotlib` PDF |
 
