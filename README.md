@@ -26,6 +26,39 @@ always-on VPS, with game telemetry in Neon Postgres.
 | Play the game | [otlr.vercel.app](https://otlr.vercel.app) · [how to play](#how-to-play) |
 | Run it on your laptop | [Run it locally](#-run-it-locally) |
 
+### Pages on the site
+
+| Page | What it is |
+|---|---|
+| [`/model`](https://otlr.vercel.app/model) | The court case model: what was built, the results, how far to trust it |
+| [`/model/explore`](https://otlr.vercel.app/model/explore) | Test the model: choose a case, press Analyze, see the prediction and why |
+| [`/model/analytics`](https://otlr.vercel.app/model/analytics) | What the court data shows |
+| [`/model/pipeline`](https://otlr.vercel.app/model/pipeline) | Every pipeline step with its code and output (`/model/about` redirects here) |
+| [`/`](https://otlr.vercel.app) | OUTLIER title screen: Quick Case, Career, Class Mode, Manual |
+| `/office` | The case desk (Quick Case) |
+| `/case/[caseId]`, `/case/[caseId]/verdict` | Investigating a case, the corkboard and accusation, then the verdict |
+| [`/career`](https://otlr.vercel.app/career) | Career Mode |
+| [`/host`](https://otlr.vercel.app/host), `/host/[code]`, `/host/[code]/autopsy` | Class Mode on the projector: create a room, run the round, the Class Autopsy |
+| `/play/[code]` | Class Mode on a student's phone |
+| `/profile/[playerId]` | A player's detective card |
+
+The website calls a FastAPI backend (`game/backend`); its endpoints:
+
+| Endpoint | What it does |
+|---|---|
+| `GET /api/model/options`, `POST /api/model/predict`, `GET /api/model/sample`, `GET /api/model/analytics` | The court case model: input choices, a prediction with its explanation, real 2017 test cases, the analytics (the site reaches these through `/model-api/*`) |
+| `GET /api/levels`, `GET /api/tools` | Quick Case levels and the detective tools |
+| `POST /api/cases`, `GET /api/cases/{id}`, `GET /api/cases/{id}/state` | Start a case, load it, restore progress |
+| `POST /api/cases/{id}/tools/{tool}`, `GET /api/cases/{id}/rows`, `GET /api/cases/{id}/data.csv` | Run a tool, read ledger rows, download the ledger |
+| `GET /api/cases/{id}/interrogate/{suspect}`, `POST /api/cases/{id}/hacker-charge` | Question a suspect, pay for a Hacker Mode run |
+| `POST /api/cases/{id}/accuse`, `GET /api/cases/{id}/report.pdf` | Accuse, get the PDF case report |
+| `POST /api/career`, `GET /api/career/{code}`, `POST /api/career/{code}/sign`, `POST /api/career/{code}/case`, `POST /api/career/cases/{id}/accuse`, `GET /api/career/{code}/ending`, `POST /api/career/{code}/retire` | Career Mode: start, load, sign a contract, next case, accuse, the ending, retire |
+| `POST /api/rooms`, `WS /ws/rooms/{code}`, `GET /api/rooms/{code}/autopsy` | Class Mode: create a room, the live round over WebSocket, the Class Autopsy |
+| `GET /api/players/{id}/profile` | A player's detective card |
+
+Debug-only endpoints (`/api/debug/...`, `/api/career/{code}/debug-jump`) exist only when `AUDITOR_DEBUG=1`
+and are off in production.
+
 ---
 
 ## Part 1 · The court case duration model
