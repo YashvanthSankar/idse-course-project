@@ -7,6 +7,26 @@ district-court records → cleaning → EDA → a model of how long cases take �
 - **Why this topic and who it is for:** [`REPORT.md`](REPORT.md), section 1.
 - **This file:** how to run everything, what each piece does, the raw facts measured, and the
   decisions with their reasons.
+- **Read it step by step, with the code:** [otlr.vercel.app/model/pipeline](https://otlr.vercel.app/model/pipeline)
+  (the same as [`notebooks/00_full_pipeline.ipynb`](notebooks/00_full_pipeline.ipynb)).
+
+## The pipeline in simple words
+
+1. **Collect.** Download the court records (81 million cases, 2010–2018) and keep only the files we
+   need. We study Tamil Nadu: 3.64 million cases.
+2. **Clean.** Court staff typed many fields by hand, so one law has thousands of spellings and some
+   dates are impossible. Small tested rules fix what can be fixed and count the rest.
+3. **Find the collection date.** The data doesn't say when it was collected, so we find it from the
+   sudden drop in decisions per month (January–February 2019).
+4. **Make the answers.** For each case: did it finish within a year? We only answer for cases we
+   could watch for a full year, and we use cases filed 2015–2017, because older years are missing
+   their quick cases.
+5. **Explore.** Charts of how long cases take by type, court and district, and where the time goes.
+6. **Build the model.** It sees only 12 facts known on the filing day. It learns from 2015–2016,
+   is chosen on 2016 and is tested once on 2017. It must beat simple look-up tables.
+7. **Check it honestly.** Right 80.9% of the time overall, but on real disputes 74.3% against 72.0%
+   for always guessing "no".
+8. **Put it online.** The saved model (6 kB) runs behind the website, where anyone can try a case.
 
 ## Run it
 

@@ -64,8 +64,8 @@ const pct = (x: number, d = 0) => `${(x * 100).toFixed(d)}%`;
 const f3 = (x: number) => x.toFixed(3);
 
 const PART_BLURB: Record<string, string> = {
-  A: "From the raw download to a cleaned, honestly labelled table. Every problem is measured before it is fixed, and two facts about the data (when it was collected, and what the early years are missing) decide how the model can be built at all.",
-  B: "From the cleaned table to a tested model. Only filing-day inputs, a split by time, simple baselines first, three model families, one test on a later year the models never saw, and the weak spots stated plainly.",
+  A: "From the raw download to a clean table with a correct yes/no answer for each case. We measure every problem before fixing it, and two facts about the data (when it was collected, and what the early years are missing) decide how the model can be built.",
+  B: "From the clean table to a tested model. The model only sees what is known on the filing day; it learns from earlier years and is tested once on a later year it never saw; it has to beat simple rules; and its weak spots are listed plainly.",
 };
 
 /* Markdown from the notebook (rendered to HTML by the exporter) in the site's type. */
@@ -95,8 +95,9 @@ function Html({ html, className }: { html: string; className: string }) {
   return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-const shortTitle = (t: string) => t.replace(/^Side analysis: /, "").split(/[:(]/)[0].replace(/\?$/, "").trim();
+const shortTitle = (t: string) => t.replace(/^(Side|Extra) analysis: /, "").split(/[:(]/)[0].replace(/\?$/, "").trim();
 const sentence = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+const lower = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
 
 /* ------------------------------------------------------------------------------------------ */
 
@@ -134,7 +135,7 @@ function Hero({ served, stageCount }: { served: Metric; stageCount: number }) {
     <header className="m-title">
       <h1>From 81 million court records to one tested model</h1>
       <p>
-        The whole project in {stageCount} steps, in the order the work was done. Each step says what was done, why, and what came out, with the exact code behind it. Written from one executed notebook, which you can download.
+        The whole project in {stageCount} steps, in the order we did the work. Each step says what we did, why, and what we found, with the exact code behind it. Everything here comes from one notebook, which you can download.
       </p>
       <div className="m-actions">
         <a href={NOTEBOOK_FILE} download className="m-btn">
@@ -262,13 +263,13 @@ function ResultsSection({ served, lookup }: { served: Metric; lookup: Metric }) 
       <header className="mb-3">
         <h2 className="part-title">How it did on {n(served.n)} unseen cases</h2>
         <p className="mt-3 max-w-[72ch] text-[var(--m-ink-2)]">
-          Every model was fitted on cases filed in {RES.train_years.join(" and ")} and scored once on cases filed in {RES.test_year}. The served model is {served.name.replace(/, with law and section$/, " with the law and section inputs")}, chosen before the {RES.test_year} cases were looked at. Accuracy is how often its yes/no call was right. AUC is how well it ranks a finished case above an unfinished one (0.5 is a coin toss). Brier and log loss measure how far its probabilities were from what happened (lower is better).
+          Every model learned from cases filed in {RES.train_years.join(" and ")} and was tested once on cases filed in {RES.test_year}. Our model is {lower(served.name.replace(/, with law and section$/, " with the law and section inputs"))}, chosen before we looked at the {RES.test_year} cases. Accuracy is how often its yes/no answer was right. AUC is how often it gives a case that finished a higher chance than one that did not (0.5 is guessing, 1.0 is perfect). Brier score and log loss show how far its chances were from what happened (lower is better).
         </p>
       </header>
 
       <Card
         title="Read this first: most of the accuracy is easy cases"
-        note="Petty summary trials and bail-type petitions are almost always over within a year. Each group is compared with the simplest possible rule: always guess the commonest answer for that group."
+        note="Petty-offence cases and bail-type petitions almost always finish within a year. Each group is compared with the simplest rule: always guess the most common answer for that group."
       >
         <div className="overflow-x-auto">
           <table className="num-table w-full border-collapse text-left text-[13.5px] tabular-nums" data-testid="pipeline-difficulty">
@@ -285,7 +286,7 @@ function ResultsSection({ served, lookup }: { served: Metric; lookup: Metric }) 
               {(
                 [
                   ["All 2017 test cases", RES.difficulty.all],
-                  ["Easy: summary trials and bail-type petitions", RES.difficulty.easy],
+                  ["Easy: petty-offence cases and bail-type petitions", RES.difficulty.easy],
                   ["Real disputes (everything else)", RES.difficulty.contested],
                 ] as const
               ).map(([label, g], i) => (
@@ -301,12 +302,12 @@ function ResultsSection({ served, lookup }: { served: Metric; lookup: Metric }) 
           </table>
         </div>
         <p className="mt-3 text-[14px] leading-6 text-[var(--m-ink-2)]">
-          Training a model on real disputes alone barely changes this (best AUC {Math.max(...Object.values(RES.difficulty.contested_only_models).map((m) => m.auc)).toFixed(2)}), so the limit is what can be known on filing day, not the
-          algorithm.
+          Training a model on real disputes alone barely changes this (best AUC {Math.max(...Object.values(RES.difficulty.contested_only_models).map((m) => m.auc)).toFixed(2)}), so the limit is what we can know on the filing day, not the
+          model.
         </p>
       </Card>
 
-      <Card title="Model comparison" note={`Test year ${RES.test_year}. Bold row: the served model. The three baselines are what you get without any machine learning.`}>
+      <Card title="Model comparison" note={`Tested on ${RES.test_year} cases. Bold row: our model. The three simple rules are what you get without any machine learning.`}>
         <div className="overflow-x-auto">
           <table className="num-table-3 w-full border-collapse text-left text-[13.5px] tabular-nums">
             <thead>
@@ -323,9 +324,9 @@ function ResultsSection({ served, lookup }: { served: Metric; lookup: Metric }) 
                 <tr key={m.name} className={m.served ? "bg-[var(--m-buff-pale)] font-semibold text-[var(--m-ink)]" : "text-[var(--m-ink-2)]"}>
                   <td className="min-w-[9rem] border-b border-[var(--m-line)] py-2 pr-4">
                     {m.name.split(",")[0]}
-                    {m.served && <span className="ml-2 rounded bg-[var(--m-tape)] px-1.5 py-px text-[12px] font-medium text-white">served</span>}
+                    {m.served && <span className="ml-2 rounded bg-[var(--m-tape)] px-1.5 py-px text-[12px] font-medium text-white">our model</span>}
                   </td>
-                  <td className="min-w-[7rem] border-b border-[var(--m-line)] py-2 pr-4">{m.inputs === "" ? "lookup table" : m.inputs === "filing basics" ? "filing basics" : "basics + law and section"}</td>
+                  <td className="min-w-[7rem] border-b border-[var(--m-line)] py-2 pr-4">{m.inputs === "" ? "look-up table" : m.inputs === "filing basics" ? "basic facts" : "basic facts + law and section"}</td>
                   <td className="border-b border-[var(--m-line)] py-2 pr-4">{pct(m.accuracy, 1)}</td>
                   <td className="border-b border-[var(--m-line)] py-2 pr-4">{f3(m.auc)}</td>
                   <td className="border-b border-[var(--m-line)] py-2 pr-4">{f3(m.brier)}</td>
@@ -336,13 +337,13 @@ function ResultsSection({ served, lookup }: { served: Metric; lookup: Metric }) 
           </table>
         </div>
         <p className="mt-3 text-[13.5px] leading-6 text-[var(--m-ink-2)]">
-          Without the law and section inputs, no model does much better than the case-type × district lookup table (AUC {f3(lookup.auc)}). With them, all three families land within
-          0.001 of each other: knowing what the case is about is what helps, and the algorithm barely matters.
+          Without the law and section inputs, no model does much better than the look-up table by case type and district (AUC {f3(lookup.auc)}). With them, all three kinds of model are within
+          0.001 of each other: knowing what the case is about is what helps, and which model we use hardly matters.
         </p>
       </Card>
 
       <div className="m-grid lg:grid-cols-2">
-        <Card title="Confusion matrix" note={`${RES.test_year} test cases, calling "within a year" when the probability is at least 50%.`}>
+        <Card title="Confusion matrix" note={`${RES.test_year} test cases. The model says "within a year" when its chance is 50% or more.`}>
           <div className="grid grid-cols-[auto_1fr_1fr] gap-1.5 text-[13px]">
             <div />
             <div className="pb-1 text-center text-[12px] leading-tight text-[var(--m-ink-3)]">
@@ -360,15 +361,15 @@ function ResultsSection({ served, lookup }: { served: Metric; lookup: Metric }) 
               <br />
               not within
             </div>
-            <Cell label="true negative" value={c.tn} total={total} strong />
-            <Cell label="false positive" value={c.fp} total={total} />
+            <Cell label="rightly said no" value={c.tn} total={total} strong />
+            <Cell label="wrongly said yes" value={c.fp} total={total} />
             <div className="flex items-center pr-2 text-right text-[12px] leading-tight text-[var(--m-ink-3)]">
               actually
               <br />
               within
             </div>
-            <Cell label="false negative" value={c.fn} total={total} />
-            <Cell label="true positive" value={c.tp} total={total} strong />
+            <Cell label="wrongly said no" value={c.fn} total={total} />
+            <Cell label="rightly said yes" value={c.tp} total={total} strong />
           </div>
           <dl className="mt-4 grid grid-cols-3 gap-3 text-[13px]">
             {[
@@ -385,22 +386,22 @@ function ResultsSection({ served, lookup }: { served: Metric; lookup: Metric }) 
           </dl>
         </Card>
 
-        <Card title="Is a predicted 70% really 70%?" note="Cases grouped by predicted probability; each dot compares the group's average prediction with the share that really finished within a year. On the dashed line = honest probabilities.">
+        <Card title="Is a predicted 70% really 70%?" note="Cases are grouped by the chance the model gave them. Each dot compares a group's average chance with the share that really finished within a year. Dots on the dashed line mean the chances are right.">
           <CalibrationChart points={RES.calibration.map((x) => ({ predicted: x.mean_predicted, observed: x.observed, cases: x.cases }))} />
         </Card>
       </div>
 
       <div className="m-grid lg:grid-cols-2">
-        <Card title="Other horizons" note="The same recipe asked for 6 months and 2 years. Each horizon uses the latest years that allow a full follow-up.">
+        <Card title="Other time limits" note="The same method asked for 6 months and 2 years. Each one uses the latest years that let every case be watched for the full time.">
           <Table
             head={["question", "model AUC", "per-type baseline", "train → test"]}
             rows={Object.entries(RES.horizons).map(([k, h]) => [`within ${k}`, f3(h.model_auc), f3(h.baseline_auc), `${h.train.join("–")} → ${h.test}`])}
           />
           <p className="mt-3 text-[13.5px] leading-6 text-[var(--m-ink-2)]">
-            Drift: courts got faster each year, so the served model predicts {pct(drift.mean_predicted, 1)} of {RES.test_year} cases within a year when {pct(drift.observed, 1)} were.
+            Courts got faster each year, so our model predicts {pct(drift.mean_predicted, 1)} of {RES.test_year} cases within a year when {pct(drift.observed, 1)} were.
           </p>
         </Card>
-        <Card title="Weak spot: ranking cases of the same kind" note="AUC inside a single kind of case, 2017, weakest first. Near 0.5 means that, between two cases of that kind, the model cannot tell which will finish first.">
+        <Card title="Weak spot: cases of the same type" note="AUC inside a single type of case, 2017, weakest first. Near 0.5 means that, between two cases of the same type, the model cannot tell which will finish first.">
           <Table
             head={["kind of case", "AUC within the kind", "cases"]}
             rows={RES.weak_case_types.map((w) => [RES.case_type_names[w.case_type]?.split(" (")[0] ?? w.case_type.toUpperCase(), w.auc === null ? "—" : w.auc.toFixed(2), n(w.n)])}
@@ -409,18 +410,18 @@ function ResultsSection({ served, lookup }: { served: Metric; lookup: Metric }) 
       </div>
 
       <div className="m-grid sm:grid-cols-2">
-        <Card title="Side analysis: days, by linear regression" note="Among cases disposed of within two years only; trained on 2015 filings, tested on 2016. Exploratory: it cannot speak for the cases that did not finish.">
+        <Card title="Extra analysis: number of days (linear regression)" note="Only cases that finished within two years; learned from 2015 cases, tested on 2016. It says nothing about the cases that did not finish.">
           <dl className="grid grid-cols-2 gap-3 text-[13px]">
             <Tile value={`${Math.round(reg.linear_regression.median_error_days)} days`} label="typical (median) error" />
-            <Tile value={pct(reg.linear_regression.r2_log_days)} label={`of the variation in log(days) explained (baseline ${pct(reg.baseline_median_per_case_type.r2_log_days)})`} />
-            <Tile value={`${Math.round(reg.linear_regression.mae_days)} days`} label={`mean error (baseline ${Math.round(reg.baseline_median_per_case_type.mae_days)}: a few long cases dominate the mean)`} />
+            <Tile value={pct(reg.linear_regression.r2_log_days)} label={`of the variation in log(days) explained (simple rule ${pct(reg.baseline_median_per_case_type.r2_log_days)})`} />
+            <Tile value={`${Math.round(reg.linear_regression.mae_days)} days`} label={`average error (simple rule ${Math.round(reg.baseline_median_per_case_type.mae_days)}: a few very long cases pull the average up)`} />
             <Tile value={n(reg.linear_regression.n)} label="test cases" />
           </dl>
         </Card>
-        <Card title="Side analysis: districts, by k-means" note="33 district profiles (speed on six kinds of case plus backlog), standardised; k chosen by silhouette score.">
+        <Card title="Extra analysis: grouping districts (k-means)" note="33 district profiles (how fast six types of case finish, plus backlog), put on the same scale; the number of groups chosen by silhouette score.">
           <dl className="grid grid-cols-2 gap-3 text-[13px]">
             <Tile value={`k = ${RES.clusters.k}`} label="groups chosen" />
-            <Tile value={RES.clusters.best_silhouette.toFixed(2)} label="best silhouette score. Below about 0.25 the structure is weak: districts differ by degree, not by type" />
+            <Tile value={RES.clusters.best_silhouette.toFixed(2)} label="best silhouette score. Below about 0.25 the groups are weak: districts differ by how much, not by type" />
           </dl>
         </Card>
       </div>
@@ -471,12 +472,12 @@ function Closing() {
             <p className="m-kpi-value mt-2">
               {NB.checks.agree} of {NB.checks.total}
             </p>
-            <p className="m-note">numbers recomputed in the notebook agree with the reports written by the pipeline scripts.</p>
+            <p className="m-note">numbers calculated again in the notebook match the result files written by the pipeline scripts.</p>
           </div>
         )}
         <div className="m-panel">
           <h3 className="m-h2">The notebook</h3>
-          <p className="m-note">Every step above is one section of a single executed Jupyter notebook, run top to bottom on {NB.generated}. The slow steps (random forests, permutation importance) are read from the reports the training script wrote.</p>
+          <p className="m-note">Every step above is one section of a single executed Jupyter notebook, run top to bottom on {NB.generated}. The slow steps (the random forests and the shuffle test) are read from the result files the training script wrote.</p>
           <a href={NOTEBOOK_FILE} download className="m-btn mt-3">
             Download the .ipynb
           </a>
